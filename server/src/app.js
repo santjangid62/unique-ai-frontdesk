@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import fs from 'node:fs';
 import path from 'node:path';
-import { env, allowedOrigins } from './config/env.js';
+import { env, allowedOrigins, assertProdConfig } from './config/env.js';
 import { connectDB } from './config/db.js';
 import { ApiError } from './utils/ApiError.js';
 import { errorHandler, notFound } from './middleware/error.js';
@@ -30,6 +30,10 @@ import notificationRoutes from './routes/notifications.routes.js';
 import auditRoutes from './routes/audit.routes.js';
 import integrationRoutes from './routes/integrations.routes.js';
 import platformRoutes from './routes/platform.routes.js';
+
+// Fail fast in production (including on serverless) when secrets or the
+// database are missing, instead of silently running with development defaults.
+assertProdConfig();
 
 const app = express();
 app.disable('x-powered-by');
