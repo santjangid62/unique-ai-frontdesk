@@ -29,11 +29,10 @@ router.get(
   '/widget/:slug/config',
   asyncHandler(async (req, res) => {
     const tenant = await resolveTenant(req.params.slug);
-    const [profile, agent] = await Promise.all([
-      BusinessProfile.findOne({ tenantId: tenant._id }).lean(),
-      AiAgent.findOne({ tenantId: tenant._id, isActive: true, isDefault: true }).lean() ||
-        AiAgent.findOne({ tenantId: tenant._id, isActive: true }).lean(),
-    ]);
+    const profile = await BusinessProfile.findOne({ tenantId: tenant._id }).lean();
+    const agent =
+      (await AiAgent.findOne({ tenantId: tenant._id, isActive: true, isDefault: true }).lean()) ||
+      (await AiAgent.findOne({ tenantId: tenant._id, isActive: true }).lean());
 
     if (profile && profile.widget && profile.widget.isEnabled === false) {
       throw ApiError.forbidden('This chat widget is disabled');

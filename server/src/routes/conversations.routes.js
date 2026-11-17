@@ -26,13 +26,23 @@ router.get(
     if (req.query.status) filter.status = req.query.status;
     if (req.query.assigned === 'me') filter.assignedTo = req.user.id;
     if (req.query.handoff === 'true') filter.status = 'handoff';
+    // Staff work their own queue plus unclaimed handoffs; admins see everything.
+    if (req.user.role === 'staff') {
+      filter.$or = [{ assignedTo: req.user.id }, { assignedTo: null }];
+    }
     if (req.query.search) {
       const term = String(req.query.search).trim();
-      filter.$or = [
+      const searchOr = [
         { customerName: { $regex: term, $options: 'i' } },
         { customerPhone: { $regex: term, $options: 'i' } },
         { lastMessagePreview: { $regex: term, $options: 'i' } },
       ];
+      if (filter.$or) {
+        filter.$and = [{ $or: filter.$or }, { $or: searchOr }];
+        delete filter.$or;
+      } else {
+        filter.$or = searchOr;
+      }
     }
 
     const [items, total, counts] = await Promise.all([
