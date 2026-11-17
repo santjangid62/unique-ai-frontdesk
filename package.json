@@ -15,6 +15,7 @@
     "install:all": "npm install && npm --prefix client install",
     "seed": "node server/src/scripts/seed.js",
     "db:check": "node server/src/scripts/db-check.js",
+    "deploy": "node server/src/scripts/deploy.js",
     "smoke": "node server/src/scripts/smoke.js"
   },
   "dependencies": {

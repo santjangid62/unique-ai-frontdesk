@@ -154,6 +154,29 @@ Generate secrets with:
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
+### One-command deploy (`npm run deploy`)
+
+Steps 2–5 above can be done in a single command. Put the Atlas URI and both JWT secrets in `.env`, save a Vercel
+token (https://vercel.com/account/tokens) in `deploy-token.txt` (gitignored), then run:
+
+```bash
+npm run deploy
+```
+
+The script uses the Vercel REST API (no CLI install needed) to:
+
+1. verify the token, then create or reuse the `unique-ai-frontdesk` project and link
+   `santjangid62/unique-ai-frontdesk` to it
+2. upsert `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` and `NODE_ENV` for production + preview
+3. trigger a production deployment from `main` and stream its state until it finishes (build log tail on failure)
+4. seed the production database with the demo workspace
+5. verify the live URL: `/api/health` (`db: connected`), the SPA shell, a real login + `/api/auth/me`,
+   tenant-scoped `/api/leads`, anonymous `401`, the public widget config, and that a wrong password is rejected
+
+It exits non-zero if any live check fails. Useful flags: `--skip-seed`, and
+`--skip-deploy --url https://app.vercel.app` to verify an existing deployment without redeploying.
+Secrets are never printed (the Mongo URI is masked).
+
 ### MongoDB Atlas
 
 Create a free cluster, a database user and allow Vercel egress (or `0.0.0.0/0` for a pilot), then copy the
