@@ -1,0 +1,181 @@
+# Unique AI Frontdesk
+
+Multi-tenant AI receptionist SaaS for coaching institutes — website chat, WhatsApp, voice calls, lead CRM,
+demo-class booking and human handoff, built to the **Unique AI Frontdesk PRD v1.0**.
+
+- **Frontend:** React 18 + Vite + Tailwind CSS + React Router + Axios + React Hook Form + Recharts + Lucide
+- **Backend:** Node.js + Express + Mongoose + JWT + bcryptjs + Zod + Helmet + express-rate-limit
+- **AI:** OpenAI chat completions with tenant-scoped retrieval (RAG) and a grounded fallback when no key is set
+- **Channels:** Website widget API, WhatsApp Cloud API webhook, Twilio-compatible voice webhooks
+- **Hosting:** Vercel (static client + serverless Express function), MongoDB Atlas
+
+## Quick start
+
+```bash
+npm install
+cp .env.example .env          # then set MONGODB_URI and the JWT secrets
+
+npm run seed                  # plans + demo workspace + demo logins
+npm run dev                   # API on http://localhost:5000
+npm run dev:client            # dashboard on http://localhost:5173 (proxies /api)
+```
+
+Demo logins created by `npm run seed`:
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Super Admin | admin@uniqueit.in | Admin@12345 |
+| Business Admin | owner@uniquecomputers.in | Owner@12345 |
+| Staff | staff@uniquecomputers.in | Staff@12345 |
+| Second tenant admin | owner@abccoaching.in | Owner@12345 |
+
+Without a MongoDB instance you can run a throwaway in-memory database:
+
+```bash
+USE_IN_MEMORY_DB=1 npm run dev      # downloads a MongoDB binary on first run
+USE_IN_MEMORY_DB=1 npm run seed
+```
+
+## Features implemented
+
+| PRD module | Where |
+| --- | --- |
+| Authentication, refresh rotation, password reset, RBAC | `server/src/routes/auth.routes.js`, `middleware/auth.js`, `middleware/rbac.js` |
+| Tenant management + tenant isolation (server-derived `tenantId`, cross-tenant attempts audited) | `routes/tenants.routes.js`, `middleware/rbac.js` |
+| Business profile + coaching courses/fees/batches | `routes/business.routes.js`, `models/BusinessProfile.js` |
+| AI receptionist agents + playground | `routes/agents.routes.js` |
+| Knowledge base with PDF/TXT/MD/CSV ingestion and chunking | `routes/knowledge.routes.js`, `services/retrieval.js` |
+| Website chatbot + embeddable widget | `routes/public.routes.js`, `pages/PublicChat.jsx` |
+| WhatsApp Cloud API webhook (signature verified) | `routes/whatsapp.routes.js` |
+| Voice receptionist webhooks (Twilio signature, TwiML, transcripts) | `routes/voice.routes.js` |
+| Lead CRM, dedupe, assignment, notes, CSV export | `routes/leads.routes.js`, `services/crm.js` |
+| Customers with history | `routes/customers.routes.js` |
+| Appointments, availability, double-booking prevention | `routes/appointments.routes.js`, `services/booking.js` |
+| Conversations + human handoff / resume / close | `routes/conversations.routes.js`, `services/chat.js` |
+| Notifications | `routes/notifications.routes.js` |
+| Reports (business) and platform analytics | `routes/analytics.routes.js` |
+| Subscription plans, usage metering, invoices | `routes/plans.routes.js`, `services/usage.js` |
+| Audit logs, integrations, platform settings | `routes/audit.routes.js`, `routes/integrations.routes.js`, `routes/platform.routes.js` |
+
+## AI grounding rules
+
+`services/ai.js` enforces, in the system prompt and in code:
+
+1. Answers come only from the business profile and enabled knowledge entries.
+2. Unknown questions set `escalate: true` instead of inventing fees, availability or policies.
+3. Appointments are only confirmed after `services/booking.js` successfully saves the booking.
+4. If `OPENAI_API_KEY` is missing or the provider fails, a deterministic retrieval-only fallback answers and
+   escalates when nothing relevant is found.
+
+## API
+
+Every response uses one envelope: `{ "success": true, "data": ..., "meta": ... }` or
+`{ "success": false, "error": { "code", "message", "details?" } }`.
+
+```
+POST   /api/auth/register | login | logout | refresh | forgot-password | reset-password
+GET    /api/auth/me                     PATCH /api/auth/me
+POST   /api/auth/change-password
+
+GET    /api/tenants  POST /api/tenants  GET|PUT /api/tenants/:id
+PATCH  /api/tenants/:id/status
+
+GET    /api/users    POST /api/users    GET|PUT|DELETE /api/users/:id
+GET    /api/business/profile            PUT /api/business/profile
+
+GET    /api/ai-agents  POST /api/ai-agents  PUT|DELETE /api/ai-agents/:id
+POST   /api/ai-agents/:id/test
+
+GET    /api/knowledge  POST /api/knowledge  PUT|DELETE /api/knowledge/:id
+POST   /api/knowledge/upload            GET /api/knowledge/documents
+
+GET    /api/leads  POST /api/leads  GET|PUT|DELETE /api/leads/:id
+PATCH  /api/leads/:id/status            POST /api/leads/:id/assign | notes
+GET    /api/leads/export
+
+GET    /api/customers  POST /api/customers  GET|PUT|DELETE /api/customers/:id
+GET    /api/appointments  POST /api/appointments  PUT /api/appointments/:id
+PATCH  /api/appointments/:id/status     GET /api/appointments/availability
+
+GET    /api/conversations  GET /api/conversations/:id
+POST   /api/conversations/:id/reply     PATCH /api/conversations/:id/handoff
+PATCH  /api/conversations/:id/resume-ai PATCH /api/conversations/:id/close
+GET    /api/calls
+
+POST   /api/voice/incoming | gather | status | transfer
+GET    /api/webhooks/whatsapp           POST /api/webhooks/whatsapp
+GET    /api/public/widget/:slug/config  POST /api/public/widget/:slug/chat
+GET    /api/public/widget/:slug/messages
+GET    /api/public/widget/:slug/availability
+POST   /api/public/widget/:slug/appointments
+GET    /api/public/widget/:slug/embed.js
+
+GET    /api/plans  POST /api/plans  PUT /api/plans/:id
+GET    /api/subscriptions/me  POST /api/subscriptions/change-plan
+GET    /api/subscriptions/invoices
+
+GET    /api/analytics/business/overview GET /api/analytics/platform/overview
+GET    /api/notifications               GET /api/notifications/unread-count
+PATCH  /api/notifications/:id/read      POST /api/notifications/read-all
+GET    /api/audit | /api/audit/tenant
+GET    /api/integrations                PUT /api/integrations/:provider
+POST   /api/integrations/:provider/check
+GET    /api/platform/users              PATCH /api/platform/users/:id/status
+GET    /api/platform/settings           PUT /api/platform/settings
+GET    /api/health
+```
+
+## Security notes
+
+- Access tokens are short-lived JWTs; refresh tokens are opaque, hashed at rest, rotated on use and revocable.
+- `tenantId` is always derived from the authenticated user; a client-supplied `X-Tenant-Id` that differs is
+  rejected with 403 and written to the audit log.
+- Passwords use bcrypt (cost 12). Super Admins cannot self-register; see `POST /api/auth/bootstrap-super-admin`
+  (disabled unless `ALLOW_SUPER_ADMIN_BOOTSTRAP=true`).
+- WhatsApp and Twilio webhooks verify provider signatures; in production unsigned webhooks are rejected.
+- Provider credentials are stored per tenant and masked in API responses.
+
+## Deployment on Vercel
+
+`vercel.json` builds the Vite client and exposes the Express app as a serverless function at `api/index.js`.
+
+1. Push this repository to GitHub.
+2. Import it in Vercel (framework preset: **Other**). Build command and output directory come from `vercel.json`.
+3. Add environment variables in **Project → Settings → Environment Variables**:
+   `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `CLIENT_ORIGIN` (your Vercel URL), and optionally
+   `OPENAI_API_KEY`, `OPENAI_MODEL`, `TWILIO_AUTH_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`.
+4. Deploy, then seed the production database once from your machine:
+   `MONGODB_URI="<atlas-uri>" npm run seed`
+5. Open the deployment URL and sign in with a demo account, or register a new business.
+
+Generate secrets with:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+```
+
+### MongoDB Atlas
+
+Create a free cluster, a database user and allow Vercel egress (or `0.0.0.0/0` for a pilot), then copy the
+connection string into `MONGODB_URI` (append `/unique-frontdesk`).
+
+### Optional provider configuration
+
+- **OpenAI:** set `OPENAI_API_KEY` (server-side only). Without it the assistant runs in grounded fallback mode.
+- **WhatsApp:** create an app in Meta for Developers, set the webhook URL to `https://<domain>/api/webhooks/whatsapp`,
+  the verify token to `WHATSAPP_VERIFY_TOKEN`, and set `WHATSAPP_APP_SECRET`. Add the phone number ID and access
+  token under **Business Settings → Channel integrations**.
+- **Voice:** point your Twilio number's voice webhook to `https://<domain>/api/voice/incoming` and set
+  `TWILIO_AUTH_TOKEN`. Map the number to the business in **Channel integrations**.
+- **Payments:** `POST /api/subscriptions/change-plan` records invoices with `pending` status; add a Razorpay
+  webhook to mark them paid. No gateway credentials are included.
+
+## Verification
+
+```bash
+npm run build         # Vite production build
+npm run smoke         # end-to-end API checks against a running, seeded server
+```
+
+`npm run smoke` covers health, login, RBAC, tenant isolation, lead dedupe, double-booking prevention, grounded
+AI answers, escalation on unknown questions, platform analytics and CSV export.
