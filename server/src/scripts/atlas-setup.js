@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 import 'dotenv/config';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
-const API = 'https://cloud.mongodb.com/api/atlas/v1.0';
+const API = (process.env.ATLAS_API_BASE || 'https://cloud.mongodb.com/api/atlas/v1.0').replace(/\/$/, '');
 const PROJECT = process.env.ATLAS_PROJECT_NAME || 'unique-ai-frontdesk';
 const CLUSTER = process.env.ATLAS_CLUSTER_NAME || 'Cluster0';
 const DB_NAME = process.env.ATLAS_DB_NAME || 'unique-frontdesk';
@@ -29,6 +29,10 @@ const REGIONS = (process.env.ATLAS_REGION || 'AP_SOUTH_1,US_EAST_1').split(',').
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
 const wantSeed = args.includes('--seed');
+const skipVerify = args.includes('--no-verify');
+const envPath = process.env.ATLAS_ENV_PATH
+  ? path.resolve(process.env.ATLAS_ENV_PATH)
+  : path.join(ROOT, '.env');
 const CLUSTER_TIMEOUT_MS = 25 * 60_000;
 
 const log = {
@@ -162,36 +166,18 @@ async function call(keys, pathname, { method = 'GET', body } = {}) {
 
 /**
  * Free tier (M0) cannot set diskSizeGB and is not a dedicated cluster, so the
- * legacy providerSettings shape is the documented one for the v1 endpoint.
- * The replicationSpecs shape is kept as a fallback for newer API behaviour.
+ * documented v1 shape is providerSettings with instanceSizeName M0.
  */
-function clusterPayloads(region) {
-  return [
-    {
-      name: CLUSTER,
-      clusterType: 'REPLICASET',
-      providerSettings: { providerName: 'AWS', regionName: region, instanceSizeName: 'M0' },
-    },
-    {
-      name: CLUSTER,
-      clusterType: 'REPLICASET',
-      replicationSpecs: [
-        {
-          zoneName: 'Zone 1',
-          regionConfigs: [
-            {
-              providerName: 'TENANT',
-              backingProviderName: 'AWS',
-              regionName: region,
-              priority: 7,
-              electableSpecs: { instanceSize: 'M0', nodeCount: 3 },
-            },
-          ],
-        },
-      ],
-    },
-  ];
-}
+const freeClusterPayload = (region) => ({
+  name: CLUSTER,
+  clusterType: 'REPLICASET',
+  providerSettings: { providerName: 'AWS', regionName: region, instanceSizeName: 'M0' },
+});
+
+const instanceSizeOf = (cluster) =>
+  cluster.providerSettings?.instanceSizeName ||
+  cluster.replicationSpecs?.[0]?.regionConfigs?.[0]?.electableSpecs?.instanceSize ||
+  '';
 
 async function pickOrg(keys) {
   log.step('1/7  Organization');
@@ -217,42 +203,44 @@ async function ensureProject(keys, org) {
 
 async function ensureCluster(keys, groupId) {
   log.step('3/7  Free cluster (M0)');
-  try {
-    const existing = await call(keys, `/groups/${groupId}/clusters/${CLUSTER}`);
-    log.ok(`Cluster "${CLUSTER}" already exists (${existing.stateName || 'unknown'})`);
+  const { results = [] } = await call(keys, `/groups/${groupId}/clusters`);
+
+  // A project may already hold a free cluster under any name, and a project
+  // can only have one — reuse whatever is there instead of creating a second.
+  const existing = results.find((cluster) => cluster.name === CLUSTER) || results.find((cluster) => instanceSizeOf(cluster) === 'M0');
+  if (existing) {
+    const kind = existing.name === CLUSTER ? 'cluster' : 'existing free cluster';
+    log.ok(`Reusing ${kind} "${existing.name}" (${existing.stateName || 'unknown'})`);
     return existing;
-  } catch (error) {
-    if (error.status !== 404) throw error;
   }
 
   let lastError = null;
   for (const region of REGIONS) {
-    for (const body of clusterPayloads(region)) {
-      try {
-        const created = await call(keys, `/groups/${groupId}/clusters`, { method: 'POST', body });
-        log.ok(`Requested M0 in ${region}`);
-        return created;
-      } catch (error) {
-        lastError = error;
-        if (error.status === 409) {
-          const existing = await call(keys, `/groups/${groupId}/clusters/${CLUSTER}`).catch(() => null);
-          if (existing) {
-            log.ok(`Cluster "${CLUSTER}" already exists (${existing.stateName || 'unknown'})`);
-            return existing;
-          }
+    try {
+      const created = await call(keys, `/groups/${groupId}/clusters`, { method: 'POST', body: freeClusterPayload(region) });
+      log.ok(`Requested M0 in ${region}`);
+      return created;
+    } catch (error) {
+      lastError = error;
+      if (error.status === 409) {
+        const raced = await call(keys, `/groups/${groupId}/clusters`).catch(() => ({ results: [] }));
+        const reusable = (raced.results || []).find((cluster) => instanceSizeOf(cluster) === 'M0');
+        if (reusable) {
+          log.ok(`Reusing existing free cluster "${reusable.name}"`);
+          return reusable;
         }
-        log.warn(`${region} (${body.providerSettings ? 'providerSettings' : 'replicationSpecs'}): ${apiMessage(error.payload || {}) || error.message}`);
       }
+      log.warn(`${region}: ${apiMessage(error.payload || {}) || error.message}`);
     }
   }
   throw new Error(`Could not create the free cluster — ${lastError?.message || 'unknown error'}`);
 }
 
-async function waitForCluster(keys, groupId) {
+async function waitForCluster(keys, groupId, clusterName) {
   const startedAt = Date.now();
   let lastState = '';
   while (Date.now() - startedAt < CLUSTER_TIMEOUT_MS) {
-    const cluster = await call(keys, `/groups/${groupId}/clusters/${CLUSTER}`);
+    const cluster = await call(keys, `/groups/${groupId}/clusters/${clusterName}`);
     const state = cluster.stateName || 'UNKNOWN';
     if (state !== lastState) log.info(`Cluster state: ${state}`);
     lastState = state;
@@ -315,7 +303,6 @@ function buildUri(srv, { username, password }) {
 }
 
 function writeEnv(uri) {
-  const envPath = path.join(ROOT, '.env');
   const line = `MONGODB_URI=${uri}`;
   const content = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
   const next = /^MONGODB_URI=.*$/m.test(content)
@@ -325,7 +312,7 @@ function writeEnv(uri) {
   // dotenv never overwrites an existing variable, so child processes (db:check,
   // seed) would otherwise inherit the stale value from this process.
   process.env.MONGODB_URI = uri;
-  log.ok(`Wrote MONGODB_URI to .env — ${maskUri(uri)}`);
+  log.ok(`Wrote MONGODB_URI to ${path.relative(ROOT, envPath) || envPath} — ${maskUri(uri)}`);
 }
 
 function runScript(script) {
@@ -356,10 +343,8 @@ async function verifyConnection() {
 
   if (dryRun) {
     for (const region of REGIONS) {
-      for (const body of clusterPayloads(region)) {
-        console.log(`\n   POST ${API}/groups/{groupId}/clusters`);
-        console.log(`   ${JSON.stringify(body, null, 2).replace(/\n/g, '\n   ')}`);
-      }
+      console.log(`\n   POST ${API}/groups/{groupId}/clusters`);
+      console.log(`   ${JSON.stringify(freeClusterPayload(region), null, 2).replace(/\n/g, '\n   ')}`);
     }
     const sample = buildUri('mongodb+srv://cluster0.example.mongodb.net', {
       username: DB_USER,
@@ -387,14 +372,15 @@ async function verifyConnection() {
   await ensureAccessList(keys, project.id);
 
   log.step('6/7  Connection string');
-  const ready = cluster.stateName === 'IDLE' ? cluster : await waitForCluster(keys, project.id);
+  const clusterName = cluster.name || CLUSTER;
+  const ready = cluster.stateName === 'IDLE' ? cluster : await waitForCluster(keys, project.id, clusterName);
   const srv = ready.connectionStrings?.standardSrv || ready.connectionStrings?.standard;
   if (!srv) throw new Error('Atlas has not returned a connection string yet — rerun in a minute.');
   const uri = buildUri(srv, user);
   writeEnv(uri);
-  log.ok(`${CLUSTER} · ${user.username} · database ${DB_NAME}`);
+  log.ok(`${clusterName} · ${user.username} · database ${DB_NAME}`);
 
-  const connected = await verifyConnection();
+  const connected = skipVerify ? true : await verifyConnection();
   if (wantSeed) {
     log.step('Seeding the demo workspace');
     if ((await runScript('server/src/scripts/seed.js')) !== 0) {
@@ -404,7 +390,7 @@ async function verifyConnection() {
 
   log.step('Done');
   console.log(`   Project : ${PROJECT}`);
-  console.log(`   Cluster : ${CLUSTER}`);
+  console.log(`   Cluster : ${cluster.name || CLUSTER}`);
   console.log(`   User    : ${user.username} (password stored in .env)`);
   console.log(`   URI     : ${maskUri(uri)}`);
   if (!connected) console.log('\n   Next: npm run db:check');

@@ -191,8 +191,13 @@ npm run atlas:setup            # M0 free cluster + DB user + 0.0.0.0/0 + MONGODB
 npm run atlas:setup -- --seed  # ...and seed the demo workspace
 ```
 
-The script reuses an existing project/cluster, rotates the password of the `unique_admin` user if it already
-exists, waits for the cluster to become IDLE, writes `MONGODB_URI` and finally runs `db:check`.
+The script reuses an existing project and any free (M0) cluster already in it regardless of its name, rotates the
+password of the `unique_admin` user if it already exists, waits for the cluster to become IDLE, writes
+`MONGODB_URI` and finally runs `db:check`.
+
+`npm run atlas:setup -- --dry-run` prints the requests without sending them, `-- --no-verify` skips the
+connection check, and `npm run test:atlas` exercises digest auth, the stale-nonce retry, cluster reuse and the M0
+payload against a local mock of the Atlas API (no keys or network needed).
 
 ### Local MongoDB instead of Atlas
 
