@@ -193,7 +193,10 @@ npm run atlas:setup -- --seed  # ...and seed the demo workspace
 
 The script reuses an existing project and any free (M0) cluster already in it regardless of its name, rotates the
 password of the `unique_admin` user if it already exists, waits for the cluster to become IDLE, writes
-`MONGODB_URI` and finally runs `db:check`.
+`MONGODB_URI`, fills any missing `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` in `.env`, and finally runs `db:check`.
+
+A project-scoped key also works: set `ATLAS_PROJECT_ID=<project id>` and the script skips the organization lookup
+and project creation entirely (the key then needs the Project Owner role for that project).
 
 `npm run atlas:setup -- --dry-run` prints the requests without sending them, `-- --no-verify` skips the
 connection check, and `npm run test:atlas` exercises digest auth, the stale-nonce retry, cluster reuse and the M0

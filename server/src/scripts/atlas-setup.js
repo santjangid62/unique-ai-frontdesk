@@ -24,6 +24,7 @@ const PROJECT = process.env.ATLAS_PROJECT_NAME || 'unique-ai-frontdesk';
 const CLUSTER = process.env.ATLAS_CLUSTER_NAME || 'Cluster0';
 const DB_NAME = process.env.ATLAS_DB_NAME || 'unique-frontdesk';
 const DB_USER = process.env.ATLAS_DB_USER || 'unique_admin';
+const projectIdOverride = (process.env.ATLAS_PROJECT_ID || '').trim();
 const REGIONS = (process.env.ATLAS_REGION || 'AP_SOUTH_1,US_EAST_1').split(',').map((r) => r.trim()).filter(Boolean);
 
 const args = process.argv.slice(2);
@@ -179,8 +180,18 @@ const instanceSizeOf = (cluster) =>
   cluster.replicationSpecs?.[0]?.regionConfigs?.[0]?.electableSpecs?.instanceSize ||
   '';
 
+async function resolveProject(keys) {
+  if (projectIdOverride) {
+    log.step('Project (ATLAS_PROJECT_ID)');
+    const project = await call(keys, `/groups/${projectIdOverride}`);
+    log.ok(`Using "${project.name}" (${project.id}) with a project-scoped key`);
+    return project;
+  }
+  return ensureProject(keys, await pickOrg(keys));
+}
+
 async function pickOrg(keys) {
-  log.step('1/7  Organization');
+  log.step('Organization');
   const { results = [] } = await call(keys, '/orgs');
   const org = process.env.ATLAS_ORG_ID ? results.find((item) => item.id === process.env.ATLAS_ORG_ID) : results[0];
   if (!org) throw new Error('No organization visible to this key — use an Organization Owner key.');
@@ -189,7 +200,7 @@ async function pickOrg(keys) {
 }
 
 async function ensureProject(keys, org) {
-  log.step('2/7  Project');
+  log.step('Project');
   const { results = [] } = await call(keys, `/orgs/${org.id}/groups`);
   const existing = results.find((project) => project.name === PROJECT);
   if (existing) {
@@ -202,7 +213,7 @@ async function ensureProject(keys, org) {
 }
 
 async function ensureCluster(keys, groupId) {
-  log.step('3/7  Free cluster (M0)');
+  log.step('Free cluster (M0)');
   const { results = [] } = await call(keys, `/groups/${groupId}/clusters`);
 
   // A project may already hold a free cluster under any name, and a project
@@ -251,7 +262,7 @@ async function waitForCluster(keys, groupId, clusterName) {
 }
 
 async function ensureDatabaseUser(keys, groupId) {
-  log.step('4/7  Database user');
+  log.step('Database user');
   const password = process.env.ATLAS_DB_PASSWORD || crypto.randomBytes(18).toString('base64url');
   const roles = [{ roleName: 'readWriteAnyDatabase', databaseName: 'admin' }];
   const userPath = `/groups/${groupId}/databaseUsers/admin/${DB_USER}`;
@@ -272,7 +283,7 @@ async function ensureDatabaseUser(keys, groupId) {
 }
 
 async function ensureAccessList(keys, groupId) {
-  log.step('5/7  Network access');
+  log.step('Network access');
   try {
     // Atlas reports an existing entry inside results[].error with a 200, so the
     // body has to be inspected and not just the status code.
@@ -302,17 +313,38 @@ function buildUri(srv, { username, password }) {
   return `${scheme}${encodeURIComponent(username)}:${encodeURIComponent(password)}@${host}/${DB_NAME}?retryWrites=true&w=majority`;
 }
 
-function writeEnv(uri) {
-  const line = `MONGODB_URI=${uri}`;
-  const content = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
-  const next = /^MONGODB_URI=.*$/m.test(content)
-    ? content.replace(/^MONGODB_URI=.*$/m, line)
-    : `${content.trimEnd()}\n${line}\n`;
-  fs.writeFileSync(envPath, next);
-  // dotenv never overwrites an existing variable, so child processes (db:check,
-  // seed) would otherwise inherit the stale value from this process.
-  process.env.MONGODB_URI = uri;
-  log.ok(`Wrote MONGODB_URI to ${path.relative(ROOT, envPath) || envPath} — ${maskUri(uri)}`);
+/** Writes key=value pairs into the env file, leaving every other line alone. */
+function updateEnv(values) {
+  let content = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+  for (const [key, value] of Object.entries(values)) {
+    const line = `${key}=${value}`;
+    const pattern = new RegExp(`^${key}=.*$`, 'm');
+    content = pattern.test(content) ? content.replace(pattern, line) : `${content.trimEnd()}\n${line}\n`;
+    // dotenv never overwrites an existing variable, so child processes
+    // (db:check, seed) would otherwise inherit the previous value.
+    process.env[key] = value;
+  }
+  fs.writeFileSync(envPath, content);
+}
+
+function envValue(key) {
+  if (!fs.existsSync(envPath)) return '';
+  const match = fs.readFileSync(envPath, 'utf8').match(new RegExp(`^${key}=(.*)$`, 'm'));
+  return match ? match[1].trim() : '';
+}
+
+function ensureJwtSecrets() {
+  log.step('JWT secrets');
+  const generated = {};
+  for (const key of ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET']) {
+    if (!envValue(key)) generated[key] = crypto.randomBytes(48).toString('hex');
+  }
+  if (!Object.keys(generated).length) {
+    log.ok('JWT_ACCESS_SECRET and JWT_REFRESH_SECRET already set');
+    return;
+  }
+  updateEnv(generated);
+  log.ok(`Generated ${Object.keys(generated).join(' + ')} in ${path.relative(ROOT, envPath) || envPath}`);
 }
 
 function runScript(script) {
@@ -324,7 +356,7 @@ function runScript(script) {
 }
 
 async function verifyConnection() {
-  log.step('7/7  Verifying the new connection');
+  log.step('Verifying the new connection');
   for (let attempt = 1; attempt <= 4; attempt += 1) {
     if ((await runScript('server/src/scripts/db-check.js')) === 0) return true;
     if (attempt < 4) {
@@ -365,20 +397,21 @@ async function verifyConnection() {
   }
   log.ok(`Using API key ${keys.publicKey}`);
 
-  const org = await pickOrg(keys);
-  const project = await ensureProject(keys, org);
+  const project = await resolveProject(keys);
   const cluster = await ensureCluster(keys, project.id);
   const user = await ensureDatabaseUser(keys, project.id);
   await ensureAccessList(keys, project.id);
 
-  log.step('6/7  Connection string');
+  log.step('Connection string');
   const clusterName = cluster.name || CLUSTER;
   const ready = cluster.stateName === 'IDLE' ? cluster : await waitForCluster(keys, project.id, clusterName);
   const srv = ready.connectionStrings?.standardSrv || ready.connectionStrings?.standard;
   if (!srv) throw new Error('Atlas has not returned a connection string yet — rerun in a minute.');
   const uri = buildUri(srv, user);
-  writeEnv(uri);
+  updateEnv({ MONGODB_URI: uri });
+  log.ok(`Wrote MONGODB_URI to ${path.relative(ROOT, envPath) || envPath} — ${maskUri(uri)}`);
   log.ok(`${clusterName} · ${user.username} · database ${DB_NAME}`);
+  ensureJwtSecrets();
 
   const connected = skipVerify ? true : await verifyConnection();
   if (wantSeed) {

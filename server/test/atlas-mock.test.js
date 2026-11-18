@@ -38,15 +38,17 @@ const check = (label, condition, detail = '') => {
   }
 };
 
-function startMock({ clusters = [] } = {}) {
+function startMock({ clusters = [], project = null } = {}) {
   const state = {
     nonces: new Map(),
     staleIssued: 0,
     clusterPosts: [],
     clusters: clusters.map((cluster) => ({ ...cluster })),
-    project: null,
+    project,
     user: null,
     accessListPosts: 0,
+    orgCalls: 0,
+    projectPosts: 0,
   };
 
   const issueNonce = (stale = false) => {
@@ -114,14 +116,21 @@ function startMock({ clusters = [] } = {}) {
     const body = ['POST', 'PATCH', 'PUT'].includes(req.method) ? await readBody(req) : {};
 
     if (req.method === 'GET' && route === '/orgs') {
+      state.orgCalls += 1;
       return send(200, { results: [{ id: 'org1', name: 'Mock Org' }] });
     }
     if (req.method === 'GET' && route === '/orgs/org1/groups') {
       return send(200, { results: state.project ? [state.project] : [] });
     }
     if (req.method === 'POST' && route === '/groups') {
+      state.projectPosts += 1;
       state.project = { id: 'proj1', name: body.name };
       return send(201, state.project);
+    }
+    if (req.method === 'GET' && segments.length === 2 && segments[0] === 'groups') {
+      return state.project && segments[1] === state.project.id
+        ? send(200, state.project)
+        : send(404, { detail: 'project not found' });
     }
     if (req.method === 'GET' && route === '/groups/proj1/clusters') {
       return send(200, { results: state.clusters });
@@ -177,7 +186,7 @@ function startMock({ clusters = [] } = {}) {
   });
 }
 
-function runSetup(mockUrl, envFile) {
+function runSetup(mockUrl, envFile, extraEnv = {}) {
   return new Promise((resolve) => {
     const child = spawn(process.execPath, [SCRIPT, '--no-verify'], {
       cwd: ROOT,
@@ -189,6 +198,8 @@ function runSetup(mockUrl, envFile) {
         ATLAS_ENV_PATH: envFile,
         ATLAS_REGION: 'AP_SOUTH_1',
         ATLAS_PROJECT_NAME: 'unique-ai-frontdesk',
+        ATLAS_PROJECT_ID: '',
+        ...extraEnv,
       },
     });
 
@@ -199,9 +210,10 @@ function runSetup(mockUrl, envFile) {
   });
 }
 
-const tempEnvFile = () => {
+const tempEnvFile = ({ withJwt = true } = {}) => {
   const file = path.join(os.tmpdir(), `atlas-env-${crypto.randomBytes(4).toString('hex')}.env`);
-  fs.writeFileSync(file, 'MONGODB_URI=\nJWT_ACCESS_SECRET=test\nJWT_REFRESH_SECRET=test\n');
+  const jwt = withJwt ? 'JWT_ACCESS_SECRET=test\nJWT_REFRESH_SECRET=test\n' : 'JWT_ACCESS_SECRET=\nJWT_REFRESH_SECRET=\n';
+  fs.writeFileSync(file, `MONGODB_URI=\n${jwt}`);
   return file;
 };
 
@@ -250,6 +262,26 @@ const tempEnvFile = () => {
     check('payload has no replicationSpecs fallback', !payload.replicationSpecs, JSON.stringify(payload));
     check('wrote the new cluster URI to the env file', /MONGODB_URI=mongodb\+srv:\/\/unique_admin:[^@]+@cluster0\.mock\.mongodb\.net\/unique-frontdesk/.test(env), env.split('\n')[0]);
     check('digest auth succeeded after the stale nonce', mock.state.staleIssued >= 1 && code === 0);
+
+    await mock.close();
+    fs.unlinkSync(envFile);
+  }
+
+  console.log('\nScenario 3 — project-scoped key with ATLAS_PROJECT_ID');
+  {
+    const mock = await startMock({ clusters: [], project: { id: 'proj1', name: 'Mock Project' } });
+    const envFile = tempEnvFile({ withJwt: false });
+    const { code, output } = await runSetup(mock.url, envFile, { ATLAS_PROJECT_ID: 'proj1' });
+    const env = fs.readFileSync(envFile, 'utf8');
+
+    check('setup exits 0', code === 0, output.slice(-300));
+    check('uses the given project id', /Using "Mock Project" \(proj1\) with a project-scoped key/.test(output), output.slice(-300));
+    check('never lists organizations', mock.state.orgCalls === 0, `orgCalls=${mock.state.orgCalls}`);
+    check('never creates a project', mock.state.projectPosts === 0, `projectPosts=${mock.state.projectPosts}`);
+    check('still creates the M0 cluster', mock.state.clusterPosts.length === 1, `${mock.state.clusterPosts.length} POST(s)`);
+    check('wrote the connection string', /MONGODB_URI=mongodb\+srv:\/\/unique_admin:[^@]+@cluster0\.mock\.mongodb\.net/.test(env), env.split('\n')[0]);
+    check('generated JWT_ACCESS_SECRET', /^JWT_ACCESS_SECRET=[0-9a-f]{96}$/m.test(env), env.match(/^JWT_ACCESS_SECRET=.*$/m)?.[0]?.slice(0, 30));
+    check('generated JWT_REFRESH_SECRET', /^JWT_REFRESH_SECRET=[0-9a-f]{96}$/m.test(env), env.match(/^JWT_REFRESH_SECRET=.*$/m)?.[0]?.slice(0, 30));
 
     await mock.close();
     fs.unlinkSync(envFile);
