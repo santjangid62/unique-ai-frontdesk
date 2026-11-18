@@ -27,7 +27,7 @@ import { DEMO_CREDENTIALS } from './seed.js';
 import { mongoUriProblem } from '../config/env.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
-const API = 'https://api.vercel.com';
+const API = (process.env.VERCEL_API_BASE || 'https://api.vercel.com').replace(/\/$/, '');
 const PROJECT_NAME = process.env.VERCEL_PROJECT_NAME || 'unique-ai-frontdesk';
 const GITHUB_REPO = process.env.VERCEL_GIT_REPO || 'santjangid62/unique-ai-frontdesk';
 const BRANCH = process.env.VERCEL_GIT_BRANCH || 'main';
@@ -178,6 +178,10 @@ async function upsertEnvVars(token, project, secrets) {
   };
 
   for (const [key, value] of Object.entries(entries)) {
+    if (!value) {
+      warn(`${key} skipped (empty)`);
+      continue;
+    }
     try {
       await api(token, `/v10/projects/${project.id}/env?upsert=true`, {
         method: 'POST',
@@ -217,11 +221,18 @@ async function triggerDeploy(token, project) {
   info(`Deployment ${deployment.id} queued from ${GITHUB_REPO}@${BRANCH}`);
 
   const finished = await waitForBuild(token, deployment.id);
-  const productionUrl =
-    finished.alias?.find((alias) => alias.endsWith('.vercel.app')) || `${project.name}.vercel.app`;
-  const url = `https://${String(productionUrl).replace(/^https?:\/\//, '')}`;
+  const url = deploymentUrl(finished, project);
   pass(`Deployed: ${url}`);
   return { url, id: finished.id, inspector: finished.inspectorUrl };
+}
+
+/** Absolute URLs are used as-is; a bare domain is treated as a Vercel https host. */
+function deploymentUrl(deployment, project) {
+  const candidates = [deployment.url, ...(deployment.alias || [])].filter(Boolean).map(String);
+  const absolute = candidates.find((value) => /^https?:\/\//i.test(value));
+  if (absolute) return absolute.replace(/\/$/, '');
+  const domain = candidates.find((value) => value.endsWith('.vercel.app')) || `${project.name}.vercel.app`;
+  return `https://${domain.replace(/^https?:\/\//i, '')}`;
 }
 
 async function waitForBuild(token, id) {

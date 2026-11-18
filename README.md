@@ -175,7 +175,11 @@ The script uses the Vercel REST API (no CLI install needed) to:
 
 It exits non-zero if any live check fails. Useful flags: `--skip-seed`, and
 `--skip-deploy --url https://app.vercel.app` to verify an existing deployment without redeploying.
-Secrets are never printed (the Mongo URI is masked).
+Secrets are never printed (the Mongo URI is masked), and an empty variable is never pushed to Vercel.
+
+`npm run test:deploy` runs this entire flow against a local mock Vercel API and a mock deployment —
+project creation, repo link, env upsert, polling, a healthy run, a disconnected database and a failed
+build — so the script can be verified without a token, network or database.
 
 ### MongoDB Atlas
 

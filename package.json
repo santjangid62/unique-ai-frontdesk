@@ -19,7 +19,8 @@
     "atlas:setup": "node server/src/scripts/atlas-setup.js",
     "deploy": "node server/src/scripts/deploy.js",
     "smoke": "node server/src/scripts/smoke.js",
-    "test:atlas": "node server/test/atlas-mock.test.js"
+    "test:atlas": "node server/test/atlas-mock.test.js",
+    "test:deploy": "node server/test/vercel-deploy.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
