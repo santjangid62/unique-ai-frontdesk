@@ -16,6 +16,7 @@
     "seed": "node server/src/scripts/seed.js",
     "db:check": "node server/src/scripts/db-check.js",
     "db:local": "node server/src/scripts/local-db.js",
+    "atlas:setup": "node server/src/scripts/atlas-setup.js",
     "deploy": "node server/src/scripts/deploy.js",
     "smoke": "node server/src/scripts/smoke.js"
   },

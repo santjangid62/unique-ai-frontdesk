@@ -182,6 +182,23 @@ Secrets are never printed (the Mongo URI is masked).
 Create a free cluster, a database user and allow Vercel egress (or `0.0.0.0/0` for a pilot), then copy the
 connection string into `MONGODB_URI` (append `/unique-frontdesk`).
 
+Or let the Admin API do it: create an **Organization Owner** API key
+(Access Manager → API Keys, API access list `0.0.0.0/0`), save the public key on line 1 and the private key on
+line 2 of `atlas-key.txt` (gitignored), then:
+
+```bash
+npm run atlas:setup            # M0 free cluster + DB user + 0.0.0.0/0 + MONGODB_URI in .env
+npm run atlas:setup -- --seed  # ...and seed the demo workspace
+```
+
+The script reuses an existing project/cluster, rotates the password of the `unique_admin` user if it already
+exists, waits for the cluster to become IDLE, writes `MONGODB_URI` and finally runs `db:check`.
+
+### Local MongoDB instead of Atlas
+
+`npm run db:local` starts a mongod from `.mongo/` (downloading it once) with data in `.mongo-data/`, and the app
+accepts credential-less local URIs such as `mongodb://127.0.0.1:27017/unique-frontdesk`.
+
 ### Optional provider configuration
 
 - **OpenAI:** set `OPENAI_API_KEY` (server-side only). Without it the assistant runs in grounded fallback mode.

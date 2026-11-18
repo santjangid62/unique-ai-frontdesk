@@ -32,6 +32,8 @@ export const env = {
  * empty values, pasted file paths or web links, leftover <password>
  * placeholders and missing credentials.
  */
+const LOCAL_MONGO_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '0.0.0.0']);
+
 export function mongoUriProblem(uri) {
   const value = String(uri || '').trim();
   if (!value) return 'MONGODB_URI is empty. Add your Atlas connection string to .env.';
@@ -48,16 +50,41 @@ export function mongoUriProblem(uri) {
   if (/[<>]/.test(rest)) {
     return 'MONGODB_URI still contains a <username> or <password> placeholder — replace it with the real database user and password.';
   }
-  if (!rest.includes('@')) {
-    return 'MONGODB_URI has no credentials. It should look like mongodb+srv://user:password@cluster0.xxxxx.mongodb.net.';
-  }
-  const host = rest.split('@').pop().split('/')[0].split('?')[0];
-  if (!host || !host.includes('.')) {
-    return 'MONGODB_URI has no cluster host after the @ (expected something like cluster0.xxxxx.mongodb.net).';
-  }
   if (/\s/.test(value)) {
     return 'MONGODB_URI contains a space — remove line breaks/spaces, keep it on a single unquoted line.';
   }
+
+  const authority = rest.split('/')[0].split('?')[0];
+  const hasCredentials = authority.includes('@');
+  const credentials = hasCredentials ? authority.slice(0, authority.lastIndexOf('@')) : '';
+  const hostPort = hasCredentials ? authority.slice(authority.lastIndexOf('@') + 1) : authority;
+  const host = (hostPort.startsWith('[')
+    ? hostPort.slice(1, hostPort.indexOf(']'))
+    : hostPort.split(':')[0]
+  ).trim().toLowerCase();
+
+  if (!host) {
+    return 'MONGODB_URI has no host. It should look like mongodb+srv://user:password@cluster0.xxxxx.mongodb.net.';
+  }
+
+  // Local mongod (npm run db:local) is unauthenticated by design.
+  if (!hasCredentials) {
+    if (LOCAL_MONGO_HOSTS.has(host)) return null;
+    return 'MONGODB_URI has no credentials. It should look like mongodb+srv://user:password@cluster0.xxxxx.mongodb.net.';
+  }
+
+  if (!host.includes('.')) {
+    return 'MONGODB_URI has no cluster host after the @ (expected something like cluster0.xxxxx.mongodb.net).';
+  }
+
+  const separator = credentials.indexOf(':');
+  if (separator <= 0) {
+    return 'MONGODB_URI has no username before the password (expected mongodb+srv://user:password@cluster…).';
+  }
+  if (separator === credentials.length - 1) {
+    return 'MONGODB_URI has no password after the username (expected mongodb+srv://user:password@cluster…).';
+  }
+
   return null;
 }
 
