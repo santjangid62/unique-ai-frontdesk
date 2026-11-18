@@ -1,17 +1,15 @@
 #!/usr/bin/env node
 /**
- * Creates everything needed on MongoDB Atlas through the Admin API and writes
- * the connection string to .env — one command once the API key is in place.
+ * Creates the Atlas project, a free M0 cluster, a database user and 0.0.0.0/0
+ * network access through the Atlas Admin API, then writes MONGODB_URI to .env.
  *
- *   npm run atlas:setup                # project + M0 cluster + DB user + 0.0.0.0/0 + .env
- *   npm run atlas:setup -- --seed      # ...and seed the demo workspace
+ *   npm run atlas:setup              # do everything, then verify the connection
+ *   npm run atlas:setup -- --seed    # ...and seed the demo workspace
+ *   npm run atlas:setup -- --dry-run # print the requests instead of sending them
  *
- * Keys are read from ATLAS_PUBLIC_KEY / ATLAS_PRIVATE_KEY, or from
- * atlas-key.txt (first line public key, second line private key; that file is
- * gitignored). The key needs the Organization Owner role and its API access
- * list must include 0.0.0.0/0 (or this machine's IP).
- *
- * Uses HTTP Digest auth (what Atlas API keys use) and prints the URI masked.
+ * Keys: ATLAS_PUBLIC_KEY / ATLAS_PRIVATE_KEY, or atlas-key.txt (line 1 public,
+ * line 2 private; gitignored). The key needs Organization Owner and its API
+ * access list must include 0.0.0.0/0.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -22,74 +20,71 @@ import 'dotenv/config';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const API = 'https://cloud.mongodb.com/api/atlas/v1.0';
-const PROJECT_NAME = process.env.ATLAS_PROJECT_NAME || 'unique-ai-frontdesk';
-const CLUSTER_NAME = process.env.ATLAS_CLUSTER_NAME || 'Cluster0';
+const PROJECT = process.env.ATLAS_PROJECT_NAME || 'unique-ai-frontdesk';
+const CLUSTER = process.env.ATLAS_CLUSTER_NAME || 'Cluster0';
 const DB_NAME = process.env.ATLAS_DB_NAME || 'unique-frontdesk';
-const DB_USERNAME = process.env.ATLAS_DB_USER || 'unique_admin';
-const REGIONS = (process.env.ATLAS_REGION || 'AP_SOUTH_1,US_EAST_1')
-  .split(',')
-  .map((region) => region.trim())
-  .filter(Boolean);
+const DB_USER = process.env.ATLAS_DB_USER || 'unique_admin';
+const REGIONS = (process.env.ATLAS_REGION || 'AP_SOUTH_1,US_EAST_1').split(',').map((r) => r.trim()).filter(Boolean);
+
+const args = process.argv.slice(2);
+const dryRun = args.includes('--dry-run');
+const wantSeed = args.includes('--seed');
 const CLUSTER_TIMEOUT_MS = 25 * 60_000;
 
-const step = (text) => console.log(`\n\u001b[1m${text}\u001b[0m`);
-const info = (text) => console.log(`   ${text}`);
-const ok = (text) => console.log(`   \u001b[32m✓\u001b[0m ${text}`);
-const warn = (text) => console.log(`   \u001b[33m! ${text}\u001b[0m`);
-const bad = (text) => console.log(`   \u001b[31m✗ ${text}\u001b[0m`);
-const maskUri = (uri) => uri.replace(/\/\/([^:/@]+):([^@]*)@/, '//$1:••••@');
+const log = {
+  step: (text) => console.log(`\n\u001b[1m${text}\u001b[0m`),
+  info: (text) => console.log(`   ${text}`),
+  ok: (text) => console.log(`   \u001b[32m✓\u001b[0m ${text}`),
+  warn: (text) => console.log(`   \u001b[33m! ${text}\u001b[0m`),
+  bad: (text) => console.log(`   \u001b[31m✗ ${text}\u001b[0m`),
+};
 const md5 = (value) => crypto.createHash('md5').update(value).digest('hex');
+const maskUri = (uri) => uri.replace(/\/\/([^:/@]+):([^@]*)@/, '//$1:••••@');
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/* ---------------------------------------------------------------- auth ---- */
 
 function loadKeys() {
   let publicKey = (process.env.ATLAS_PUBLIC_KEY || '').trim();
   let privateKey = (process.env.ATLAS_PRIVATE_KEY || '').trim();
+  const file = path.join(ROOT, 'atlas-key.txt');
 
-  if (!publicKey || !privateKey) {
-    const file = path.join(ROOT, 'atlas-key.txt');
-    if (fs.existsSync(file)) {
-      const lines = fs
-        .readFileSync(file, 'utf8')
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .filter((line) => line && !line.startsWith('#'));
-      publicKey = publicKey || lines[0] || '';
-      privateKey = privateKey || lines[1] || '';
-    }
+  if ((!publicKey || !privateKey) && fs.existsSync(file)) {
+    const lines = fs
+      .readFileSync(file, 'utf8')
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith('#'));
+    publicKey ||= lines[0] || '';
+    privateKey ||= lines[1] || '';
   }
   return { publicKey, privateKey };
 }
 
 function parseChallenge(header) {
   const params = {};
-  const pattern = /([a-z]+)=(?:"([^"]*)"|([^,]*))/gi;
-  let match;
-  while ((match = pattern.exec(header))) {
-    params[match[1].toLowerCase()] = match[2] !== undefined ? match[2] : match[3];
+  for (const match of header.matchAll(/([a-z]+)=(?:"([^"]*)"|([^,]*))/gi)) {
+    params[match[1].toLowerCase()] = match[2] ?? match[3];
   }
   return params;
 }
 
-function digestHeader({ username, password, method, uri, challenge }) {
-  const algorithm = (challenge.algorithm || 'MD5').toUpperCase();
-  if (!algorithm.startsWith('MD5')) {
-    throw new Error(`Atlas asked for an unsupported auth algorithm: ${challenge.algorithm}`);
-  }
+function digestAuthorization(keys, method, uri, challenge) {
+  const qop = (challenge.qop || '').split(',')[0].trim();
   const nc = '00000001';
   const cnonce = crypto.randomBytes(8).toString('hex');
-  const qop = (challenge.qop || '').split(',')[0].trim();
-
-  const ha1 = md5(`${username}:${challenge.realm}:${password}`);
+  const ha1 = md5(`${keys.publicKey}:${challenge.realm}:${keys.privateKey}`);
   const ha2 = md5(`${method}:${uri}`);
   const response = qop
     ? md5(`${ha1}:${challenge.nonce}:${nc}:${cnonce}:${qop}:${ha2}`)
     : md5(`${ha1}:${challenge.nonce}:${ha2}`);
 
   const parts = [
-    `username="${username}"`,
+    `username="${keys.publicKey}"`,
     `realm="${challenge.realm}"`,
     `nonce="${challenge.nonce}"`,
     `uri="${uri}"`,
-    `algorithm=${challenge.algorithm || 'MD5'}`,
+    'algorithm=MD5',
     `response="${response}"`,
   ];
   if (qop) parts.push(`qop=${qop}`, `nc=${nc}`, `cnonce="${cnonce}"`);
@@ -100,15 +95,18 @@ function apiMessage(payload) {
   return (
     payload?.detail ||
     payload?.errorDescription ||
-    payload?.error?.message ||
     payload?.message ||
+    payload?.error?.message ||
     (typeof payload?.error === 'string' ? payload.error : '') ||
     JSON.stringify(payload).slice(0, 300)
   );
 }
 
-async function atlas(keys, pathname, { method = 'GET', body } = {}) {
+async function call(keys, pathname, { method = 'GET', body } = {}) {
   const url = `${API}${pathname}`;
+  const { pathname: pathOnly, search } = new URL(url);
+  const uri = `${pathOnly}${search}`;
+
   const send = (authorization) =>
     fetch(url, {
       method,
@@ -121,31 +119,27 @@ async function atlas(keys, pathname, { method = 'GET', body } = {}) {
       signal: AbortSignal.timeout(60_000),
     });
 
+  // Atlas answers an unauthenticated call with a Digest challenge. A stale
+  // nonce comes back as another 401 with a fresh challenge, so retrying with
+  // whatever nonce we were last given handles both cases.
+  let challenge = null;
   let response;
-  try {
-    response = await send(null);
-  } catch (error) {
-    throw new Error(`Atlas API unreachable (${error.name === 'TimeoutError' ? 'timeout' : error.message})`);
-  }
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    response = await send(challenge ? digestAuthorization(keys, method, uri, challenge) : null);
+    if (response.status !== 401) break;
 
-  if (response.status === 401) {
-    const challengeHeader = response.headers.get('www-authenticate') || '';
-    if (!challengeHeader.toLowerCase().startsWith('digest')) {
-      const text = await response.text();
-      const error = new Error(`Atlas rejected the API key (401). ${text.slice(0, 160)}`);
+    const header = response.headers.get('www-authenticate') || '';
+    if (!header.toLowerCase().startsWith('digest')) {
+      const error = new Error(`Atlas rejected the API key (401). ${(await response.text()).slice(0, 160)}`);
       error.status = 401;
       throw error;
     }
-    const parsed = new URL(url);
-    const uri = `${parsed.pathname}${parsed.search}`;
-    const authorization = digestHeader({
-      username: keys.publicKey,
-      password: keys.privateKey,
-      method,
-      uri,
-      challenge: parseChallenge(challengeHeader),
-    });
-    response = await send(authorization);
+    challenge = parseChallenge(header);
+    if (attempt === 2) {
+      const error = new Error('Atlas rejected the API key after re-authenticating (401).');
+      error.status = 401;
+      throw error;
+    }
   }
 
   const text = await response.text();
@@ -155,9 +149,8 @@ async function atlas(keys, pathname, { method = 'GET', body } = {}) {
   } catch {
     payload = { raw: text.slice(0, 400) };
   }
-
   if (!response.ok) {
-    const error = new Error(`${method} ${pathname} -> ${response.status} ${apiMessage(payload)}`);
+    const error = new Error(`${method} ${pathname} → ${response.status} ${apiMessage(payload)}`);
     error.status = response.status;
     error.payload = payload;
     throw error;
@@ -165,62 +158,68 @@ async function atlas(keys, pathname, { method = 'GET', body } = {}) {
   return payload;
 }
 
-async function pickOrg(keys) {
-  step('1/7  Organization');
-  const orgs = await atlas(keys, '/orgs');
-  const list = orgs.results || [];
-  if (!list.length) throw new Error('This API key has no organizations. Use an Organization Owner key.');
+/* ------------------------------------------------------------ resources ---- */
 
-  const preferred = process.env.ATLAS_ORG_ID
-    ? list.find((org) => org.id === process.env.ATLAS_ORG_ID)
-    : list[0];
-  if (!preferred) throw new Error(`Organization ${process.env.ATLAS_ORG_ID} is not visible to this key.`);
-
-  ok(`${preferred.name} (${preferred.id})`);
-  return preferred;
-}
-
-async function ensureProject(keys, org) {
-  step('2/7  Project');
-  const projects = await atlas(keys, `/orgs/${org.id}/groups`);
-  const existing = (projects.results || []).find((project) => project.name === PROJECT_NAME);
-  if (existing) {
-    ok(`Reusing project "${PROJECT_NAME}" (${existing.id})`);
-    return existing;
-  }
-
-  const created = await atlas(keys, '/groups', {
-    method: 'POST',
-    body: { orgId: org.id, name: PROJECT_NAME },
-  });
-  ok(`Created project "${PROJECT_NAME}" (${created.id})`);
-  return created;
-}
-
-const clusterConfig = (regionName) => ({
-  name: CLUSTER_NAME,
-  clusterType: 'REPLICASET',
-  diskSizeGB: 0.5,
-  replicationSpecs: [
+/**
+ * Free tier (M0) cannot set diskSizeGB and is not a dedicated cluster, so the
+ * legacy providerSettings shape is the documented one for the v1 endpoint.
+ * The replicationSpecs shape is kept as a fallback for newer API behaviour.
+ */
+function clusterPayloads(region) {
+  return [
     {
-      zoneName: 'Zone 1',
-      regionConfigs: [
+      name: CLUSTER,
+      clusterType: 'REPLICASET',
+      providerSettings: { providerName: 'AWS', regionName: region, instanceSizeName: 'M0' },
+    },
+    {
+      name: CLUSTER,
+      clusterType: 'REPLICASET',
+      replicationSpecs: [
         {
-          providerName: 'AWS',
-          regionName,
-          priority: 7,
-          electableSpecs: { instanceSize: 'M0', nodeCount: 3 },
+          zoneName: 'Zone 1',
+          regionConfigs: [
+            {
+              providerName: 'TENANT',
+              backingProviderName: 'AWS',
+              regionName: region,
+              priority: 7,
+              electableSpecs: { instanceSize: 'M0', nodeCount: 3 },
+            },
+          ],
         },
       ],
     },
-  ],
-});
+  ];
+}
+
+async function pickOrg(keys) {
+  log.step('1/7  Organization');
+  const { results = [] } = await call(keys, '/orgs');
+  const org = process.env.ATLAS_ORG_ID ? results.find((item) => item.id === process.env.ATLAS_ORG_ID) : results[0];
+  if (!org) throw new Error('No organization visible to this key — use an Organization Owner key.');
+  log.ok(`${org.name} (${org.id})`);
+  return org;
+}
+
+async function ensureProject(keys, org) {
+  log.step('2/7  Project');
+  const { results = [] } = await call(keys, `/orgs/${org.id}/groups`);
+  const existing = results.find((project) => project.name === PROJECT);
+  if (existing) {
+    log.ok(`Reusing "${PROJECT}" (${existing.id})`);
+    return existing;
+  }
+  const created = await call(keys, '/groups', { method: 'POST', body: { orgId: org.id, name: PROJECT } });
+  log.ok(`Created "${PROJECT}" (${created.id})`);
+  return created;
+}
 
 async function ensureCluster(keys, groupId) {
-  step('3/7  Free cluster (M0)');
+  log.step('3/7  Free cluster (M0)');
   try {
-    const existing = await atlas(keys, `/groups/${groupId}/clusters/${CLUSTER_NAME}`);
-    ok(`Cluster "${CLUSTER_NAME}" already exists (${existing.stateName || 'exists'})`);
+    const existing = await call(keys, `/groups/${groupId}/clusters/${CLUSTER}`);
+    log.ok(`Cluster "${CLUSTER}" already exists (${existing.stateName || 'unknown'})`);
     return existing;
   } catch (error) {
     if (error.status !== 404) throw error;
@@ -228,151 +227,158 @@ async function ensureCluster(keys, groupId) {
 
   let lastError = null;
   for (const region of REGIONS) {
-    try {
-      info(`Creating M0 in ${region}…`);
-      const created = await atlas(keys, `/groups/${groupId}/clusters`, {
-        method: 'POST',
-        body: clusterConfig(region),
-      });
-      ok(`Cluster "${CLUSTER_NAME}" requested in ${region}`);
-      return created;
-    } catch (error) {
-      lastError = error;
-      warn(`${region} failed: ${apiMessage(error.payload || {}) || error.message}`);
+    for (const body of clusterPayloads(region)) {
+      try {
+        const created = await call(keys, `/groups/${groupId}/clusters`, { method: 'POST', body });
+        log.ok(`Requested M0 in ${region}`);
+        return created;
+      } catch (error) {
+        lastError = error;
+        if (error.status === 409) {
+          const existing = await call(keys, `/groups/${groupId}/clusters/${CLUSTER}`).catch(() => null);
+          if (existing) {
+            log.ok(`Cluster "${CLUSTER}" already exists (${existing.stateName || 'unknown'})`);
+            return existing;
+          }
+        }
+        log.warn(`${region} (${body.providerSettings ? 'providerSettings' : 'replicationSpecs'}): ${apiMessage(error.payload || {}) || error.message}`);
+      }
     }
   }
-  throw new Error(`Could not create the free cluster (${lastError?.message || 'unknown error'})`);
+  throw new Error(`Could not create the free cluster — ${lastError?.message || 'unknown error'}`);
 }
 
 async function waitForCluster(keys, groupId) {
   const startedAt = Date.now();
   let lastState = '';
   while (Date.now() - startedAt < CLUSTER_TIMEOUT_MS) {
-    const cluster = await atlas(keys, `/groups/${groupId}/clusters/${CLUSTER_NAME}`);
+    const cluster = await call(keys, `/groups/${groupId}/clusters/${CLUSTER}`);
     const state = cluster.stateName || 'UNKNOWN';
-    if (state !== lastState) {
-      info(`Cluster state: ${state}`);
-      lastState = state;
-    }
+    if (state !== lastState) log.info(`Cluster state: ${state}`);
+    lastState = state;
     if (state === 'IDLE') return cluster;
-    await new Promise((resolve) => setTimeout(resolve, 15_000));
+    await sleep(15_000);
   }
-  throw new Error('The cluster did not become IDLE within 25 minutes; rerun the script to resume.');
-}
-
-function generatePassword() {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-  let password = '';
-  for (let index = 0; index < 24; index += 1) {
-    password += alphabet[crypto.randomInt(alphabet.length)];
-  }
-  return password;
+  throw new Error('The cluster did not become IDLE within 25 minutes — rerun to resume.');
 }
 
 async function ensureDatabaseUser(keys, groupId) {
-  step('4/7  Database user');
-  const username = DB_USERNAME;
-  const password = process.env.ATLAS_DB_PASSWORD || generatePassword();
-  const body = {
-    databaseName: 'admin',
-    groupId,
-    username,
-    password,
-    roles: [{ roleName: 'readWriteAnyDatabase', databaseName: 'admin' }],
-  };
+  log.step('4/7  Database user');
+  const password = process.env.ATLAS_DB_PASSWORD || crypto.randomBytes(18).toString('base64url');
+  const roles = [{ roleName: 'readWriteAnyDatabase', databaseName: 'admin' }];
+  const userPath = `/groups/${groupId}/databaseUsers/admin/${DB_USER}`;
 
   try {
-    await atlas(keys, `/groups/${groupId}/databaseUsers/admin/${username}`);
-    await atlas(keys, `/groups/${groupId}/databaseUsers/admin/${username}`, {
-      method: 'PATCH',
-      body: { password, roles: body.roles },
-    });
-    ok(`Rotated password for existing user "${username}"`);
+    await call(keys, userPath);
+    await call(keys, userPath, { method: 'PATCH', body: { password, roles } });
+    log.ok(`Rotated password for existing "${DB_USER}"`);
   } catch (error) {
     if (error.status !== 404) throw error;
-    await atlas(keys, `/groups/${groupId}/databaseUsers`, { method: 'POST', body });
-    ok(`Created database user "${username}" (readWriteAnyDatabase)`);
+    await call(keys, `/groups/${groupId}/databaseUsers`, {
+      method: 'POST',
+      body: { databaseName: 'admin', groupId, username: DB_USER, password, roles },
+    });
+    log.ok(`Created "${DB_USER}" (readWriteAnyDatabase)`);
   }
-
-  return { username, password };
+  return { username: DB_USER, password };
 }
 
 async function ensureAccessList(keys, groupId) {
-  step('5/7  Network access (0.0.0.0/0)');
-  const entry = { ipAddress: '0.0.0.0/0', comment: 'Vercel deploy + local dev' };
+  log.step('5/7  Network access');
   try {
-    await atlas(keys, `/groups/${groupId}/accessList`, { method: 'POST', body: [entry] });
-    ok('Opened 0.0.0.0/0');
+    // Atlas reports an existing entry inside results[].error with a 200, so the
+    // body has to be inspected and not just the status code.
+    const result = await call(keys, `/groups/${groupId}/accessList`, {
+      method: 'POST',
+      body: [{ ipAddress: '0.0.0.0/0', comment: 'Vercel + local dev' }],
+    });
+    const entryError = result?.results?.[0]?.error;
+    if (!entryError) log.ok('Opened 0.0.0.0/0');
+    else if (/already exists|duplicate/i.test(entryError)) log.ok('0.0.0.0/0 already allowed');
+    else throw new Error(entryError);
   } catch (error) {
-    const message = apiMessage(error.payload || {});
-    if (/already exists|duplicate/i.test(message)) {
-      ok('0.0.0.0/0 already allowed');
+    if (/already exists|duplicate/i.test(apiMessage(error.payload || {}))) {
+      log.ok('0.0.0.0/0 already allowed');
       return;
     }
     throw error;
   }
 }
 
-function buildUri(srv, username, password) {
-  const host = String(srv).replace(/^mongodb(\+srv)?:\/\//, '').replace(/\/$/, '');
-  return `mongodb+srv://${encodeURIComponent(username)}:${encodeURIComponent(password)}@${host}/${DB_NAME}?retryWrites=true&w=majority`;
+/* ------------------------------------------------------------ finishing ---- */
+
+function buildUri(srv, { username, password }) {
+  const raw = String(srv);
+  const scheme = /^mongodb\+srv:\/\//i.test(raw) ? 'mongodb+srv://' : 'mongodb://';
+  const host = raw.replace(/^mongodb(\+srv)?:\/\//i, '').replace(/\/$/, '');
+  return `${scheme}${encodeURIComponent(username)}:${encodeURIComponent(password)}@${host}/${DB_NAME}?retryWrites=true&w=majority`;
 }
 
 function writeEnv(uri) {
   const envPath = path.join(ROOT, '.env');
   const line = `MONGODB_URI=${uri}`;
-  let content = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
-  if (/^MONGODB_URI=.*$/m.test(content)) {
-    content = content.replace(/^MONGODB_URI=.*$/m, line);
-  } else {
-    content = `${content.trimEnd()}\n${line}\n`;
-  }
-  fs.writeFileSync(envPath, content);
-  ok(`Wrote MONGODB_URI to .env — ${maskUri(uri)}`);
+  const content = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+  const next = /^MONGODB_URI=.*$/m.test(content)
+    ? content.replace(/^MONGODB_URI=.*$/m, line)
+    : `${content.trimEnd()}\n${line}\n`;
+  fs.writeFileSync(envPath, next);
+  // dotenv never overwrites an existing variable, so child processes (db:check,
+  // seed) would otherwise inherit the stale value from this process.
+  process.env.MONGODB_URI = uri;
+  log.ok(`Wrote MONGODB_URI to .env — ${maskUri(uri)}`);
 }
 
-function runNode(script, args = []) {
+function runScript(script) {
   return new Promise((resolve) => {
-    const child = spawn(process.execPath, [path.join(ROOT, script), ...args], {
-      cwd: ROOT,
-      stdio: 'inherit',
-      env: process.env,
-    });
+    const child = spawn(process.execPath, [path.join(ROOT, script)], { cwd: ROOT, stdio: 'inherit', env: process.env });
     child.on('exit', (code) => resolve(code ?? 1));
     child.on('error', () => resolve(1));
   });
 }
 
 async function verifyConnection() {
-  step('7/7  Verifying the new connection');
+  log.step('7/7  Verifying the new connection');
   for (let attempt = 1; attempt <= 4; attempt += 1) {
-    const code = await runNode('server/src/scripts/db-check.js');
-    if (code === 0) return true;
+    if ((await runScript('server/src/scripts/db-check.js')) === 0) return true;
     if (attempt < 4) {
-      info('DNS for a new cluster can take a minute — retrying in 20s…');
-      await new Promise((resolve) => setTimeout(resolve, 20_000));
+      log.info('A new cluster can take a minute to appear in DNS — retrying in 20s…');
+      await sleep(20_000);
     }
   }
-  warn('Could not connect yet. Rerun `npm run db:check` in a minute.');
+  log.warn('Still not connecting. Rerun `npm run db:check` in a minute.');
   return false;
 }
+
+/* ----------------------------------------------------------------- main ---- */
 
 (async () => {
   console.log('\n\u001b[1mMongoDB Atlas setup (Admin API)\u001b[0m');
 
+  if (dryRun) {
+    for (const region of REGIONS) {
+      for (const body of clusterPayloads(region)) {
+        console.log(`\n   POST ${API}/groups/{groupId}/clusters`);
+        console.log(`   ${JSON.stringify(body, null, 2).replace(/\n/g, '\n   ')}`);
+      }
+    }
+    const sample = buildUri('mongodb+srv://cluster0.example.mongodb.net', {
+      username: DB_USER,
+      password: 'examplePassword123',
+    });
+    console.log(`\n   Sample URI: ${maskUri(sample)}`);
+    console.log('   Dry run — no requests were sent.\n');
+    process.exit(0);
+  }
+
   const keys = loadKeys();
   if (!keys.publicKey || !keys.privateKey) {
-    bad('No Atlas API key found.');
-    console.log('   Create one: https://cloud.mongodb.com → Access Manager → API Keys → Create API Key');
-    console.log('   Role: Organization Owner · API Access List: 0.0.0.0/0');
-    console.log('   Then save the two lines in atlas-key.txt (public, then private) and rerun.\n');
+    log.bad('No Atlas API key found.');
+    console.log('   https://cloud.mongodb.com → Access Manager → API Keys → Create API Key');
+    console.log('   Role: Organization Owner · API access list: 0.0.0.0/0');
+    console.log('   Save the two keys in atlas-key.txt (public, then private) and rerun.\n');
     process.exit(1);
   }
-  if (keys.publicKey.length < 8 || keys.privateKey.length < 8) {
-    bad('The keys in atlas-key.txt look too short — copy the full public and private keys.');
-    process.exit(1);
-  }
-  ok(`Using API key ${keys.publicKey}`);
+  log.ok(`Using API key ${keys.publicKey}`);
 
   const org = await pickOrg(keys);
   const project = await ensureProject(keys, org);
@@ -380,36 +386,33 @@ async function verifyConnection() {
   const user = await ensureDatabaseUser(keys, project.id);
   await ensureAccessList(keys, project.id);
 
-  step('6/7  Connection string');
+  log.step('6/7  Connection string');
   const ready = cluster.stateName === 'IDLE' ? cluster : await waitForCluster(keys, project.id);
   const srv = ready.connectionStrings?.standardSrv || ready.connectionStrings?.standard;
-  if (!srv) throw new Error('Atlas did not return a connection string for this cluster yet. Rerun in a minute.');
-  const uri = buildUri(srv, user.username, user.password);
+  if (!srv) throw new Error('Atlas has not returned a connection string yet — rerun in a minute.');
+  const uri = buildUri(srv, user);
   writeEnv(uri);
-  ok(`Cluster: ${CLUSTER_NAME} · user: ${user.username} · database: ${DB_NAME}`);
+  log.ok(`${CLUSTER} · ${user.username} · database ${DB_NAME}`);
 
   const connected = await verifyConnection();
-
-  if (process.argv.includes('--seed')) {
-    step('Seeding the demo workspace');
-    await runNode('server/src/scripts/seed.js');
+  if (wantSeed) {
+    log.step('Seeding the demo workspace');
+    if ((await runScript('server/src/scripts/seed.js')) !== 0) {
+      throw new Error('Seeding failed — run `npm run seed` to see the error.');
+    }
   }
 
-  console.log('\n\u001b[1mDone\u001b[0m');
-  console.log(`   Atlas project : ${PROJECT_NAME}`);
-  console.log(`   Cluster       : ${CLUSTER_NAME}`);
-  console.log(`   Database user : ${user.username} (password saved in .env)`);
-  console.log(`   Connection    : ${maskUri(uri)}`);
-  if (!connected) console.log('\n   Next: npm run db:check   (after a minute, for DNS)');
-  console.log(`   Then: ${process.argv.includes('--seed') ? 'npm run dev' : 'npm run seed && npm run dev'}\n`);
+  log.step('Done');
+  console.log(`   Project : ${PROJECT}`);
+  console.log(`   Cluster : ${CLUSTER}`);
+  console.log(`   User    : ${user.username} (password stored in .env)`);
+  console.log(`   URI     : ${maskUri(uri)}`);
+  if (!connected) console.log('\n   Next: npm run db:check');
+  console.log(`   Then: ${wantSeed ? 'npm run dev' : 'npm run seed && npm run dev'}\n`);
   process.exit(0);
 })().catch((error) => {
   console.error(`\n\u001b[31m✗ Atlas setup failed:\u001b[0m ${error.message}\n`);
-  if (error.status === 401) {
-    console.error('  Check the public/private key pair and that 0.0.0.0/0 is in the API key access list.\n');
-  }
-  if (error.status === 403) {
-    console.error('  The key is valid but lacks permission — it needs the Organization Owner role.\n');
-  }
+  if (error.status === 401) console.error('  Check the key pair and that 0.0.0.0/0 is in the API key access list.\n');
+  if (error.status === 403) console.error('  The key is valid but needs the Organization Owner role.\n');
   process.exit(1);
 });
