@@ -65,7 +65,11 @@ function validateInputs({ requireMongo = true, requireToken = true } = {}) {
   let token = (process.env.VERCEL_TOKEN || '').trim();
   const tokenFile = path.join(ROOT, 'deploy-token.txt');
   if (!token && fs.existsSync(tokenFile)) {
-    token = fs.readFileSync(tokenFile, 'utf8').trim();
+    token = fs
+      .readFileSync(tokenFile, 'utf8')
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find((line) => line && !line.startsWith('#')) || '';
   }
   if (!token && requireToken) {
     problems.push('No Vercel token: create https://vercel.com/account/tokens and save it in deploy-token.txt');
