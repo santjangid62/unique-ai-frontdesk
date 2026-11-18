@@ -162,7 +162,7 @@ async function ensureProject(token) {
     pass(`Repository linked: ${GITHUB_REPO}`);
   } catch (error) {
     warn(`Could not link ${GITHUB_REPO} (${error.message})`);
-    warn('Install the Vercel GitHub app for this repo, or the deploy step will fall back to the Vercel CLI.');
+    warn('Install the Vercel GitHub app for this repo, then rerun — deploying needs the linked repository.');
   }
 
   return project;
@@ -205,8 +205,9 @@ async function triggerDeploy(token, project) {
   }
 
   if (!project.link?.repoId) {
-    warn('No linked repository — falling back to the Vercel CLI.');
-    return deployWithCli(token);
+    throw new Error(
+      `${GITHUB_REPO} is not linked to the Vercel project — install the Vercel GitHub app for this repo (or link it in the dashboard) and rerun`,
+    );
   }
 
   const deployment = await api(token, '/v13/deployments', {
@@ -270,25 +271,6 @@ async function printBuildErrors(token, id) {
   } catch {
     warn('Could not load build logs; open the deployment in the Vercel dashboard.');
   }
-}
-
-async function deployWithCli(token) {
-  info('Running: npx vercel deploy --prod --yes --token ***');
-  const code = await new Promise((resolve) => {
-    const child = spawn(
-      'npx',
-      ['--yes', 'vercel@latest', 'deploy', '--prod', '--yes', '--token', token, '--name', PROJECT_NAME],
-      { cwd: ROOT, stdio: 'inherit', shell: process.platform === 'win32' },
-    );
-    child.on('exit', (exitCode) => resolve(exitCode ?? 1));
-    child.on('error', () => resolve(1));
-  });
-  if (code !== 0) {
-    throw new Error('Vercel CLI deploy failed — link the repo in the Vercel dashboard and rerun');
-  }
-  const url = `https://${PROJECT_NAME}.vercel.app`;
-  pass(`Deployed: ${url}`);
-  return { url, id: null };
 }
 
 function runSeed() {
