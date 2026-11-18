@@ -218,6 +218,23 @@ const runDeploy = ({ apiBase, mongoUri }) =>
     await app.close();
   }
 
+  console.log('\nScenario 5 — verify-only run with --skip-deploy --url');
+  {
+    const app = await startAppMock();
+    const { code, output } = await runNode(DEPLOY, {
+      cwd: ROOT,
+      args: ['--skip-deploy', '--skip-seed', '--url', app.url],
+      env: { VERCEL_TOKEN: '', JWT_ACCESS_SECRET: JWT_ACCESS, JWT_REFRESH_SECRET: JWT_REFRESH, MONGODB_URI: '' },
+    });
+
+    check('runs without a Vercel token', !/No Vercel token/.test(output), output.slice(-300));
+    check('verifies the URL given on the command line', /Skipping deploy, verifying/.test(output) && output.includes(`Live URL   : ${app.url}`));
+    check('all live checks passed', /9\/9 checks passed/.test(output), output.slice(-400));
+    check('exits 0', code === 0, output.slice(-400));
+
+    await app.close();
+  }
+
   console.log(summary());
   process.exit(exitCode());
 })().catch((error) => {

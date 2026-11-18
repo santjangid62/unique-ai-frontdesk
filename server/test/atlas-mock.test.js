@@ -152,20 +152,33 @@ const tempEnvFile = ({ withJwt = true } = {}) => {
   return file;
 };
 
+const tempSeedStub = (exitCodeValue) => {
+  const file = path.join(os.tmpdir(), `seed-stub-${crypto.randomBytes(4).toString('hex')}.mjs`);
+  fs.writeFileSync(
+    file,
+    `console.log('seed stub uri=' + (process.env.MONGODB_URI || 'missing'));\nprocess.exit(${exitCodeValue});\n`,
+  );
+  return file;
+};
+
+const setupEnv = (mockUrl, envFile) => ({
+  ATLAS_PUBLIC_KEY: PUBLIC_KEY,
+  ATLAS_PRIVATE_KEY: PRIVATE_KEY,
+  ATLAS_API_BASE: `${mockUrl}${BASE_PATH}`,
+  ATLAS_ENV_PATH: envFile,
+  ATLAS_REGION: 'AP_SOUTH_1',
+  ATLAS_PROJECT_NAME: 'unique-ai-frontdesk',
+  ATLAS_PROJECT_ID: '',
+});
+
 const runSetup = (mockUrl, envFile, extraEnv = {}) =>
+  runNode(SCRIPT, { cwd: ROOT, args: ['--no-verify'], env: { ...setupEnv(mockUrl, envFile), ...extraEnv } });
+
+const runSetupSeed = (mockUrl, envFile, seedScript) =>
   runNode(SCRIPT, {
     cwd: ROOT,
-    args: ['--no-verify'],
-    env: {
-      ATLAS_PUBLIC_KEY: PUBLIC_KEY,
-      ATLAS_PRIVATE_KEY: PRIVATE_KEY,
-      ATLAS_API_BASE: `${mockUrl}${BASE_PATH}`,
-      ATLAS_ENV_PATH: envFile,
-      ATLAS_REGION: 'AP_SOUTH_1',
-      ATLAS_PROJECT_NAME: 'unique-ai-frontdesk',
-      ATLAS_PROJECT_ID: '',
-      ...extraEnv,
-    },
+    args: ['--seed', '--no-verify'],
+    env: { ...setupEnv(mockUrl, envFile), ATLAS_SEED_SCRIPT: seedScript },
   });
 
 (async () => {
@@ -244,6 +257,44 @@ const runSetup = (mockUrl, envFile, extraEnv = {}) =>
 
     await mock.close();
     fs.unlinkSync(envFile);
+  }
+
+  console.log('\nScenario 4 — --seed runs after the connection string is written');
+  {
+    const mock = await startMock({ clusters: [] });
+    const envFile = tempEnvFile();
+    const stub = tempSeedStub(0);
+    const { code, output } = await runSetup(mock.url, envFile, { ATLAS_SEED_SCRIPT: stub });
+    const seeded = await runSetupSeed(mock.url, envFile, stub);
+
+    check('setup with --seed exits 0', seeded.code === 0, seeded.output.slice(-400));
+    check('runs the seed step', /Seeding the demo workspace/.test(seeded.output));
+    check(
+      'seeds with the freshly written URI',
+      /seed stub uri=mongodb\+srv:\/\/unique_admin:[^@]+@cluster0\.mock\.mongodb\.net/.test(seeded.output),
+      seeded.output.slice(-400),
+    );
+    check('suggests `npm run dev` after seeding', /Then: npm run dev/.test(seeded.output));
+    check('without --seed nothing is seeded', !/Seeding the demo workspace/.test(output));
+
+    await mock.close();
+    fs.unlinkSync(envFile);
+    fs.unlinkSync(stub);
+  }
+
+  console.log('\nScenario 5 — a failing seed fails the setup');
+  {
+    const mock = await startMock({ clusters: [] });
+    const envFile = tempEnvFile();
+    const stub = tempSeedStub(1);
+    const seeded = await runSetupSeed(mock.url, envFile, stub);
+
+    check('setup exits 1', seeded.code === 1, seeded.output.slice(-400));
+    check('reports the seeding failure', /Seeding failed/.test(seeded.output));
+
+    await mock.close();
+    fs.unlinkSync(envFile);
+    fs.unlinkSync(stub);
   }
 
   console.log(summary());

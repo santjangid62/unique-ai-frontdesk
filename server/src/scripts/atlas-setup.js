@@ -348,8 +348,9 @@ function ensureJwtSecrets() {
 }
 
 function runScript(script) {
+  const target = path.isAbsolute(script) ? script : path.join(ROOT, script);
   return new Promise((resolve) => {
-    const child = spawn(process.execPath, [path.join(ROOT, script)], { cwd: ROOT, stdio: 'inherit', env: process.env });
+    const child = spawn(process.execPath, [target], { cwd: ROOT, stdio: 'inherit', env: process.env });
     child.on('exit', (code) => resolve(code ?? 1));
     child.on('error', () => resolve(1));
   });
@@ -416,7 +417,8 @@ async function verifyConnection() {
   const connected = skipVerify ? true : await verifyConnection();
   if (wantSeed) {
     log.step('Seeding the demo workspace');
-    if ((await runScript('server/src/scripts/seed.js')) !== 0) {
+    // ATLAS_SEED_SCRIPT lets the chaining be tested without a live database.
+    if ((await runScript(process.env.ATLAS_SEED_SCRIPT || 'server/src/scripts/seed.js')) !== 0) {
       throw new Error('Seeding failed — run `npm run seed` to see the error.');
     }
   }
