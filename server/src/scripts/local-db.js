@@ -31,21 +31,55 @@ function findMongod(dir) {
   return null;
 }
 
-function extractIfNeeded() {
-  if (findMongod(BIN_DIR)) return;
+const ZIP_URL =
+  process.env.MONGODB_ZIP_URL ||
+  'https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-6.0.18.zip';
+
+function downloadIfNeeded() {
+  fs.mkdirSync(BIN_DIR, { recursive: true });
   const zip = fs.readdirSync(BIN_DIR).find((name) => name.endsWith('.zip'));
-  if (!zip) {
-    console.error('\n  No mongod binary found.');
-    console.error('  Download it with:');
-    console.error('    curl -L -C - -o .mongo/mongodb.zip https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-6.0.18.zip');
-    console.error('    (cd .mongo && tar -xf mongodb.zip)\n');
+  if (zip) return zip;
+
+  console.log('  No MongoDB binary found — downloading it once (about 512 MB, can take a while).');
+  const result = spawnSync(
+    'curl',
+    ['-L', '-C', '-', '--retry', '5', '--retry-delay', '3', '-o', 'mongodb.zip', ZIP_URL],
+    { cwd: BIN_DIR, stdio: 'inherit' },
+  );
+  if (result.status !== 0) {
+    console.error('  Download failed. Rerun `npm run db:local` to resume it.');
     process.exit(1);
   }
-  console.log(`  Extracting ${zip}…`);
-  const result = spawnSync('tar', ['-xf', zip], { cwd: BIN_DIR, stdio: 'inherit' });
-  if (result.status !== 0) {
-    console.error('  Extraction failed. Extract the zip manually into .mongo/ and rerun.');
+  return 'mongodb.zip';
+}
+
+function extractIfNeeded() {
+  if (findMongod(BIN_DIR)) return;
+  const zip = downloadIfNeeded();
+  const zipPath = path.join(BIN_DIR, zip);
+  const sizeMb = (fs.statSync(zipPath).size / 1048576).toFixed(1);
+
+  console.log(`  Extracting ${zip} (${sizeMb} MB)…`);
+  // Git Bash ships GNU tar, which cannot read zip archives; Windows PowerShell can.
+  const result = spawnSync(
+    'powershell',
+    [
+      '-NoProfile',
+      '-Command',
+      `Expand-Archive -LiteralPath '${zipPath.replace(/'/g, "''")}' -DestinationPath '${BIN_DIR.replace(/'/g, "''")}' -Force`,
+    ],
+    { stdio: 'inherit' },
+  );
+  if (result.status !== 0 || !findMongod(BIN_DIR)) {
+    console.error(`  Could not extract the archive (${sizeMb} MB).`);
+    console.error('  If the download is incomplete, rerun `npm run db:local` to resume it.');
     process.exit(1);
+  }
+  try {
+    fs.unlinkSync(zipPath);
+    console.log('  Archive removed after a successful extraction.');
+  } catch {
+    /* leaving the zip in place is harmless */
   }
 }
 
