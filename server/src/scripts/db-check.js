@@ -4,7 +4,7 @@
  */
 import mongoose from 'mongoose';
 import { connectDB, disconnectDB } from '../config/db.js';
-import { env } from '../config/env.js';
+import { env, mongoUriProblem } from '../config/env.js';
 
 const MODELS = [
   'Tenant',
@@ -32,8 +32,9 @@ const MODELS = [
 ];
 
 (async () => {
-  if (!env.mongoUri) {
-    console.error('MONGODB_URI is not set. Add it to .env (or export it) before running this check.');
+  const uriProblem = mongoUriProblem(env.mongoUri);
+  if (uriProblem) {
+    console.error(`\n  ${uriProblem}\n`);
     process.exit(1);
   }
 

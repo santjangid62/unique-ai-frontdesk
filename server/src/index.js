@@ -1,4 +1,4 @@
-import { env, assertProdConfig } from './config/env.js';
+import { env, assertProdConfig, mongoUriProblem } from './config/env.js';
 import { connectDB, disconnectDB } from './config/db.js';
 
 let memoryServer = null;
@@ -15,9 +15,10 @@ async function start() {
     console.log('[db] Using an in-memory MongoDB (USE_IN_MEMORY_DB=1); data is lost on exit');
   }
 
-  if (!env.mongoUri) {
-    console.error('[db] MONGODB_URI is not set.');
-    console.error('[db] Add your MongoDB Atlas connection string to .env, or run with USE_IN_MEMORY_DB=1 for a throwaway local database.');
+  const uriProblem = mongoUriProblem(env.mongoUri);
+  if (uriProblem) {
+    console.error(`[db] ${uriProblem}`);
+    console.error('[db] Set MONGODB_URI in .env, or run with USE_IN_MEMORY_DB=1 for a throwaway local database.');
     process.exit(1);
   }
 

@@ -2,7 +2,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import mongoose from 'mongoose';
 import { connectDB, disconnectDB } from '../config/db.js';
-import { env } from '../config/env.js';
+import { env, mongoUriProblem } from '../config/env.js';
 import { ensureDefaultPlans } from '../services/plans.js';
 import User from '../models/User.js';
 import Tenant from '../models/Tenant.js';
@@ -828,8 +828,10 @@ if (isDirectRun) {
       memory = await MongoMemoryServer.create({ instance: { dbName: 'unique-frontdesk' } });
       process.env.MONGODB_URI = memory.getUri('unique-frontdesk');
     }
-    if (!process.env.MONGODB_URI) {
-      console.error('[seed] Set MONGODB_URI to seed a database (or USE_IN_MEMORY_DB=1 for a throwaway run).');
+    const uriProblem = mongoUriProblem(process.env.MONGODB_URI);
+    if (uriProblem) {
+      console.error(`[seed] ${uriProblem}`);
+      console.error('[seed] Fix MONGODB_URI in .env (or use USE_IN_MEMORY_DB=1 for a throwaway run with a downloaded MongoDB binary).');
       process.exit(1);
     }
     await connectDB(process.env.MONGODB_URI);

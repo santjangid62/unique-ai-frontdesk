@@ -24,6 +24,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import 'dotenv/config';
 import { DEMO_CREDENTIALS } from './seed.js';
+import { mongoUriProblem } from '../config/env.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const API = 'https://api.vercel.com';
@@ -58,7 +59,10 @@ function validateInputs({ requireMongo = true, requireToken = true } = {}) {
   const accessSecret = (process.env.JWT_ACCESS_SECRET || '').trim();
   const refreshSecret = (process.env.JWT_REFRESH_SECRET || '').trim();
 
-  if (!mongoUri && requireMongo) problems.push('MONGODB_URI is empty in .env');
+  if (requireMongo || mongoUri) {
+    const uriIssue = mongoUriProblem(mongoUri);
+    if (uriIssue) problems.push(uriIssue);
+  }
   if (!accessSecret) problems.push('JWT_ACCESS_SECRET is empty in .env');
   if (!refreshSecret) problems.push('JWT_REFRESH_SECRET is empty in .env');
 

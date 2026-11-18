@@ -26,6 +26,41 @@ export const env = {
   allowSuperAdminBootstrap: asBool(process.env.ALLOW_SUPER_ADMIN_BOOTSTRAP, false),
 };
 
+/**
+ * Returns a human readable problem with a configured MongoDB URI, or null when
+ * it looks usable. Catches the mistakes that produce opaque mongoose errors:
+ * empty values, pasted file paths or web links, leftover <password>
+ * placeholders and missing credentials.
+ */
+export function mongoUriProblem(uri) {
+  const value = String(uri || '').trim();
+  if (!value) return 'MONGODB_URI is empty. Add your Atlas connection string to .env.';
+  if (/^([a-z]:\\|\\\\)/i.test(value) || value.startsWith('/') || value.startsWith('./')) {
+    return `MONGODB_URI looks like a file path (${value.slice(0, 40)}), not a connection string. Copy it from Atlas → Connect → Drivers → Node.js.`;
+  }
+  if (/^https?:\/\//i.test(value)) {
+    return 'MONGODB_URI is a web link. Use the mongodb+srv:// string from Atlas → Connect → Drivers → Node.js.';
+  }
+  if (!/^mongodb(\+srv)?:\/\//i.test(value)) {
+    return 'MONGODB_URI must start with mongodb:// or mongodb+srv://.';
+  }
+  const rest = value.replace(/^mongodb(\+srv)?:\/\//i, '');
+  if (/[<>]/.test(rest)) {
+    return 'MONGODB_URI still contains a <username> or <password> placeholder — replace it with the real database user and password.';
+  }
+  if (!rest.includes('@')) {
+    return 'MONGODB_URI has no credentials. It should look like mongodb+srv://user:password@cluster0.xxxxx.mongodb.net.';
+  }
+  const host = rest.split('@').pop().split('/')[0].split('?')[0];
+  if (!host || !host.includes('.')) {
+    return 'MONGODB_URI has no cluster host after the @ (expected something like cluster0.xxxxx.mongodb.net).';
+  }
+  if (/\s/.test(value)) {
+    return 'MONGODB_URI contains a space — remove line breaks/spaces, keep it on a single unquoted line.';
+  }
+  return null;
+}
+
 export function assertProdConfig() {
   if (!env.isProd) return;
   const problems = [];
