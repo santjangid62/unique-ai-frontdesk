@@ -36,6 +36,17 @@ USE_IN_MEMORY_DB=1 npm run dev      # downloads a MongoDB binary on first run
 USE_IN_MEMORY_DB=1 npm run seed
 ```
 
+For a persistent local database with extra dummy data (40 leads, 10 chats, 6 demo appointments and a QA login):
+
+```bash
+npm run db:local                    # mongod on 127.0.0.1:27017, data in .mongo-data/
+npm run seed
+npm run demo:data                   # safe to re-run, never duplicates
+```
+
+`demo:data` prints the logins it uses. Besides the demo accounts above it creates
+`tester@uniquecomputers.in / Tester@12345` (business admin) so testers can work without the owner account.
+
 ## Features implemented
 
 | PRD module | Where |
