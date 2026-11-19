@@ -42,7 +42,11 @@ For a persistent local database with extra dummy data (40 leads, 10 chats, 6 dem
 npm run db:local                    # mongod on 127.0.0.1:27017, data in .mongo-data/
 npm run seed
 npm run demo:data                   # safe to re-run, never duplicates
+npm run demo:reset                  # local-only: drop the DB and rebuild all of the above
 ```
+
+`demo:reset` is the way back to a clean demo state after manual testing has changed data the seed cannot
+recognise (lead statuses, cancelled appointments, staff replies). It refuses to run against a non-local URI.
 
 `demo:data` prints the logins it uses. Besides the demo accounts above it creates
 `tester@uniquecomputers.in / Tester@12345` (business admin) so testers can work without the owner account.

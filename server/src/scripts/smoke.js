@@ -121,6 +121,23 @@ async function login(email, password) {
     body: { status: 'contacted' },
   });
   check('Update lead status', statusUpdate.status === 200 && statusUpdate.payload?.data?.status === 'contacted');
+  check(
+    'Lead status change is recorded in the lead timeline',
+    (statusUpdate.payload?.data?.notes || []).some((note) => note.text === 'Status changed to contacted'),
+  );
+
+  const assignable = await request('/api/users/meta/assignable', { token: owner.accessToken });
+  const assignee = (assignable.payload?.data || [])[0];
+  const assigneeId = assignee?._id || assignee?.id;
+  check('Assignable staff lookup', assignable.status === 200 && Boolean(assigneeId), JSON.stringify(assignable.payload));
+
+  const assignLead = await request(`/api/leads/${createdLead.payload.data.lead.id}/assign`, {
+    method: 'POST',
+    token: owner.accessToken,
+    body: { assigneeId: assigneeId || null },
+  });
+  const assignedId = assignLead.payload?.data?.assigneeId?._id || assignLead.payload?.data?.assigneeId;
+  check('Assign lead to a staff member', assignLead.status === 200 && Boolean(assigneeId) && String(assignedId) === String(assigneeId), JSON.stringify(assignLead.payload));
 
   const slot = await firstOpenSlot(owner.accessToken);
   check('Availability offers an open slot', Boolean(slot), 'no open slot in the next 10 days');
@@ -152,6 +169,20 @@ async function login(email, password) {
       },
     });
     check('Double booking prevented', clash.status === 409, JSON.stringify(clash.payload));
+
+    const confirm = await request(`/api/appointments/${appointment.payload.data.id}/status`, {
+      method: 'PATCH',
+      token: owner.accessToken,
+      body: { status: 'confirmed' },
+    });
+    check('Confirm appointment', confirm.status === 200 && confirm.payload?.data?.status === 'confirmed', JSON.stringify(confirm.payload));
+
+    const cancel = await request(`/api/appointments/${appointment.payload.data.id}/status`, {
+      method: 'PATCH',
+      token: owner.accessToken,
+      body: { status: 'cancelled' },
+    });
+    check('Cancel appointment', cancel.status === 200 && cancel.payload?.data?.status === 'cancelled', JSON.stringify(cancel.payload));
   }
 
   const widgetConfig = await request('/api/public/widget/unique-computers/config');
@@ -184,6 +215,29 @@ async function login(email, password) {
 
   const conversations = await request('/api/conversations', { token: owner.accessToken });
   check('Conversation inbox', conversations.status === 200 && Array.isArray(conversations.payload.data));
+
+  const smokeConversation = (conversations.payload?.data || []).find(
+    (conversation) => conversation.customerPhone === phone || conversation.customerName === 'Smoke Visitor',
+  );
+  check('Widget chat created a conversation', Boolean(smokeConversation?.id), 'no conversation for the smoke visitor');
+
+  if (smokeConversation?.id) {
+    const replyText = 'Smoke check: our counsellor will call you shortly.';
+    const staffReply = await request(`/api/conversations/${smokeConversation.id}/reply`, {
+      method: 'POST',
+      token: owner.accessToken,
+      body: { text: replyText },
+    });
+    check(
+      'Staff reply is stored as a staff message',
+      staffReply.status === 200 && staffReply.payload?.data?.role === 'staff' && staffReply.payload?.data?.content === replyText,
+      JSON.stringify(staffReply.payload),
+    );
+
+    const transcript = await request(`/api/conversations/${smokeConversation.id}`, { token: owner.accessToken });
+    const lastMessage = (transcript.payload?.data?.messages || []).slice(-1)[0];
+    check('Staff reply appears at the end of the transcript', lastMessage?.role === 'staff' && lastMessage?.content === replyText);
+  }
 
   const staffLogin = await login('staff@uniquecomputers.in', 'Staff@12345');
   check('Staff login', Boolean(staffLogin.accessToken));
@@ -227,6 +281,28 @@ async function login(email, password) {
   });
   const csvText = await csv.text();
   check('Lead CSV export', csv.status === 200 && csvText.includes('Smoke Test Lead'));
+
+  const profile = await request('/api/business/profile', { token: owner.accessToken });
+  const originalDescription = profile.payload?.data?.description || '';
+  const editedDescription = `${originalDescription} Smoke profile check.`;
+  check('Business profile loads', profile.status === 200 && typeof originalDescription === 'string', JSON.stringify(profile.payload));
+
+  const saveProfile = await request('/api/business/profile', {
+    method: 'PUT',
+    token: owner.accessToken,
+    body: { description: editedDescription },
+  });
+  check('Save business profile', saveProfile.status === 200 && saveProfile.payload?.data?.description === editedDescription, JSON.stringify(saveProfile.payload));
+
+  const restoreProfile = await request('/api/business/profile', {
+    method: 'PUT',
+    token: owner.accessToken,
+    body: { description: originalDescription },
+  });
+  check(
+    'Profile save round-trips back to the original text',
+    restoreProfile.status === 200 && restoreProfile.payload?.data?.description === originalDescription,
+  );
 
   console.log(`\n  ${passed} passed, ${failed} failed${failed ? ` (${failures.join(', ')})` : ''}\n`);
   process.exit(failed ? 1 : 0);

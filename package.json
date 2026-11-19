@@ -15,6 +15,7 @@
     "install:all": "npm install && npm --prefix client install",
     "seed": "node server/src/scripts/seed.js",
     "demo:data": "node server/src/scripts/demo-data.js",
+    "demo:reset": "node server/src/scripts/reset-demo.js",
     "db:check": "node server/src/scripts/db-check.js",
     "db:local": "node server/src/scripts/local-db.js",
     "atlas:setup": "node server/src/scripts/atlas-setup.js",
