@@ -227,7 +227,11 @@ accepts credential-less local URIs such as `mongodb://127.0.0.1:27017/unique-fro
 ```bash
 npm run build         # Vite production build
 npm run smoke         # end-to-end API checks against a running, seeded server
+npm run lock:check    # fails if package-lock.json drifted from package.json (root + client)
 ```
+
+`npm run lock:check` uses `npm ci --dry-run --ignore-scripts`, so it downloads nothing — CI runs it before
+`npm ci` and fails fast when a dependency was added without regenerating a lockfile.
 
 `npm run smoke` covers health, login, RBAC, tenant isolation, lead dedupe, double-booking prevention, grounded
 AI answers, escalation on unknown questions, platform analytics and CSV export.
