@@ -16,6 +16,7 @@ import Conversation from '../models/Conversation.js';
 import Message from '../models/Message.js';
 import Appointment from '../models/Appointment.js';
 import Notification from '../models/Notification.js';
+import UsageLog from '../models/UsageLog.js';
 
 export const TESTER_CREDENTIALS = {
   email: 'tester@uniquecomputers.in',
@@ -227,6 +228,35 @@ async function addAppointments(tenant, staffIds, random) {
   return created;
 }
 
+/**
+ * Real chat replies also write a UsageLog row, which the dashboard's
+ * "AI replies in 14 days" KPI counts. Dummy transcripts skip that path, so
+ * backfill one log per AI message to keep the numbers consistent.
+ */
+async function addAiUsage(tenant) {
+  const messages = await Message.find({ tenantId: tenant._id, role: 'ai' }).select('_id createdAt').lean();
+  let created = 0;
+  for (const message of messages) {
+    const result = await UsageLog.updateOne(
+      { tenantId: tenant._id, kind: 'ai', 'meta.messageId': String(message._id) },
+      {
+        $setOnInsert: {
+          tenantId: tenant._id,
+          kind: 'ai',
+          quantity: 1,
+          unit: 'reply',
+          channel: 'website',
+          meta: { messageId: String(message._id), source: 'demo:data' },
+          createdAt: message.createdAt,
+        },
+      },
+      { upsert: true, timestamps: false },
+    );
+    if (result.upsertedCount) created += 1;
+  }
+  return created;
+}
+
 async function addNotifications(tenant, users) {
   let created = 0;
   const items = [
@@ -272,6 +302,7 @@ async function main() {
   const conversations = await addConversations(tenant, staffIds, random);
   const appointments = await addAppointments(tenant, staffIds, random);
   const notifications = await addNotifications(tenant, [owner, tester].filter(Boolean));
+  const aiUsage = await addAiUsage(tenant);
 
   const totals = {
     leads: await Lead.countDocuments({ tenantId: tenant._id, isDeleted: false }),
@@ -279,7 +310,9 @@ async function main() {
     appointments: await Appointment.countDocuments({ tenantId: tenant._id }),
   };
 
-  console.log(`\n  [demo:data] added ${leads} leads, ${conversations} conversations, ${appointments} appointments, ${notifications} notifications`);
+  console.log(
+    `\n  [demo:data] added ${leads} leads, ${conversations} conversations, ${appointments} appointments, ${notifications} notifications, ${aiUsage} AI usage logs`,
+  );
   console.log(`  [demo:data] tenant totals: ${totals.leads} leads · ${totals.conversations} conversations · ${totals.appointments} appointments`);
   console.log('\n  Test logins');
   console.log('  ---------------------------------------------------------');
