@@ -20,6 +20,7 @@ import Notification from '../models/Notification.js';
 import AutomationRule from '../models/AutomationRule.js';
 import AuditLog from '../models/AuditLog.js';
 import Integration from '../models/Integration.js';
+import UsageLog from '../models/UsageLog.js';
 
 export const DEMO_CREDENTIALS = {
   superAdmin: { email: 'admin@uniqueit.in', password: 'Admin@12345' },
@@ -495,7 +496,7 @@ export async function runSeed({ quiet = false } = {}) {
       },
     ]);
 
-    await Message.insertMany(
+    const seededMessages = await Message.insertMany(
       [
         {
           tenantId: tenant._id,
@@ -553,6 +554,29 @@ export async function runSeed({ quiet = false } = {}) {
       ],
       { timestamps: false },
     );
+
+    // Real replies also write a UsageLog row (services/chat.js) and the dashboard's
+    // "AI replies in 14 days" KPI counts those rows, so demo transcripts need them
+    // too. Keyed by message id, so `npm run demo:data` never counts them twice.
+    const channelByConversation = new Map(conversations.map((item) => [String(item._id), item.channel]));
+    for (const message of seededMessages) {
+      if (message.role !== 'ai') continue;
+      await UsageLog.updateOne(
+        { tenantId: tenant._id, kind: 'ai', 'meta.messageId': String(message._id) },
+        {
+          $setOnInsert: {
+            tenantId: tenant._id,
+            kind: 'ai',
+            quantity: 1,
+            unit: 'reply',
+            channel: channelByConversation.get(String(message.conversationId)) || 'website',
+            meta: { messageId: String(message._id), source: 'seed' },
+            createdAt: message.createdAt,
+          },
+        },
+        { upsert: true, timestamps: false },
+      );
+    }
   }
 
   if ((await Appointment.countDocuments({ tenantId: tenant._id })) === 0) {
