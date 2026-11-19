@@ -6,7 +6,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      # The mock suites never start an in-memory MongoDB; skip its 500 MB download.
+      # The mock suites never start an in-memory MongoDB; skip its 500 MB postinstall.
+      # The smoke job downloads the binary it actually needs and caches it below.
       MONGOMS_DISABLE_POSTINSTALL: 1
     steps:
       - uses: actions/checkout@v4
@@ -19,4 +20,16 @@ jobs:
       - name: Check lockfiles are in sync
         run: npm run lock:check
       - run: npm ci
+      - name: Cache the mongod binary used by the smoke test
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      # A broken import or JSX error should fail here, not on Vercel's build.
+      - name: Build client
+        run: npm run build
+      # Boots an in-memory MongoDB, seeds it and runs the API smoke suite, so
+      # auth, RBAC and tenant-isolation regressions are caught on every push.
+      - name: Smoke test against an in-memory database
+        run: npm run smoke:ci
       - run: npm test

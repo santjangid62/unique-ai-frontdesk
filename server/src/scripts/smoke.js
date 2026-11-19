@@ -39,6 +39,30 @@ async function request(path, { method = 'GET', token, body, headers = {} } = {})
   return { status: response.status, payload };
 }
 
+const DAY_CODES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const pad2 = (value) => String(value).padStart(2, '0');
+const localDate = (date) => `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+
+/**
+ * Picks the first bookable slot in the next 10 days from the tenant's own
+ * availability, so the check never depends on today's weekday or business hours.
+ */
+async function firstOpenSlot(token) {
+  for (let offset = 1; offset <= 10; offset += 1) {
+    const day = new Date();
+    day.setDate(day.getDate() + offset);
+    const { status, payload } = await request(`/api/appointments/availability?date=${localDate(day)}`, { token });
+    if (status !== 200) continue;
+
+    const data = payload?.data || {};
+    if (data.workingDays?.length && !data.workingDays.includes(DAY_CODES[day.getDay()])) continue;
+
+    const slot = (data.slots || []).find((item) => item.available);
+    if (slot) return slot;
+  }
+  return null;
+}
+
 async function login(email, password) {
   const { status, payload } = await request('/api/auth/login', {
     method: 'POST',
@@ -98,6 +122,9 @@ async function login(email, password) {
   });
   check('Update lead status', statusUpdate.status === 200 && statusUpdate.payload?.data?.status === 'contacted');
 
+  const slot = await firstOpenSlot(owner.accessToken);
+  check('Availability offers an open slot', Boolean(slot), 'no open slot in the next 10 days');
+
   const appointment = await request('/api/appointments', {
     method: 'POST',
     token: owner.accessToken,
@@ -106,7 +133,7 @@ async function login(email, password) {
       customerPhone: phone,
       type: 'demo',
       course: 'Python Programming',
-      startAt: new Date(Date.now() + 3 * 86400000).setHours(14, 0, 0, 0),
+      startAt: slot?.startAt || new Date(Date.now() + 3 * 86400000).setHours(14, 0, 0, 0),
       durationMinutes: 45,
     },
   });

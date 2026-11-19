@@ -227,8 +227,14 @@ accepts credential-less local URIs such as `mongodb://127.0.0.1:27017/unique-fro
 ```bash
 npm run build         # Vite production build
 npm run smoke         # end-to-end API checks against a running, seeded server
+npm run smoke:ci      # the same suite, self-contained: in-memory MongoDB + seed + app
 npm run lock:check    # fails if package-lock.json drifted from package.json (root + client)
 ```
+
+`npm run smoke:ci` needs no database or server: it starts a throwaway in-memory MongoDB, seeds the demo
+workspace, serves the app on an ephemeral port and runs `npm run smoke` against it. CI runs the client build,
+`npm run smoke:ci` and `npm test` on every push, so a broken build, auth regression or tenant-isolation bug
+fails before deployment.
 
 `npm run lock:check` uses `npm ci --dry-run --ignore-scripts`, so it downloads nothing — CI runs it before
 `npm ci` and fails fast when a dependency was added without regenerating a lockfile.
