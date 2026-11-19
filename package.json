@@ -19,6 +19,7 @@
     "atlas:setup": "node server/src/scripts/atlas-setup.js",
     "deploy": "node server/src/scripts/deploy.js",
     "smoke": "node server/src/scripts/smoke.js",
+    "lock:check": "npm ci --dry-run --ignore-scripts && npm --prefix client ci --dry-run --ignore-scripts",
     "test": "node server/test/atlas-mock.test.js && node server/test/vercel-deploy.test.js",
     "test:atlas": "node server/test/atlas-mock.test.js",
     "test:deploy": "node server/test/vercel-deploy.test.js"

@@ -14,5 +14,9 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      # Fails the build when package.json and a lockfile drift apart, before
+      # wasting time on an install that would rewrite them silently.
+      - name: Check lockfiles are in sync
+        run: npm run lock:check
       - run: npm ci
       - run: npm test
