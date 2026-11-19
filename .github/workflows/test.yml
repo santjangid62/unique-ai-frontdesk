@@ -20,6 +20,9 @@ jobs:
       - name: Check lockfiles are in sync
         run: npm run lock:check
       - run: npm ci
+      # The client is a separate package (its own lockfile), so it needs its own install.
+      - name: Install client dependencies
+        run: npm --prefix client ci
       - name: Cache the mongod binary used by the smoke test
         uses: actions/cache@v4
         with:
