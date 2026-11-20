@@ -82,6 +82,9 @@ recognise (lead statuses, cancelled appointments, staff replies). It refuses to 
 4. If `OPENAI_API_KEY` is missing or the provider fails, a deterministic retrieval-only fallback answers and
    escalates when nothing relevant is found.
 
+To train the AI for a specific business (profile, agent instructions, knowledge entries, widget, testing and
+maintenance), follow the step-by-step guide in [`docs/AI_TRAINING_GUIDE.md`](docs/AI_TRAINING_GUIDE.md).
+
 ## API
 
 Every response uses one envelope: `{ "success": true, "data": ..., "meta": ... }` or

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Save, Trash2, Plug } from 'lucide-react';
+import { BookOpen, Plus, Save, Trash2, Plug } from 'lucide-react';
 import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
 import { Alert, Badge, Card, Field, PageHeader, Spinner } from '../components/ui.jsx';
@@ -136,9 +136,20 @@ export default function Settings() {
         title="Business Settings"
         subtitle="These details are given to the AI on every reply, so keep them accurate."
         actions={
-          <button type="submit" form="profile-form" className="btn-primary" disabled={busy}>
-            <Save size={16} /> {busy ? 'Saving…' : 'Save changes'}
-          </button>
+          <>
+            <a
+              href="https://github.com/santjangid62/unique-ai-frontdesk/blob/main/docs/AI_TRAINING_GUIDE.md"
+              target="_blank"
+              rel="noreferrer"
+              className="btn-secondary"
+              title="Step-by-step guide to training the AI for your business"
+            >
+              <BookOpen size={16} /> Training guide
+            </a>
+            <button type="submit" form="profile-form" className="btn-primary" disabled={busy}>
+              <Save size={16} /> {busy ? 'Saving…' : 'Save changes'}
+            </button>
+          </>
         }
       />
 
