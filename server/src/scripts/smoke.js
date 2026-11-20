@@ -1,8 +1,14 @@
 /**
  * API smoke check. Requires a running server (npm start or npm run dev) that
  * has been seeded. Usage: node server/src/scripts/smoke.js
+ *
+ * The signup checks create a throwaway business; it is removed again at the end
+ * (see scripts/smoke-cleanup.js) when MONGODB_URI is available.
  */
-const BASE = process.env.SMOKE_BASE_URL || 'http://localhost:5000';
+import 'dotenv/config';
+import { cleanupSmokeBusiness } from './smoke-cleanup.js';
+
+const BASE = process.env.SMOKE_BASE_URL || process.env.SMOKE_BASE || 'http://localhost:5000';
 
 let passed = 0;
 let failed = 0;
@@ -192,6 +198,8 @@ async function login(email, password) {
     body: { email: signupEmail, password: signupPassword, portal: 'business' },
   });
   check('Business admin signs in on the business portal', signupRightPortal.status === 200);
+
+  const smokeTenantId = verified.payload?.data?.tenant?.id || signupRightPortal.payload?.data?.tenant?.id;
 
   const staffOnSuperAdmin = await request('/api/auth/login', {
     method: 'POST',
@@ -428,6 +436,19 @@ async function login(email, password) {
     'Profile save round-trips back to the original text',
     restoreProfile.status === 200 && restoreProfile.payload?.data?.description === originalDescription,
   );
+
+  // ---- Remove the throwaway business created above ----
+  if (process.env.MONGODB_URI) {
+    let cleanup = { removed: false };
+    try {
+      cleanup = await cleanupSmokeBusiness({ tenantId: smokeTenantId, email: signupEmail });
+    } catch (error) {
+      cleanup = { removed: false, reason: `cleanup failed: ${error.message}` };
+    }
+    check('Smoke test business is removed afterwards', cleanup.removed === true, JSON.stringify(cleanup));
+  } else {
+    console.log('  SKIP  Smoke test business cleanup (MONGODB_URI is not set)');
+  }
 
   console.log(`\n  ${passed} passed, ${failed} failed${failed ? ` (${failures.join(', ')})` : ''}\n`);
   process.exit(failed ? 1 : 0);
