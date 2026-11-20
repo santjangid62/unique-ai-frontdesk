@@ -3,7 +3,7 @@ import { useAuth } from './context/AuthContext.jsx';
 import { Spinner } from './components/ui.jsx';
 import Shell from './components/Shell.jsx';
 import Landing from './pages/Landing.jsx';
-import { Login, Register, ForgotPassword, ResetPassword } from './pages/Auth.jsx';
+import { Login, LoginPortal, Register, VerifyEmail, ForgotPassword, ResetPassword } from './pages/Auth.jsx';
 import PublicChat from './pages/PublicChat.jsx';
 import Overview from './pages/Overview.jsx';
 import Agents from './pages/Agents.jsx';
@@ -20,6 +20,7 @@ import Subscription from './pages/Subscription.jsx';
 import Settings from './pages/Settings.jsx';
 import Notifications from './pages/Notifications.jsx';
 import Profile from './pages/Profile.jsx';
+import Guide from './pages/Guide.jsx';
 import Businesses from './pages/platform/Businesses.jsx';
 import PlatformUsers from './pages/platform/PlatformUsers.jsx';
 import Plans from './pages/platform/Plans.jsx';
@@ -47,8 +48,11 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
+      {/* Separate sign-in portals per role. */}
+      <Route path="/login" element={<LoginPortal />} />
+      <Route path="/login/:portal" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/chat/:slug" element={<PublicChat />} />
@@ -139,6 +143,7 @@ export default function App() {
         />
         <Route path="notifications" element={<Notifications />} />
         <Route path="profile" element={<Profile />} />
+        <Route path="guide" element={<Guide />} />
         <Route
           path="businesses"
           element={

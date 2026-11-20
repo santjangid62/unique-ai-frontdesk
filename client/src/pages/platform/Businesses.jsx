@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Building2, Plus, Search } from 'lucide-react';
 import api, { errorMessage } from '../../lib/api.js';
 import useFetch from '../../lib/useFetch.js';
-import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Pagination, Spinner, Table } from '../../components/ui.jsx';
+import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Pagination, Spinner, Table, Tx } from '../../components/ui.jsx';
 import { dateTime, fromNow, titleCase } from '../../lib/format.js';
 
 const empty = {
@@ -100,7 +100,7 @@ export default function Businesses() {
             />
           </div>
           <select className="input w-40" value={filters.status} onChange={(event) => setFilters({ ...filters, status: event.target.value, page: 1 })}>
-            <option value="">All statuses</option>
+            <option value=""><Tx>All statuses</Tx></option>
             {['active', 'suspended', 'inactive'].map((status) => (
               <option key={status} value={status}>
                 {titleCase(status)}
@@ -227,7 +227,7 @@ export default function Businesses() {
             </select>
           </Field>
           <div className="sm:col-span-2 mt-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Business admin (optional)</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500"><Tx>Business admin (optional)</Tx></p>
             <div className="grid gap-3 sm:grid-cols-3">
               <input className="input" placeholder="Admin name" value={form.ownerName} onChange={(event) => setForm({ ...form, ownerName: event.target.value })} />
               <input className="input" placeholder="Admin email" type="email" value={form.ownerEmail} onChange={(event) => setForm({ ...form, ownerEmail: event.target.value })} />
@@ -258,7 +258,7 @@ export default function Businesses() {
               ))}
             </div>
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Users</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500"><Tx>Users</Tx></p>
               <ul className="space-y-1">
                 {(detailFetch.data.users || []).map((member) => (
                   <li key={member._id} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 text-sm">
@@ -272,11 +272,11 @@ export default function Businesses() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded-xl bg-slate-50 px-3 py-2">
-                <p className="text-[11px] uppercase tracking-wide text-slate-400">Leads</p>
+                <p className="text-[11px] uppercase tracking-wide text-slate-400"><Tx>Leads</Tx></p>
                 <p className="text-lg font-bold text-slate-800">{detailFetch.data.stats.leads}</p>
               </div>
               <div className="rounded-xl bg-slate-50 px-3 py-2">
-                <p className="text-[11px] uppercase tracking-wide text-slate-400">Conversations</p>
+                <p className="text-[11px] uppercase tracking-wide text-slate-400"><Tx>Conversations</Tx></p>
                 <p className="text-lg font-bold text-slate-800">{detailFetch.data.stats.conversations}</p>
               </div>
             </div>

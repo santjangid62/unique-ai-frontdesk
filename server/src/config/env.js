@@ -24,6 +24,10 @@ export const env = {
   whatsappAppSecret: process.env.WHATSAPP_APP_SECRET || '',
   whatsappVerifyToken: process.env.WHATSAPP_VERIFY_TOKEN || 'unique-frontdesk-verify',
   allowSuperAdminBootstrap: asBool(process.env.ALLOW_SUPER_ADMIN_BOOTSTRAP, false),
+  // Transactional email (verification codes, password resets).
+  resendApiKey: process.env.RESEND_API_KEY || '',
+  mailFrom: process.env.MAIL_FROM || 'Unique AI Frontdesk <onboarding@resend.dev>',
+  appUrl: process.env.APP_URL || process.env.CLIENT_ORIGIN || 'http://localhost:5173',
 };
 
 /**

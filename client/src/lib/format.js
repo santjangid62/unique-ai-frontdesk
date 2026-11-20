@@ -1,7 +1,12 @@
+import { translate } from '../i18n/index.jsx';
+
+/** Display label for statuses, channels and categories; follows the UI language. */
 export const titleCase = (value = '') =>
-  String(value)
-    .replace(/[_-]+/g, ' ')
-    .replace(/\b\w/g, (character) => character.toUpperCase());
+  translate(
+    String(value)
+      .replace(/[_-]+/g, ' ')
+      .replace(/\b\w/g, (character) => character.toUpperCase()),
+  );
 
 export const currency = (value, code = 'INR') =>
   new Intl.NumberFormat('en-IN', {
@@ -32,7 +37,7 @@ export const fromNow = (value) => {
   if (!value) return '—';
   const diff = Date.now() - new Date(value).getTime();
   const minutes = Math.round(diff / 60000);
-  if (Math.abs(minutes) < 1) return 'just now';
+  if (Math.abs(minutes) < 1) return translate('just now');
   if (Math.abs(minutes) < 60) return `${minutes}m ago`;
   const hours = Math.round(minutes / 60);
   if (Math.abs(hours) < 24) return `${hours}h ago`;

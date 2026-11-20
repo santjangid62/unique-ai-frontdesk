@@ -5,8 +5,10 @@ import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
 import { Alert, Card, EmptyState, PageHeader, Pagination, Spinner, Tabs } from '../components/ui.jsx';
 import { fromNow, titleCase } from '../lib/format.js';
+import { useI18n } from '../i18n/index.jsx';
 
 export default function Notifications() {
+  const { t } = useI18n();
   const [filter, setFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [error, setError] = useState('');
@@ -44,7 +46,7 @@ export default function Notifications() {
         subtitle="New leads, handoffs, appointments and billing alerts."
         actions={
           <button type="button" className="btn-secondary" onClick={markAll}>
-            <CheckCheck size={16} /> Mark all read
+            <CheckCheck size={16} /> {t('Mark all read')}
           </button>
         }
       />
@@ -89,14 +91,14 @@ export default function Notifications() {
                     <span>{fromNow(notification.createdAt)}</span>
                     {notification.link ? (
                       <Link to={notification.link} className="font-semibold text-brand-600" onClick={() => markRead(notification)}>
-                        Open
+                        {t('Open')}
                       </Link>
                     ) : null}
                   </div>
                 </div>
                 {!notification.readAt ? (
                   <button type="button" className="btn-ghost px-2 py-1 text-xs" onClick={() => markRead(notification)}>
-                    Mark read
+                    {t('Mark read')}
                   </button>
                 ) : null}
               </li>

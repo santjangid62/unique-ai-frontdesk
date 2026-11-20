@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Plus, Search, Trash2 } from 'lucide-react';
 import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
-import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Pagination, Spinner, Table } from '../components/ui.jsx';
+import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Pagination, Spinner, Table, Tx } from '../components/ui.jsx';
 import { dateTime, fromNow, titleCase } from '../lib/format.js';
 
 const empty = { name: '', phone: '', email: '', tags: '', interestedCourses: '' };
@@ -143,7 +143,7 @@ export default function Customers() {
 
       <Modal open={open} onClose={() => setOpen(false)} title="Add customer" footer={
         <>
-          <button type="button" className="btn-secondary" onClick={() => setOpen(false)}>Cancel</button>
+          <button type="button" className="btn-secondary" onClick={() => setOpen(false)}><Tx>Cancel</Tx></button>
           <button type="submit" form="customer-form" className="btn-primary" disabled={busy}>{busy ? 'Saving…' : 'Save customer'}</button>
         </>
       }>
@@ -189,7 +189,7 @@ export default function Customers() {
             </div>
 
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Appointments</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500"><Tx>Appointments</Tx></p>
               {detailFetch.data.appointments?.length ? (
                 <ul className="space-y-1">
                   {detailFetch.data.appointments.map((appointment) => (
@@ -200,12 +200,12 @@ export default function Customers() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-slate-500">No appointments yet.</p>
+                <p className="text-sm text-slate-500"><Tx>No appointments yet.</Tx></p>
               )}
             </div>
 
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Conversations</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500"><Tx>Conversations</Tx></p>
               {detailFetch.data.conversations?.length ? (
                 <ul className="space-y-1">
                   {detailFetch.data.conversations.map((conversation) => (
@@ -219,7 +219,7 @@ export default function Customers() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-slate-500">No conversations recorded.</p>
+                <p className="text-sm text-slate-500"><Tx>No conversations recorded.</Tx></p>
               )}
             </div>
           </div>

@@ -39,9 +39,10 @@ export function AuthProvider({ children }) {
     bootstrap();
   }, [bootstrap]);
 
+  /** `portal` is 'business' | 'staff' | 'super-admin' and is enforced server-side. */
   const login = useCallback(
-    async (email, password) => {
-      const { data } = await api.post('/auth/login', { email, password });
+    async (email, password, portal) => {
+      const { data } = await api.post('/auth/login', { email, password, ...(portal ? { portal } : {}) });
       applySession(data.data);
       setTenant(data.data.tenant);
       return data.data;
@@ -49,9 +50,15 @@ export function AuthProvider({ children }) {
     [applySession],
   );
 
-  const register = useCallback(
-    async (payload) => {
-      const { data } = await api.post('/auth/register', payload);
+  /** Registration only creates the workspace; the owner must verify the email first. */
+  const register = useCallback(async (payload) => {
+    const { data } = await api.post('/auth/register', payload);
+    return data.data;
+  }, []);
+
+  const verifyEmail = useCallback(
+    async (email, code) => {
+      const { data } = await api.post('/auth/verify-email', { email, code });
       applySession(data.data);
       setTenant(data.data.tenant);
       return data.data;
@@ -88,13 +95,14 @@ export function AuthProvider({ children }) {
       loading,
       login,
       register,
+      verifyEmail,
       logout,
       refreshUser,
       isSuperAdmin: user?.role === 'super_admin',
       isBusinessAdmin: user?.role === 'business_admin',
       isStaff: user?.role === 'staff',
     }),
-    [user, tenant, loading, login, register, logout, refreshUser],
+    [user, tenant, loading, login, register, verifyEmail, logout, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

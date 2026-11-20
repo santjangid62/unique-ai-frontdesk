@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { BookOpen, Plus, Save, Trash2, Plug } from 'lucide-react';
 import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
 import { Alert, Badge, Card, Field, PageHeader, Spinner } from '../components/ui.jsx';
 import { titleCase } from '../lib/format.js';
+import { useI18n } from '../i18n/index.jsx';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 export default function Settings() {
+  const { t } = useI18n();
   const { data: profile, loading, error: loadError, reload } = useFetch('/business/profile');
   const { data: integrations, reload: reloadIntegrations } = useFetch('/integrations');
   const [form, setForm] = useState(null);
@@ -137,17 +140,15 @@ export default function Settings() {
         subtitle="These details are given to the AI on every reply, so keep them accurate."
         actions={
           <>
-            <a
-              href="https://github.com/santjangid62/unique-ai-frontdesk/blob/main/docs/AI_TRAINING_GUIDE.md"
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              to="/app/guide"
               className="btn-secondary"
               title="Step-by-step guide to training the AI for your business"
             >
-              <BookOpen size={16} /> Training guide
-            </a>
+              <BookOpen size={16} /> {t('Training guide')}
+            </Link>
             <button type="submit" form="profile-form" className="btn-primary" disabled={busy}>
-              <Save size={16} /> {busy ? 'Saving…' : 'Save changes'}
+              <Save size={16} /> {busy ? t('Saving…') : t('Save changes')}
             </button>
           </>
         }
@@ -158,7 +159,7 @@ export default function Settings() {
 
       <form id="profile-form" onSubmit={save} className="space-y-5">
         <Card className="p-5">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">Business profile</h2>
+          <h2 className="mb-4 text-sm font-semibold text-slate-900">{t('Business profile')}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Business name" className="sm:col-span-2">
               <input className="input" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
@@ -242,9 +243,9 @@ export default function Settings() {
 
         <Card className="p-5">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-900">Courses</h2>
+            <h2 className="text-sm font-semibold text-slate-900">{t('Courses')}</h2>
             <button type="button" className="btn-secondary px-3 py-1.5 text-xs" onClick={addCourse}>
-              <Plus size={14} /> Add course
+              <Plus size={14} /> {t('Add course')}
             </button>
           </div>
           {!form.courses.length ? (
@@ -288,7 +289,7 @@ export default function Settings() {
                   </div>
                   <div className="mt-2 flex justify-end">
                     <button type="button" className="btn-ghost px-2 py-1 text-xs text-rose-600" onClick={() => removeCourse(index)}>
-                      <Trash2 size={14} /> Remove
+                      <Trash2 size={14} /> {t('Remove')}
                     </button>
                   </div>
                 </div>
@@ -302,9 +303,9 @@ export default function Settings() {
         <div className="mb-4 flex items-center gap-2">
           <Plug size={18} className="text-brand-600" />
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">Channel integrations</h2>
+            <h2 className="text-sm font-semibold text-slate-900">{t('Channel integrations')}</h2>
             <p className="text-xs text-slate-500">
-              Credentials are stored per business and never returned in full. Webhooks are signature-verified.
+              {t('Credentials are stored per business and never returned in full. Webhooks are signature-verified.')}
             </p>
           </div>
         </div>
@@ -345,10 +346,10 @@ export default function Settings() {
                       disabled={!Object.keys(providerForm[integration.provider] || {}).length}
                       onClick={() => saveIntegration(integration.provider, providerForm[integration.provider] || {})}
                     >
-                      Save
+                      {t('Save')}
                     </button>
                     <button type="button" className="btn-secondary px-2 py-1.5 text-xs" onClick={() => checkIntegration(integration.provider)}>
-                      Check
+                      {t('Check')}
                     </button>
                   </div>
                 </div>

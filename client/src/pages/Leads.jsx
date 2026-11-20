@@ -3,7 +3,7 @@ import { Download, Plus, Search, StickyNote, Trash2, UserCheck } from 'lucide-re
 import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Pagination, Spinner, Table, Tabs } from '../components/ui.jsx';
+import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Pagination, Spinner, Table, Tabs, Tx } from '../components/ui.jsx';
 import { dateTime, fromNow, titleCase } from '../lib/format.js';
 
 const STATUSES = ['new', 'contacted', 'interested', 'demo_scheduled', 'converted', 'not_interested', 'lost'];
@@ -180,7 +180,7 @@ export default function Leads() {
               />
             </div>
             <select className="input w-40" value={filters.source} onChange={(event) => setFilters({ ...filters, source: event.target.value, page: 1 })}>
-              <option value="">All sources</option>
+              <option value=""><Tx>All sources</Tx></option>
               {SOURCES.map((source) => (
                 <option key={source} value={source}>
                   {titleCase(source)}
@@ -238,7 +238,7 @@ export default function Leads() {
                     value={row.assigneeId?._id || ''}
                     onChange={(event) => assign(row, event.target.value)}
                   >
-                    <option value="">Unassigned</option>
+                    <option value=""><Tx>Unassigned</Tx></option>
                     {(team || []).map((member) => (
                       <option key={member._id} value={member._id}>
                         {member.name}
@@ -330,7 +330,7 @@ export default function Leads() {
           {isBusinessAdmin ? (
             <Field label="Assign to">
               <select className="input" value={form.assigneeId} onChange={(event) => setForm({ ...form, assigneeId: event.target.value })}>
-                <option value="">Unassigned</option>
+                <option value=""><Tx>Unassigned</Tx></option>
                 {(team || []).map((member) => (
                   <option key={member._id} value={member._id}>
                     {member.name} · {titleCase(member.role)}
@@ -376,7 +376,7 @@ export default function Leads() {
             </div>
 
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Activity</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500"><Tx>Activity</Tx></p>
               <div className="space-y-2">
                 {(detailFetch.data.lead.notes || []).slice().reverse().map((entry, index) => (
                   <div key={`${entry.at}-${index}`} className="rounded-xl border border-slate-100 px-3 py-2">
@@ -386,7 +386,7 @@ export default function Leads() {
                     </p>
                   </div>
                 ))}
-                {!detailFetch.data.lead.notes?.length ? <p className="text-sm text-slate-500">No notes yet.</p> : null}
+                {!detailFetch.data.lead.notes?.length ? <p className="text-sm text-slate-500"><Tx>No notes yet.</Tx></p> : null}
               </div>
               <div className="mt-3 flex gap-2">
                 <input className="input" placeholder="Add a note…" value={note} onChange={(event) => setNote(event.target.value)} />
@@ -398,7 +398,7 @@ export default function Leads() {
 
             {detailFetch.data.appointments?.length ? (
               <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Appointments</p>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500"><Tx>Appointments</Tx></p>
                 <ul className="space-y-1 text-sm text-slate-600">
                   {detailFetch.data.appointments.map((appointment) => (
                     <li key={appointment._id} className="flex justify-between rounded-lg bg-slate-50 px-3 py-2">
@@ -413,7 +413,7 @@ export default function Leads() {
             {isBusinessAdmin ? (
               <div className="flex items-center gap-2 rounded-xl border border-slate-100 px-3 py-2">
                 <UserCheck size={16} className="text-slate-400" />
-                <span className="text-xs font-semibold text-slate-500">Assign</span>
+                <span className="text-xs font-semibold text-slate-500"><Tx>Assign</Tx></span>
                 <select
                   className="input mt-0 flex-1"
                   value={detailFetch.data.lead.assigneeId?._id || ''}
@@ -422,7 +422,7 @@ export default function Leads() {
                     detailFetch.reload();
                   }}
                 >
-                  <option value="">Unassigned</option>
+                  <option value=""><Tx>Unassigned</Tx></option>
                   {(team || []).map((member) => (
                     <option key={member._id} value={member._id}>
                       {member.name}

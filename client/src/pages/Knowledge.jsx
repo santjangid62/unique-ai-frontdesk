@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { FileText, Plus, Search, Trash2, Upload } from 'lucide-react';
 import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
-import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Pagination, Spinner, Table, Tabs } from '../components/ui.jsx';
+import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Pagination, Spinner, Table, Tabs, Tx } from '../components/ui.jsx';
 import { fromNow, titleCase } from '../lib/format.js';
 
 const CATEGORIES = ['business', 'course', 'fee', 'faq', 'policy', 'timing', 'contact', 'other'];
@@ -179,7 +179,7 @@ export default function Knowledge() {
               />
             </div>
             <select className="input w-40" value={filters.category} onChange={(event) => setFilters({ ...filters, category: event.target.value, page: 1 })}>
-              <option value="">All categories</option>
+              <option value=""><Tx>All categories</Tx></option>
               {CATEGORIES.map((category) => (
                 <option key={category} value={category}>
                   {titleCase(category)}

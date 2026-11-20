@@ -27,12 +27,14 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import useFetch from '../lib/useFetch.js';
-import { Alert, Badge, Card, EmptyState, PageHeader, Spinner, Stat } from '../components/ui.jsx';
+import { Alert, Badge, Card, EmptyState, PageHeader, Spinner, Stat, Tx } from '../components/ui.jsx';
 import { compactNumber, dateTime, fromNow, titleCase, dayLabel } from '../lib/format.js';
+import { useI18n } from '../i18n/index.jsx';
 
 const CHART_COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
 function BusinessOverview() {
+  const { t } = useI18n();
   const { data, loading, error } = useFetch('/analytics/business/overview');
   if (loading) return <Spinner label="Loading your dashboard…" />;
   if (error) return <Alert>{error}</Alert>;
@@ -41,21 +43,44 @@ function BusinessOverview() {
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Total leads" value={compactNumber(kpis.leadTotal)} hint={`${kpis.newLeads || 0} new to contact`} icon={Users} />
-        <Stat label="AI resolution rate" value={`${kpis.aiResolutionRate || 0}%`} hint={`${kpis.handoffTotal || 0} handed to staff`} icon={Bot} tone="emerald" />
-        <Stat label="Appointments today" value={kpis.todayAppointments || 0} hint={`${kpis.upcomingAppointments || 0} upcoming`} icon={CalendarClock} tone="amber" />
-        <Stat label="Open conversations" value={kpis.openConversations || 0} hint={`${kpis.aiMessages || 0} AI replies in 14 days`} icon={MessagesSquare} tone="sky" />
+        <Stat
+          label="Total leads"
+          value={compactNumber(kpis.leadTotal)}
+          hint={t('{count} new to contact', { count: kpis.newLeads || 0 })}
+          icon={Users}
+        />
+        <Stat
+          label="AI resolution rate"
+          value={`${kpis.aiResolutionRate || 0}%`}
+          hint={t('{count} handed to staff', { count: kpis.handoffTotal || 0 })}
+          icon={Bot}
+          tone="emerald"
+        />
+        <Stat
+          label="Appointments today"
+          value={kpis.todayAppointments || 0}
+          hint={t('{count} upcoming', { count: kpis.upcomingAppointments || 0 })}
+          icon={CalendarClock}
+          tone="amber"
+        />
+        <Stat
+          label="Open conversations"
+          value={kpis.openConversations || 0}
+          hint={t('{count} AI replies in 14 days', { count: kpis.aiMessages || 0 })}
+          icon={MessagesSquare}
+          tone="sky"
+        />
       </div>
 
       <div className="mt-6 grid gap-5 lg:grid-cols-3">
         <Card className="p-5 lg:col-span-2">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">Enquiry trend</h2>
-              <p className="text-xs text-slate-500">Leads, conversations and appointments over the last 14 days</p>
+              <h2 className="text-sm font-semibold text-slate-900">{t('Enquiry trend')}</h2>
+              <p className="text-xs text-slate-500"><Tx>Leads, conversations and appointments over the last 14 days</Tx></p>
             </div>
             <Link to="/app/reports" className="text-xs font-semibold text-brand-600 hover:text-brand-700">
-              Full report
+              <Tx>Full report</Tx>
             </Link>
           </div>
           <div className="h-64">
@@ -83,8 +108,8 @@ function BusinessOverview() {
         </Card>
 
         <Card className="p-5">
-          <h2 className="text-sm font-semibold text-slate-900">Channel mix</h2>
-          <p className="text-xs text-slate-500">Where your customers start conversations</p>
+          <h2 className="text-sm font-semibold text-slate-900">{t('Channel mix')}</h2>
+          <p className="text-xs text-slate-500">{t('Where your customers start conversations')}</p>
           {data?.channels?.length ? (
             <>
               <div className="mt-2 h-44">
@@ -120,9 +145,9 @@ function BusinessOverview() {
       <div className="mt-6 grid gap-5 lg:grid-cols-2">
         <Card className="overflow-hidden">
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
-            <h2 className="text-sm font-semibold text-slate-900">Latest leads</h2>
+            <h2 className="text-sm font-semibold text-slate-900">{t('Latest leads')}</h2>
             <Link to="/app/leads" className="text-xs font-semibold text-brand-600">
-              View all
+              {t('View all')}
             </Link>
           </div>
           {data?.recentLeads?.length ? (
@@ -152,7 +177,7 @@ function BusinessOverview() {
 
         <Card className="overflow-hidden">
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
-            <h2 className="text-sm font-semibold text-slate-900">Upcoming appointments</h2>
+            <h2 className="text-sm font-semibold text-slate-900">{t('Upcoming appointments')}</h2>
             <Link to="/app/appointments" className="text-xs font-semibold text-brand-600">
               Calendar
             </Link>
@@ -194,6 +219,7 @@ function BusinessOverview() {
 }
 
 function PlatformOverview() {
+  const { t } = useI18n();
   const { data, loading, error } = useFetch('/analytics/platform/overview');
   if (loading) return <Spinner label="Loading platform metrics…" />;
   if (error) return <Alert>{error}</Alert>;
@@ -201,16 +227,42 @@ function PlatformOverview() {
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Businesses" value={data?.tenants?.total || 0} hint={`${data?.tenants?.newThisMonth || 0} new this month`} icon={Building2} />
-        <Stat label="Active users" value={data?.users?.total || 0} hint={`${data?.users?.byRole?.business_admin || 0} admins · ${data?.users?.byRole?.staff || 0} staff`} icon={Users} tone="sky" />
-        <Stat label="Monthly recurring revenue" value={`₹${compactNumber(data?.revenue?.mrr || 0)}`} hint={`₹${compactNumber(data?.revenue?.revenueTotal || 0)} collected`} icon={IndianRupee} tone="emerald" />
-        <Stat label="AI messages (month)" value={compactNumber(data?.usage?.aiMessagesThisMonth || 0)} hint={`${compactNumber(data?.usage?.byKind?.voice || 0)} voice minutes`} icon={Bot} tone="amber" />
+        <Stat
+          label="Businesses"
+          value={data?.tenants?.total || 0}
+          hint={t('{count} new this month', { count: data?.tenants?.newThisMonth || 0 })}
+          icon={Building2}
+        />
+        <Stat
+          label="Active users"
+          value={data?.users?.total || 0}
+          hint={t('{admins} admins · {staff} staff', {
+            admins: data?.users?.byRole?.business_admin || 0,
+            staff: data?.users?.byRole?.staff || 0,
+          })}
+          icon={Users}
+          tone="sky"
+        />
+        <Stat
+          label="Monthly recurring revenue"
+          value={`₹${compactNumber(data?.revenue?.mrr || 0)}`}
+          hint={t('₹{amount} collected', { amount: compactNumber(data?.revenue?.revenueTotal || 0) })}
+          icon={IndianRupee}
+          tone="emerald"
+        />
+        <Stat
+          label="AI messages (month)"
+          value={compactNumber(data?.usage?.aiMessagesThisMonth || 0)}
+          hint={t('{count} voice minutes', { count: compactNumber(data?.usage?.byKind?.voice || 0) })}
+          icon={Bot}
+          tone="amber"
+        />
       </div>
 
       <div className="mt-6 grid gap-5 lg:grid-cols-2">
         <Card className="p-5">
-          <h2 className="text-sm font-semibold text-slate-900">Plan distribution</h2>
-          <p className="text-xs text-slate-500">Businesses per subscription tier</p>
+          <h2 className="text-sm font-semibold text-slate-900">{t('Plan distribution')}</h2>
+          <p className="text-xs text-slate-500">{t('Businesses per subscription tier')}</p>
           <div className="mt-4 h-56">
             {data?.planDistribution?.length ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -230,7 +282,7 @@ function PlatformOverview() {
 
         <Card className="overflow-hidden">
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
-            <h2 className="text-sm font-semibold text-slate-900">Newest businesses</h2>
+            <h2 className="text-sm font-semibold text-slate-900">{t('Newest businesses')}</h2>
             <Link to="/app/businesses" className="text-xs font-semibold text-brand-600">
               Manage
             </Link>
@@ -266,6 +318,7 @@ function PlatformOverview() {
 }
 
 function StaffOverview() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const leads = useFetch('/leads?limit=5');
   const appointments = useFetch('/appointments?upcoming=true&limit=5');
@@ -277,9 +330,9 @@ function StaffOverview() {
       <Card className="mb-5 overflow-hidden">
         <div className="flex flex-col gap-3 bg-gradient-to-r from-brand-600 to-brand-500 px-6 py-6 text-white sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-100">My workspace</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-100">{t('My workspace')}</p>
             <h2 className="mt-1 text-xl font-bold">Good to see you, {user?.name?.split(' ')[0]}</h2>
-            <p className="mt-1 text-sm text-brand-100">Your assigned leads and upcoming appointments are ready.</p>
+            <p className="mt-1 text-sm text-brand-100"><Tx>Your assigned leads and upcoming appointments are ready.</Tx></p>
           </div>
           <Link to="/app/leads" className="btn bg-white/15 text-white hover:bg-white/25">
             Open my leads <ArrowUpRight size={16} />
@@ -295,7 +348,7 @@ function StaffOverview() {
       <div className="mt-6 grid gap-5 lg:grid-cols-2">
         <Card className="overflow-hidden">
           <div className="border-b border-slate-100 px-5 py-3">
-            <h2 className="text-sm font-semibold text-slate-900">My leads</h2>
+            <h2 className="text-sm font-semibold text-slate-900">{t('My leads')}</h2>
           </div>
           {leads.data?.length ? (
             <ul className="divide-y divide-slate-100">
@@ -316,7 +369,7 @@ function StaffOverview() {
 
         <Card className="overflow-hidden">
           <div className="border-b border-slate-100 px-5 py-3">
-            <h2 className="text-sm font-semibold text-slate-900">Upcoming appointments</h2>
+            <h2 className="text-sm font-semibold text-slate-900">{t('Upcoming appointments')}</h2>
           </div>
           {appointments.data?.length ? (
             <ul className="divide-y divide-slate-100">
@@ -340,6 +393,7 @@ function StaffOverview() {
 }
 
 export default function Overview() {
+  const { t } = useI18n();
   const { user } = useAuth();
   const subtitle =
     user?.role === 'super_admin'
@@ -352,12 +406,12 @@ export default function Overview() {
     <div>
       <PageHeader
         eyebrow={user?.role === 'super_admin' ? 'Platform console' : 'Workspace'}
-        title={`Welcome back, ${user?.name?.split(' ')[0] || 'there'}`}
+        title={t('Welcome back, {name}', { name: user?.name?.split(' ')[0] || t('there') })}
         subtitle={subtitle}
         actions={
           user?.role === 'business_admin' ? (
             <Link to="/app/knowledge" className="btn-secondary">
-              <Sparkles size={16} /> Improve AI answers
+              <Sparkles size={16} /> <Tx>Improve AI answers</Tx>
             </Link>
           ) : null
         }

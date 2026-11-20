@@ -4,6 +4,7 @@ import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
 import { Alert, Badge, Card, PageHeader, Progress, Spinner } from '../components/ui.jsx';
 import { currency, dateTime, titleCase } from '../lib/format.js';
+import { useI18n } from '../i18n/index.jsx';
 
 const METRICS = [
   ['aiMessages', 'AI messages', 'aiMessagesPerMonth'],
@@ -13,6 +14,7 @@ const METRICS = [
 ];
 
 export default function Subscription() {
+  const { t } = useI18n();
   const { data, loading, error: loadError, reload } = useFetch('/subscriptions/me');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState('');
@@ -76,7 +78,7 @@ export default function Subscription() {
 
       <div className="grid gap-5 lg:grid-cols-3">
         <Card className="p-5 lg:col-span-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Current plan</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t('Current plan')}</p>
           <div className="mt-2 flex items-end justify-between">
             <h2 className="text-2xl font-bold text-slate-900">{currentPlan?.name || titleCase(data.subscription?.planCode || 'Starter')}</h2>
             <p className="text-sm text-slate-500">{currency(currentPlan?.priceMonthly || 0)}/mo</p>
@@ -114,7 +116,7 @@ export default function Subscription() {
                     <h3 className="text-base font-bold text-slate-900">{plan.name}</h3>
                     <p className="mt-0.5 text-xs text-slate-500">{plan.description}</p>
                   </div>
-                  {isCurrent ? <span className="chip bg-brand-50 text-brand-700">Current</span> : null}
+                  {isCurrent ? <span className="chip bg-brand-50 text-brand-700">{t('Current')}</span> : null}
                 </div>
                 <p className="mt-3 text-2xl font-extrabold text-slate-900">
                   {currency(plan.priceMonthly)}
@@ -131,7 +133,7 @@ export default function Subscription() {
                   disabled={isCurrent || busy === plan.code}
                   onClick={() => changePlan(plan.code)}
                 >
-                  {isCurrent ? 'Active plan' : busy === plan.code ? 'Updating…' : `Switch to ${plan.name}`}
+                  {isCurrent ? t('Active plan') : busy === plan.code ? t('Updating…') : `${t('Switch to')} ${plan.name}`}
                 </button>
               </Card>
             );
@@ -141,11 +143,11 @@ export default function Subscription() {
 
       <Card className="mt-6 overflow-hidden">
         <div className="border-b border-slate-100 px-5 py-3">
-          <h2 className="text-sm font-semibold text-slate-900">Invoices</h2>
-          <p className="text-xs text-slate-500">Payment capture requires a connected gateway; invoices are recorded here either way.</p>
+          <h2 className="text-sm font-semibold text-slate-900">{t('Invoices')}</h2>
+          <p className="text-xs text-slate-500">{t('Payment capture requires a connected gateway; invoices are recorded here either way.')}</p>
         </div>
         {!invoices.length ? (
-          <p className="px-5 py-6 text-sm text-slate-500">No invoices yet.</p>
+          <p className="px-5 py-6 text-sm text-slate-500">{t('No invoices yet.')}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-100">
@@ -168,7 +170,7 @@ export default function Subscription() {
                     <td className="table-cell text-xs text-slate-500">{dateTime(invoice.issuedAt, { timeStyle: undefined })}</td>
                     <td className="table-cell text-right">
                       <button type="button" className="btn-ghost px-2 py-1 text-xs" onClick={() => downloadInvoice(invoice)}>
-                        <Download size={13} /> Download
+                        <Download size={13} /> {t('Download')}
                       </button>
                     </td>
                   </tr>

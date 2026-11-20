@@ -71,6 +71,31 @@ recognise (lead statuses, cancelled appointments, staff replies). It refuses to 
 | Reports (business) and platform analytics | `routes/analytics.routes.js` |
 | Subscription plans, usage metering, invoices | `routes/plans.routes.js`, `services/usage.js` |
 | Audit logs, integrations, platform settings | `routes/audit.routes.js`, `routes/integrations.routes.js`, `routes/platform.routes.js` |
+| Business email verification with a 6-digit code | `routes/auth.routes.js`, `services/email.js`, `pages/Auth.jsx` |
+| Separate sign-in portals per role | `/login/super-admin`, `/login/business`, `/login/staff` |
+| English / Hindi UI switcher | `client/src/i18n/index.jsx` |
+| Indian mobile validation (10 digits, no +91) | `server/src/utils/phone.js`, `components/ui.jsx` (`PhoneInput`) |
+
+## Sign-in portals, language and verification
+
+- **Separate portals:** `/login` is a chooser; each role has its own URL — `/login/super-admin`,
+  `/login/business`, `/login/staff`. The server rejects a login when the account role does not match the portal
+  (`WRONG_PORTAL`), so a staff account cannot sign in from the platform console.
+- **Business registration is verified by email.** `POST /api/auth/register` creates the workspace but returns no
+  session; it emails a 6-digit code valid for 15 minutes. The owner verifies through `/verify-email`, and only then
+  does `POST /api/auth/verify-email` issue tokens. A login attempt before verification returns
+  `403 EMAIL_NOT_VERIFIED`, writes an in-app notification and points the user to the verification screen.
+- **Language:** the header/sidebar switcher (and the one on the landing and auth pages) toggles English and
+  Hindi; the choice is stored in `localStorage` and applied across navigation, forms, tables, empty states and
+  the shared UI components.
+- **Mobile numbers:** the user types 10 digits (the `+91` prefix is shown but not required). Accepts `6-9` as the
+  first digit; `+91`, `0` prefixes and spaces are normalised away before saving.
+
+### Email delivery
+
+Set `RESEND_API_KEY` (Resend HTTP API, no SDK) and optionally `MAIL_FROM` and `APP_URL`. Without a key, development
+keeps working: the code is printed in the API log and returned as `devCode` outside production, and the verification
+screen shows it. In production the code is only emailed, never returned by the API.
 
 ## AI grounding rules
 
@@ -92,6 +117,7 @@ Every response uses one envelope: `{ "success": true, "data": ..., "meta": ... }
 
 ```
 POST   /api/auth/register | login | logout | refresh | forgot-password | reset-password
+POST   /api/auth/verify-email | resend-verification
 GET    /api/auth/me                     PATCH /api/auth/me
 POST   /api/auth/change-password
 

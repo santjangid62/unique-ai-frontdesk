@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { KeyRound, Save } from 'lucide-react';
 import api, { errorMessage } from '../lib/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { Alert, Card, Field, PageHeader } from '../components/ui.jsx';
+import { Alert, Card, Field, PageHeader, PhoneInput, Tx } from '../components/ui.jsx';
+import { useI18n } from '../i18n/index.jsx';
 import { titleCase } from '../lib/format.js';
 
 export default function Profile() {
+  const { t } = useI18n();
   const { user, tenant, refreshUser } = useAuth();
   const [form, setForm] = useState({ name: user?.name || '', phone: user?.phone || '', designation: user?.designation || '' });
   const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '' });
@@ -53,22 +55,22 @@ export default function Profile() {
           </div>
           <dl className="mt-5 space-y-3 text-sm">
             <div className="flex justify-between">
-              <dt className="text-slate-500">Role</dt>
+              <dt className="text-slate-500"><Tx>Role</Tx></dt>
               <dd className="font-semibold text-slate-800">{titleCase(user?.role)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-500">Business</dt>
+              <dt className="text-slate-500"><Tx>Business</Tx></dt>
               <dd className="font-semibold text-slate-800">{tenant?.name || 'Platform'}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-500">Plan</dt>
+              <dt className="text-slate-500"><Tx>Plan</Tx></dt>
               <dd className="font-semibold text-slate-800">{tenant?.planCode ? titleCase(tenant.planCode) : '—'}</dd>
             </div>
           </dl>
         </Card>
 
         <Card className="p-5 lg:col-span-2">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900">Personal details</h2>
+          <h2 className="mb-4 text-sm font-semibold text-slate-900"><Tx>Personal details</Tx></h2>
           {profileState.error ? (
             <div className="mb-3">
               <Alert>{profileState.error}</Alert>
@@ -87,7 +89,7 @@ export default function Profile() {
               <input className="input" value={user?.email || ''} disabled />
             </Field>
             <Field label="Phone">
-              <input className="input" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
+              <PhoneInput value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
             </Field>
             <Field label="Designation">
               <input className="input" value={form.designation} onChange={(event) => setForm({ ...form, designation: event.target.value })} />
@@ -105,7 +107,7 @@ export default function Profile() {
         <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-900">
           <KeyRound size={16} className="text-brand-600" /> Change password
         </h2>
-        <p className="mb-4 text-xs text-slate-500">Changing your password signs out all other sessions.</p>
+        <p className="mb-4 text-xs text-slate-500"><Tx>Changing your password signs out all other sessions.</Tx></p>
         {passwordState.error ? (
           <div className="mb-3">
             <Alert>{passwordState.error}</Alert>

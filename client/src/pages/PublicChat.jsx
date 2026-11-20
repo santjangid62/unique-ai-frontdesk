@@ -1,3 +1,4 @@
+import { Tx } from '../components/ui.jsx';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2, Send, Sparkles, CalendarPlus } from 'lucide-react';
@@ -128,7 +129,7 @@ export default function PublicChat() {
     return (
       <div className="grid min-h-screen place-items-center bg-slate-100 p-6">
         <div className="card max-w-sm p-6 text-center">
-          <p className="text-sm font-semibold text-slate-800">Chat unavailable</p>
+          <p className="text-sm font-semibold text-slate-800"><Tx>Chat unavailable</Tx></p>
           <p className="mt-1 text-sm text-slate-500">{error}</p>
         </div>
       </div>

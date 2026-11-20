@@ -38,7 +38,14 @@ const daysAhead = (days, hour = 11) => {
 
 async function createUser({ name, email, password, role, tenantId = null, phone = '', designation = '' }) {
   const existing = await User.findOne({ email });
-  if (existing) return existing;
+  if (existing) {
+    // Demo accounts must stay usable after the email-verification gate.
+    if (!existing.emailVerified) {
+      existing.emailVerified = true;
+      await existing.save();
+    }
+    return existing;
+  }
   const user = new User({ name, email, role, tenantId, phone, designation, emailVerified: true });
   await user.setPassword(password);
   await user.save();

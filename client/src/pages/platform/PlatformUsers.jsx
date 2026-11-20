@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Search, Users } from 'lucide-react';
 import api, { errorMessage } from '../../lib/api.js';
 import useFetch from '../../lib/useFetch.js';
-import { Alert, Badge, Card, EmptyState, PageHeader, Pagination, Spinner, Table } from '../../components/ui.jsx';
+import { Alert, Badge, Card, EmptyState, PageHeader, Pagination, Spinner, Table, Tx } from '../../components/ui.jsx';
 import { fromNow, titleCase } from '../../lib/format.js';
 
 export default function PlatformUsers() {
@@ -51,7 +51,7 @@ export default function PlatformUsers() {
             />
           </div>
           <select className="input w-48" value={filters.role} onChange={(event) => setFilters({ ...filters, role: event.target.value, page: 1 })}>
-            <option value="">All roles</option>
+            <option value=""><Tx>All roles</Tx></option>
             {['super_admin', 'business_admin', 'staff'].map((role) => (
               <option key={role} value={role}>
                 {titleCase(role)}

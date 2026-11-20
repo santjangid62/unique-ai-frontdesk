@@ -23,12 +23,14 @@ import {
   Users,
 } from 'lucide-react';
 import useFetch from '../lib/useFetch.js';
-import { Alert, Card, PageHeader, Spinner, Stat, Tabs } from '../components/ui.jsx';
+import { Alert, Card, PageHeader, Spinner, Stat, Tabs, Tx } from '../components/ui.jsx';
 import { dayLabel, titleCase } from '../lib/format.js';
+import { useI18n } from '../i18n/index.jsx';
 
 const COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#0ea5e9', '#64748b'];
 
 export default function Reports() {
+  const { t } = useI18n();
   const [days, setDays] = useState('14');
   const { data, loading, error, reload } = useFetch(`/analytics/business/overview?days=${days}`, [days]);
 
@@ -58,23 +60,41 @@ export default function Reports() {
               onChange={setDays}
             />
             <button type="button" className="btn-secondary" onClick={reload}>
-              Refresh
+              <Tx>Refresh</Tx>
             </button>
           </>
         }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Leads" value={kpis.leadTotal || 0} hint={`${kpis.newLeads || 0} awaiting first contact`} icon={Users} />
-        <Stat label="AI resolution" value={`${kpis.aiResolutionRate || 0}%`} hint={`${kpis.handoffTotal || 0} escalated to staff`} icon={Bot} tone="emerald" />
-        <Stat label="Appointments" value={kpis.appointmentTotal || 0} hint={`${kpis.upcomingAppointments || 0} upcoming`} icon={CalendarClock} tone="amber" />
-        <Stat label="Conversations" value={kpis.conversationTotal || 0} hint={`${kpis.aiMessages || 0} AI replies`} icon={MessagesSquare} tone="sky" />
+        <Stat label="Leads" value={kpis.leadTotal || 0} hint={t('{count} awaiting first contact', { count: kpis.newLeads || 0 })} icon={Users} />
+        <Stat
+          label="AI resolution"
+          value={`${kpis.aiResolutionRate || 0}%`}
+          hint={t('{count} escalated to staff', { count: kpis.handoffTotal || 0 })}
+          icon={Bot}
+          tone="emerald"
+        />
+        <Stat
+          label="Appointments"
+          value={kpis.appointmentTotal || 0}
+          hint={t('{count} upcoming', { count: kpis.upcomingAppointments || 0 })}
+          icon={CalendarClock}
+          tone="amber"
+        />
+        <Stat
+          label="Conversations"
+          value={kpis.conversationTotal || 0}
+          hint={t('{count} AI replies', { count: kpis.aiMessages || 0 })}
+          icon={MessagesSquare}
+          tone="sky"
+        />
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-3">
         <Card className="p-5 lg:col-span-2">
-          <h2 className="text-sm font-semibold text-slate-900">Daily enquiry flow</h2>
-          <p className="text-xs text-slate-500">Leads vs appointments created per day</p>
+          <h2 className="text-sm font-semibold text-slate-900"><Tx>Daily enquiry flow</Tx></h2>
+          <p className="text-xs text-slate-500"><Tx>Leads vs appointments created per day</Tx></p>
           <div className="mt-3 h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data?.trends || []} margin={{ left: -20, right: 8, top: 6 }}>
@@ -92,8 +112,8 @@ export default function Reports() {
         </Card>
 
         <Card className="p-5">
-          <h2 className="text-sm font-semibold text-slate-900">Lead pipeline</h2>
-          <p className="text-xs text-slate-500">Distribution by status</p>
+          <h2 className="text-sm font-semibold text-slate-900"><Tx>Lead pipeline</Tx></h2>
+          <p className="text-xs text-slate-500"><Tx>Distribution by status</Tx></p>
           <div className="mt-2 h-44">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -122,8 +142,8 @@ export default function Reports() {
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
         <Card className="p-5">
-          <h2 className="text-sm font-semibold text-slate-900">Channel performance</h2>
-          <p className="text-xs text-slate-500">Conversations started per channel</p>
+          <h2 className="text-sm font-semibold text-slate-900"><Tx>Channel performance</Tx></h2>
+          <p className="text-xs text-slate-500"><Tx>Conversations started per channel</Tx></p>
           <div className="mt-3 h-56">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data?.channels || []} margin={{ left: -20, right: 8 }}>
@@ -142,8 +162,8 @@ export default function Reports() {
         </Card>
 
         <Card className="p-5">
-          <h2 className="text-sm font-semibold text-slate-900">Operations snapshot</h2>
-          <p className="text-xs text-slate-500">Service quality and workload</p>
+          <h2 className="text-sm font-semibold text-slate-900"><Tx>Operations snapshot</Tx></h2>
+          <p className="text-xs text-slate-500"><Tx>Service quality and workload</Tx></p>
           <div className="mt-4 grid grid-cols-2 gap-3">
             {[
               ['Total calls', kpis.callTotal || 0, PhoneCall],

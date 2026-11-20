@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ShieldCheck } from 'lucide-react';
 import useFetch from '../../lib/useFetch.js';
-import { Alert, Badge, Card, EmptyState, PageHeader, Pagination, Spinner, Table } from '../../components/ui.jsx';
+import { Alert, Badge, Card, EmptyState, PageHeader, Pagination, Spinner, Table, Tx } from '../../components/ui.jsx';
 import { dateTime, titleCase } from '../../lib/format.js';
 
 export default function AuditLogs() {
@@ -37,7 +37,7 @@ export default function AuditLogs() {
             onChange={(event) => setFilters({ ...filters, action: event.target.value, page: 1 })}
           />
           <select className="input w-40" value={filters.severity} onChange={(event) => setFilters({ ...filters, severity: event.target.value, page: 1 })}>
-            <option value="">All severities</option>
+            <option value=""><Tx>All severities</Tx></option>
             {['info', 'warning', 'critical'].map((severity) => (
               <option key={severity} value={severity}>
                 {titleCase(severity)}

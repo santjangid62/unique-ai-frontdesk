@@ -25,6 +25,11 @@ const userSchema = new mongoose.Schema(
     designation: { type: String, trim: true, default: '' },
     isActive: { type: Boolean, default: true, index: true },
     emailVerified: { type: Boolean, default: false },
+    // One-time email verification code (hashed), cleared after success.
+    verificationCodeHash: { type: String, default: null, select: false },
+    verificationExpiresAt: { type: Date, default: null, select: false },
+    verificationSentAt: { type: Date, default: null, select: false },
+    verificationAttempts: { type: Number, default: 0, select: false },
     lastLoginAt: { type: Date, default: null },
     loginHistory: { type: [loginEntry], default: [] },
     passwordChangedAt: { type: Date, default: null },

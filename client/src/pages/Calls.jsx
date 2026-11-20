@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Phone, PhoneMissed, PlayCircle } from 'lucide-react';
 import useFetch from '../lib/useFetch.js';
-import { Alert, Badge, Card, EmptyState, PageHeader, Pagination, Spinner, Stat, Table } from '../components/ui.jsx';
+import { Alert, Badge, Card, EmptyState, PageHeader, Pagination, Spinner, Stat, Table, Tx } from '../components/ui.jsx';
 import { dateTime, titleCase } from '../lib/format.js';
 
 export default function Calls() {
@@ -39,9 +39,9 @@ export default function Calls() {
 
       <Card className="overflow-hidden">
         <div className="flex items-center justify-between border-b border-slate-100 p-4">
-          <h2 className="text-sm font-semibold text-slate-900">Call history</h2>
+          <h2 className="text-sm font-semibold text-slate-900"><Tx>Call history</Tx></h2>
           <select className="input w-44" value={filters.status} onChange={(event) => setFilters({ status: event.target.value, page: 1 })}>
-            <option value="">All statuses</option>
+            <option value=""><Tx>All statuses</Tx></option>
             {['completed', 'missed', 'failed', 'in_progress', 'transferred'].map((status) => (
               <option key={status} value={status}>
                 {titleCase(status)}
@@ -104,7 +104,7 @@ export default function Calls() {
 
       {expanded ? (
         <Card className="mt-4 p-5">
-          <h2 className="text-sm font-semibold text-slate-900">Transcript</h2>
+          <h2 className="text-sm font-semibold text-slate-900"><Tx>Transcript</Tx></h2>
           <div className="mt-3 space-y-2">
             {(data?.find((call) => call.id === expanded)?.transcript || []).map((line, index) => (
               <div key={index} className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${line.role === 'customer' ? 'bg-slate-100 text-slate-700' : 'ml-auto bg-brand-600 text-white'}`}>
@@ -112,7 +112,7 @@ export default function Calls() {
               </div>
             ))}
             {!(data?.find((call) => call.id === expanded)?.transcript || []).length ? (
-              <p className="text-sm text-slate-500">No transcript stored for this call.</p>
+              <p className="text-sm text-slate-500"><Tx>No transcript stored for this call.</Tx></p>
             ) : null}
           </div>
         </Card>

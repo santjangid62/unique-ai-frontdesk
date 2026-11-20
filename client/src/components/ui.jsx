@@ -1,6 +1,13 @@
 import { useEffect } from 'react';
 import { X, Loader2, ChevronLeft, ChevronRight, Inbox } from 'lucide-react';
 import { statusClass, titleCase } from '../lib/format.js';
+import { useI18n } from '../i18n/index.jsx';
+
+/** Wraps inline JSX text so it follows the selected language. */
+export function Tx({ children }) {
+  const { t } = useI18n();
+  return typeof children === 'string' ? t(children) : children;
+}
 
 export function Card({ children, className = '', ...rest }) {
   return (
@@ -10,15 +17,17 @@ export function Card({ children, className = '', ...rest }) {
   );
 }
 
+/** Labels, titles and headings are translated centrally so every page is bilingual. */
 export function PageHeader({ title, subtitle, actions, eyebrow }) {
+  const { t } = useI18n();
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
         {eyebrow ? (
-          <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-brand-600">{eyebrow}</p>
+          <p className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-brand-600">{t(eyebrow)}</p>
         ) : null}
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">{title}</h1>
-        {subtitle ? <p className="mt-1 max-w-2xl text-sm text-slate-500">{subtitle}</p> : null}
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t(title)}</h1>
+        {subtitle ? <p className="mt-1 max-w-2xl text-sm text-slate-500">{t(subtitle)}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
@@ -26,6 +35,7 @@ export function PageHeader({ title, subtitle, actions, eyebrow }) {
 }
 
 export function Stat({ label, value, hint, icon: Icon, tone = 'brand' }) {
+  const { t } = useI18n();
   const tones = {
     brand: 'bg-brand-50 text-brand-600',
     emerald: 'bg-emerald-50 text-emerald-600',
@@ -37,9 +47,9 @@ export function Stat({ label, value, hint, icon: Icon, tone = 'brand' }) {
     <Card className="p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t(label)}</p>
           <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900">{value}</p>
-          {hint ? <p className="mt-1 text-xs text-slate-500">{hint}</p> : null}
+          {hint ? <p className="mt-1 text-xs text-slate-500">{t(hint)}</p> : null}
         </div>
         {Icon ? (
           <span className={`grid h-10 w-10 place-items-center rounded-xl ${tones[tone] || tones.brand}`}>
@@ -52,16 +62,18 @@ export function Stat({ label, value, hint, icon: Icon, tone = 'brand' }) {
 }
 
 export function Badge({ status, children }) {
-  return <span className={`chip ${statusClass(status)}`}>{children || titleCase(status)}</span>;
+  const { t } = useI18n();
+  return <span className={`chip ${statusClass(status)}`}>{children || t(titleCase(status))}</span>;
 }
 
 export function Field({ label, error, hint, children, className = '' }) {
+  const { t } = useI18n();
   return (
     <div className={className}>
-      {label ? <label className="label">{label}</label> : null}
+      {label ? <label className="label">{t(label)}</label> : null}
       {children}
-      {error ? <p className="mt-1 text-xs font-medium text-rose-600">{error}</p> : null}
-      {hint && !error ? <p className="mt-1 text-xs text-slate-400">{hint}</p> : null}
+      {error ? <p className="mt-1 text-xs font-medium text-rose-600">{t(error)}</p> : null}
+      {hint && !error ? <p className="mt-1 text-xs text-slate-400">{t(hint)}</p> : null}
     </div>
   );
 }
@@ -78,28 +90,31 @@ export function Alert({ tone = 'error', children }) {
 }
 
 export function Spinner({ label = 'Loading…', className = '' }) {
+  const { t } = useI18n();
   return (
     <div className={`flex items-center justify-center gap-2 py-10 text-sm text-slate-500 ${className}`}>
       <Loader2 className="animate-spin" size={18} />
-      {label}
+      {t(label)}
     </div>
   );
 }
 
 export function EmptyState({ title = 'Nothing here yet', description, action, icon: Icon = Inbox }) {
+  const { t } = useI18n();
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-6 py-14 text-center">
       <span className="grid h-12 w-12 place-items-center rounded-2xl bg-slate-100 text-slate-400">
         <Icon size={22} />
       </span>
-      <h3 className="mt-1 text-sm font-semibold text-slate-800">{title}</h3>
-      {description ? <p className="max-w-sm text-sm text-slate-500">{description}</p> : null}
+      <h3 className="mt-1 text-sm font-semibold text-slate-800">{t(title)}</h3>
+      {description ? <p className="max-w-sm text-sm text-slate-500">{t(description)}</p> : null}
       {action ? <div className="mt-2">{action}</div> : null}
     </div>
   );
 }
 
 export function Modal({ open, onClose, title, description, children, footer, size = 'md' }) {
+  const { t } = useI18n();
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (event) => {
@@ -125,10 +140,10 @@ export function Modal({ open, onClose, title, description, children, footer, siz
       >
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4">
           <div>
-            <h2 className="text-base font-semibold text-slate-900">{title}</h2>
-            {description ? <p className="mt-0.5 text-xs text-slate-500">{description}</p> : null}
+            <h2 className="text-base font-semibold text-slate-900">{t(title)}</h2>
+            {description ? <p className="mt-0.5 text-xs text-slate-500">{t(description)}</p> : null}
           </div>
-          <button type="button" className="btn-ghost -mr-2 px-2 py-1" onClick={onClose} aria-label="Close">
+          <button type="button" className="btn-ghost -mr-2 px-2 py-1" onClick={onClose} aria-label={t('Close')}>
             <X size={18} />
           </button>
         </div>
@@ -140,11 +155,13 @@ export function Modal({ open, onClose, title, description, children, footer, siz
 }
 
 export function Pagination({ meta, onPage }) {
+  const { t } = useI18n();
   if (!meta || meta.totalPages <= 1) return null;
+  const count = t('{count} records', { count: meta.total });
   return (
     <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-4 py-3 text-sm text-slate-500">
       <span>
-        Page {meta.page} of {meta.totalPages} · {meta.total} records
+        {t('Page {page} of {pages}', { page: meta.page, pages: meta.totalPages })} · {count}
       </span>
       <div className="flex gap-1">
         <button
@@ -169,6 +186,7 @@ export function Pagination({ meta, onPage }) {
 }
 
 export function Table({ columns, rows, empty, rowKey = (row) => row.id, loading }) {
+  const { t } = useI18n();
   if (loading) return <Spinner />;
   if (!rows?.length) return empty || <EmptyState />;
   return (
@@ -178,7 +196,7 @@ export function Table({ columns, rows, empty, rowKey = (row) => row.id, loading 
           <tr>
             {columns.map((column) => (
               <th key={column.key} className="table-head">
-                {column.label}
+                {t(column.label)}
               </th>
             ))}
           </tr>
@@ -200,6 +218,7 @@ export function Table({ columns, rows, empty, rowKey = (row) => row.id, loading 
 }
 
 export function Tabs({ tabs, value, onChange }) {
+  const { t } = useI18n();
   return (
     <div className="flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1">
       {tabs.map((tab) => (
@@ -211,7 +230,7 @@ export function Tabs({ tabs, value, onChange }) {
             value === tab.value ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
           }`}
         >
-          {tab.label}
+          {t(tab.label)}
           {tab.count !== undefined ? <span className="ml-1.5 text-xs text-slate-400">{tab.count}</span> : null}
         </button>
       ))}
@@ -225,6 +244,33 @@ export function Progress({ value = 0, max = 100, tone = 'brand' }) {
   return (
     <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
       <div className={`h-full rounded-full ${tones[tone] || tones.brand}`} style={{ width: `${percent}%` }} />
+    </div>
+  );
+}
+
+/**
+ * Indian mobile input: the +91 prefix is fixed, the user types only the 10
+ * digits, and non-digits are stripped as they type.
+ */
+export function PhoneInput({ value = '', onChange, placeholder = '98290 11223', ...rest }) {
+  const { t } = useI18n();
+  const digits = String(value || '').replace(/\D/g, '').slice(-10);
+  return (
+    <div className="flex items-stretch">
+      <span className="inline-flex items-center rounded-l-xl border border-r-0 border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500">
+        +91
+      </span>
+      <input
+        {...rest}
+        className={`input rounded-l-none ${rest.className || ''}`}
+        type="tel"
+        inputMode="numeric"
+        autoComplete="tel-national"
+        maxLength={10}
+        placeholder={placeholder || t('Mobile number')}
+        value={digits}
+        onChange={(event) => onChange?.(event.target.value.replace(/\D/g, '').slice(0, 10))}
+      />
     </div>
   );
 }

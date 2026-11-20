@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { Plus, UserCog } from 'lucide-react';
 import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
-import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Spinner, Table } from '../components/ui.jsx';
+import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, PhoneInput, Spinner, Table, Tx } from '../components/ui.jsx';
+import { useI18n } from '../i18n/index.jsx';
 import { fromNow, titleCase } from '../lib/format.js';
 
 const empty = { name: '', email: '', password: '', phone: '', designation: '', role: 'staff' };
 
 export default function Staff() {
+  const { t } = useI18n();
   const { data, loading, error: loadError, reload } = useFetch('/users');
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty);
@@ -47,7 +49,7 @@ export default function Staff() {
         subtitle="Staff see only leads assigned to them, their conversations and their appointments."
         actions={
           <button type="button" className="btn-primary" onClick={() => setOpen(true)}>
-            <Plus size={16} /> Add team member
+            <Plus size={16} /> {t('Add team member')}
           </button>
         }
       />
@@ -108,10 +110,10 @@ export default function Staff() {
         footer={
           <>
             <button type="button" className="btn-secondary" onClick={() => setOpen(false)}>
-              Cancel
+              {t('Cancel')}
             </button>
             <button type="submit" form="staff-form" className="btn-primary" disabled={busy}>
-              {busy ? 'Creating…' : 'Create member'}
+              {busy ? t('Creating…') : t('Create member')}
             </button>
           </>
         }
@@ -132,15 +134,15 @@ export default function Staff() {
             <input className="input" type="password" required value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />
           </Field>
           <Field label="Phone">
-            <input className="input" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
+            <PhoneInput value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
           </Field>
           <Field label="Designation">
             <input className="input" placeholder="Counsellor" value={form.designation} onChange={(event) => setForm({ ...form, designation: event.target.value })} />
           </Field>
           <Field label="Access level">
             <select className="input" value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}>
-              <option value="staff">Staff (assigned work only)</option>
-              <option value="business_admin">Business admin (full access)</option>
+              <option value="staff"><Tx>Staff (assigned work only)</Tx></option>
+              <option value="business_admin"><Tx>Business admin (full access)</Tx></option>
             </select>
           </Field>
         </form>

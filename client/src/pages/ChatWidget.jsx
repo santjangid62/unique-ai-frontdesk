@@ -3,7 +3,7 @@ import { Check, Copy, ExternalLink, MessageSquareCode, Palette } from 'lucide-re
 import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { Alert, Card, Field, PageHeader, Spinner } from '../components/ui.jsx';
+import { Alert, Card, Field, PageHeader, Spinner, Tx } from '../components/ui.jsx';
 
 export default function ChatWidget() {
   const { tenant } = useAuth();
@@ -98,7 +98,7 @@ export default function ChatWidget() {
         <Card className="p-5">
           <div className="mb-4 flex items-center gap-2">
             <Palette size={18} className="text-brand-600" />
-            <h2 className="text-sm font-semibold text-slate-900">Appearance</h2>
+            <h2 className="text-sm font-semibold text-slate-900"><Tx>Appearance</Tx></h2>
           </div>
           <form onSubmit={save} className="space-y-4">
             <Field label="Welcome message">
@@ -123,8 +123,8 @@ export default function ChatWidget() {
               </Field>
               <Field label="Launcher position">
                 <select className="input" value={form.position} onChange={(event) => setForm({ ...form, position: event.target.value })}>
-                  <option value="right">Bottom right</option>
-                  <option value="left">Bottom left</option>
+                  <option value="right"><Tx>Bottom right</Tx></option>
+                  <option value="left"><Tx>Bottom left</Tx></option>
                 </select>
               </Field>
             </div>
@@ -155,7 +155,7 @@ export default function ChatWidget() {
           <Card className="p-5">
             <div className="mb-3 flex items-center gap-2">
               <MessageSquareCode size={18} className="text-brand-600" />
-              <h2 className="text-sm font-semibold text-slate-900">Embed on your website</h2>
+              <h2 className="text-sm font-semibold text-slate-900"><Tx>Embed on your website</Tx></h2>
             </div>
             <p className="text-sm text-slate-600">
               Paste this before <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">&lt;/body&gt;</code> on every page where
@@ -177,7 +177,7 @@ export default function ChatWidget() {
 
           <Card className="overflow-hidden">
             <div className="border-b border-slate-100 px-5 py-3">
-              <h2 className="text-sm font-semibold text-slate-900">Preview</h2>
+              <h2 className="text-sm font-semibold text-slate-900"><Tx>Preview</Tx></h2>
             </div>
             <div className="p-5">
               <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
@@ -187,7 +187,7 @@ export default function ChatWidget() {
                   </span>
                   <div>
                     <p className="text-sm font-semibold text-slate-800">{profile?.name}</p>
-                    <p className="text-[11px] text-slate-500">AI assistant · online</p>
+                    <p className="text-[11px] text-slate-500"><Tx>AI assistant · online</Tx></p>
                   </div>
                 </div>
                 <div className="mt-3 max-w-[85%] rounded-2xl rounded-tl-sm bg-white px-3 py-2 text-sm text-slate-700 shadow-sm">

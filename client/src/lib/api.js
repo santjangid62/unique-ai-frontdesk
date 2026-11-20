@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { translate } from '../i18n/index.jsx';
 
 export const TOKEN_KEY = 'uaf_access_token';
 
@@ -62,13 +63,14 @@ api.interceptors.response.use(
 );
 
 export function errorMessage(error, fallback = 'Something went wrong') {
-  return error?.response?.data?.error?.message || error?.message || fallback;
+  const message = error?.response?.data?.error?.message || error?.message || fallback;
+  return translate(message);
 }
 
 export function fieldErrors(error) {
   const details = error?.response?.data?.error?.details;
   if (!Array.isArray(details)) return {};
-  return Object.fromEntries(details.map((item) => [item.path, item.message]));
+  return Object.fromEntries(details.map((item) => [item.path, translate(item.message)]));
 }
 
 export default api;

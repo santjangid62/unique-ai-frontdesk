@@ -11,6 +11,7 @@ import User from '../models/User.js';
 import Plan from '../models/Plan.js';
 import Subscription from '../models/Subscription.js';
 import Lead from '../models/Lead.js';
+import { optionalIndianPhoneSchema } from '../utils/phone.js';
 
 const router = Router();
 router.use(authenticate, tenantScopeGuard, requireTenantUser);
@@ -19,7 +20,7 @@ const staffBody = z.object({
   name: z.string().min(2).max(120),
   email: z.string().email().transform((v) => v.toLowerCase().trim()),
   password: z.string().min(8).max(128),
-  phone: z.string().max(24).optional().default(''),
+  phone: optionalIndianPhoneSchema,
   designation: z.string().max(80).optional().default(''),
   role: z.enum(['business_admin', 'staff']).default('staff'),
 });
@@ -113,7 +114,7 @@ router.put(
     z.object({
       name: z.string().min(2).max(120).optional(),
       email: z.string().email().optional(),
-      phone: z.string().max(24).optional(),
+      phone: optionalIndianPhoneSchema,
       designation: z.string().max(80).optional(),
       role: z.enum(['business_admin', 'staff']).optional(),
       isActive: z.boolean().optional(),

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Bot, FlaskConical, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react';
 import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
-import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Spinner } from '../components/ui.jsx';
+import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Spinner, Tx } from '../components/ui.jsx';
 import { titleCase } from '../lib/format.js';
 
 const empty = {
@@ -146,7 +146,7 @@ export default function Agents() {
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="text-base font-bold text-slate-900">{agent.name}</h2>
-                      {agent.isDefault ? <span className="chip bg-brand-50 text-brand-700">Default</span> : null}
+                      {agent.isDefault ? <span className="chip bg-brand-50 text-brand-700"><Tx>Default</Tx></span> : null}
                       <Badge status={agent.isActive ? 'active' : 'inactive'}>{agent.isActive ? 'Active' : 'Paused'}</Badge>
                     </div>
                     <p className="mt-1 text-sm text-slate-500">{agent.description || 'No description'}</p>
@@ -156,15 +156,15 @@ export default function Agents() {
 
               <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-slate-600 sm:grid-cols-3">
                 <div className="rounded-lg bg-slate-50 px-2.5 py-2">
-                  <p className="text-[10px] uppercase tracking-wide text-slate-400">Tone</p>
+                  <p className="text-[10px] uppercase tracking-wide text-slate-400"><Tx>Tone</Tx></p>
                   <p className="font-semibold">{titleCase(agent.tone)}</p>
                 </div>
                 <div className="rounded-lg bg-slate-50 px-2.5 py-2">
-                  <p className="text-[10px] uppercase tracking-wide text-slate-400">Language</p>
+                  <p className="text-[10px] uppercase tracking-wide text-slate-400"><Tx>Language</Tx></p>
                   <p className="font-semibold">{agent.language}</p>
                 </div>
                 <div className="rounded-lg bg-slate-50 px-2.5 py-2">
-                  <p className="text-[10px] uppercase tracking-wide text-slate-400">Voice</p>
+                  <p className="text-[10px] uppercase tracking-wide text-slate-400"><Tx>Voice</Tx></p>
                   <p className="font-semibold">{agent.voice}</p>
                 </div>
               </div>
@@ -351,11 +351,11 @@ export default function Agents() {
               {testResult.confidence !== undefined ? (
                 <span className="chip bg-slate-100 text-slate-600">Confidence: {Math.round((testResult.confidence || 0) * 100)}%</span>
               ) : null}
-              {testResult.escalate ? <span className="chip bg-rose-50 text-rose-700">Would escalate</span> : null}
+              {testResult.escalate ? <span className="chip bg-rose-50 text-rose-700"><Tx>Would escalate</Tx></span> : null}
             </div>
             {testResult.knowledgeUsed?.length ? (
               <div className="rounded-xl border border-slate-100 p-3">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Knowledge used</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400"><Tx>Knowledge used</Tx></p>
                 <ul className="mt-1 space-y-1 text-xs text-slate-600">
                   {testResult.knowledgeUsed.map((item) => (
                     <li key={item.title}>
