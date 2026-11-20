@@ -174,7 +174,7 @@ export default function Leads() {
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 className="input w-56 pl-9"
-                placeholder="Search name, phone, course"
+                placeholder="Search name, phone, service"
                 value={filters.search}
                 onChange={(event) => setFilters({ ...filters, search: event.target.value, page: 1 })}
               />
@@ -207,7 +207,7 @@ export default function Leads() {
             },
             {
               key: 'course',
-              label: 'Course',
+              label: 'Service / interest',
               render: (row) => <span className="text-slate-600">{row.course || '—'}</span>,
             },
             { key: 'source', label: 'Source', render: (row) => <Badge status={row.source} /> },
@@ -306,7 +306,7 @@ export default function Leads() {
           <Field label="Email">
             <input className="input" type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
           </Field>
-          <Field label="Interested course">
+          <Field label="Service / interest">
             <input className="input" value={form.course} onChange={(event) => setForm({ ...form, course: event.target.value })} />
           </Field>
           <Field label="Source">
@@ -362,7 +362,7 @@ export default function Leads() {
             <div className="grid gap-3 sm:grid-cols-2">
               {[
                 ['Status', titleCase(detailFetch.data.lead.status)],
-                ['Course', detailFetch.data.lead.course || '—'],
+                ['Service / interest', detailFetch.data.lead.course || '—'],
                 ['Source', titleCase(detailFetch.data.lead.source)],
                 ['Assignee', detailFetch.data.lead.assigneeId?.name || 'Unassigned'],
                 ['Follow-up', detailFetch.data.lead.followUpDate ? dateTime(detailFetch.data.lead.followUpDate, { timeStyle: undefined }) : '—'],

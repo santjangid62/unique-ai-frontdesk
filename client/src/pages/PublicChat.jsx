@@ -112,11 +112,11 @@ export default function PublicChat() {
         dateStyle: 'medium',
         timeStyle: 'short',
       });
-      setBookingState({ busy: false, message: `Demo class booked for ${when}.`, error: '' });
+      setBookingState({ busy: false, message: `Appointment booked for ${when}.`, error: '' });
       setShowBooking(false);
       setMessages((prev) => [
         ...prev,
-        { id: `book-${Date.now()}`, role: 'system', content: `Demo class booked for ${when}. See you there!` },
+        { id: `book-${Date.now()}`, role: 'system', content: `Appointment booked for ${when}. See you there!` },
       ]);
     } catch (err) {
       setBookingState({ busy: false, message: '', error: errorMessage(err, 'Could not book this slot') });
@@ -151,7 +151,7 @@ export default function PublicChat() {
           </div>
           {config?.demoAvailable ? (
             <button type="button" className="btn-secondary px-3 py-2 text-xs" onClick={() => setShowBooking((value) => !value)}>
-              <CalendarPlus size={14} /> Book demo
+              <CalendarPlus size={14} /> Book appointment
             </button>
           ) : null}
         </header>
@@ -176,7 +176,7 @@ export default function PublicChat() {
               />
               <input
                 className="input"
-                placeholder="Interested course"
+                placeholder="Service / interest"
                 value={booking.course}
                 onChange={(event) => setBooking({ ...booking, course: event.target.value })}
               />
@@ -199,7 +199,7 @@ export default function PublicChat() {
             </div>
             <div className="flex gap-2">
               <button type="submit" className="btn-primary flex-1" style={{ backgroundColor: accent }} disabled={bookingState.busy}>
-                {bookingState.busy ? 'Booking…' : 'Confirm demo class'}
+                {bookingState.busy ? 'Booking…' : 'Confirm appointment'}
               </button>
               <button type="button" className="btn-secondary" onClick={() => setShowBooking(false)}>
                 Cancel
@@ -247,7 +247,7 @@ export default function PublicChat() {
         <form onSubmit={send} className="flex items-center gap-2 border-t border-slate-100 px-4 py-3">
           <input
             className="input flex-1"
-            placeholder="Ask about courses, fees or a demo class…"
+            placeholder="Ask about services, prices or an appointment…"
             value={input}
             onChange={(event) => setInput(event.target.value)}
             disabled={!config}

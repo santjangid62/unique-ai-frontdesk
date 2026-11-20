@@ -29,6 +29,9 @@ Demo logins created by `npm run seed`:
 | Staff | staff@uniquecomputers.in | Staff@12345 |
 | Second tenant admin | owner@abccoaching.in | Owner@12345 |
 
+The seed also creates a neutral public workspace for the landing page demo at `/chat/demo`
+(tenant `demo`, "Demo Business" with generic services, prices and booking policy).
+
 Without a MongoDB instance you can run a throwaway in-memory database:
 
 ```bash

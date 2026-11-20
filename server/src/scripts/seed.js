@@ -36,6 +36,128 @@ const daysAhead = (days, hour = 11) => {
   return date;
 };
 
+/** Slug of the neutral public demo workspace used by the landing page. */
+export const PUBLIC_DEMO_SLUG = 'demo';
+
+async function ensurePublicDemoWorkspace() {
+  let tenant = await Tenant.findOne({ slug: PUBLIC_DEMO_SLUG });
+  if (!tenant) {
+    tenant = await Tenant.create({
+      name: 'Demo Business',
+      slug: PUBLIC_DEMO_SLUG,
+      industry: 'other',
+      contactEmail: 'demo@example.com',
+      contactPhone: '+91 90000 00000',
+      status: 'active',
+      planCode: 'growth',
+      timezone: 'Asia/Kolkata',
+    });
+  }
+
+  await BusinessProfile.findOneAndUpdate(
+    { tenantId: tenant._id },
+    {
+      $setOnInsert: {
+        tenantId: tenant._id,
+        name: 'Demo Business',
+        industry: 'other',
+        description:
+          'A sample service business that shows how the AI front desk answers questions, shares prices and books appointments.',
+        phone: '+91 90000 00000',
+        email: 'hello@example.com',
+        website: 'https://example.com',
+        address: '4th Floor, MG Road',
+        city: 'Bengaluru',
+        state: 'Karnataka',
+        country: 'India',
+        workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+        openingTime: '09:00',
+        closingTime: '18:00',
+        languages: ['English', 'Hindi'],
+        widget: {
+          primaryColor: '#4f46e5',
+          position: 'right',
+          welcomeMessage: 'Hi! Ask me about our services, prices, timings or book an appointment.',
+          showBranding: true,
+          isEnabled: true,
+        },
+        coaching: { demoAvailable: true },
+      },
+    },
+    { upsert: true },
+  );
+
+  await AiAgent.findOneAndUpdate(
+    { tenantId: tenant._id, name: 'Demo Front Desk AI' },
+    {
+      $setOnInsert: {
+        tenantId: tenant._id,
+        name: 'Demo Front Desk AI',
+        description: 'Sample website receptionist that answers from the demo knowledge base.',
+        greeting: 'Hi! Ask me about our services, prices, timings or book an appointment.',
+        personality: 'Warm, clear and helpful',
+        tone: 'friendly',
+        language: 'English',
+        voice: 'female-neutral',
+        instructions:
+          'Answer only from the demo knowledge base. Share prices and timings exactly as listed, and offer an appointment when the visitor shows interest.',
+        channels: { website: true, whatsapp: false, voice: false },
+        handoff: { enabled: true, triggers: ['customer_request', 'low_confidence', 'complaint', 'complex_query'], transferNumber: '' },
+        isActive: true,
+        isDefault: true,
+      },
+    },
+    { upsert: true },
+  );
+
+  if ((await KnowledgeEntry.countDocuments({ tenantId: tenant._id })) === 0) {
+    await KnowledgeEntry.insertMany([
+      {
+        tenantId: tenant._id,
+        category: 'business',
+        title: 'About Demo Business',
+        content:
+          'Demo Business is a sample service business used to demonstrate the AI front desk. Services: on-site service visits, consultations and annual maintenance. Address: 4th Floor, MG Road, Bengaluru. Phone: +91 90000 00000.',
+        tags: ['about', 'address', 'contact'],
+      },
+      {
+        tenantId: tenant._id,
+        category: 'fee',
+        title: 'Service prices',
+        content:
+          'Standard service visit: Rs 499 (inspection and first hour). Full service: Rs 1,499. Annual maintenance plan: Rs 4,999 per year, including two visits and priority slots. Prices include GST.',
+        tags: ['price', 'fees', 'service'],
+      },
+      {
+        tenantId: tenant._id,
+        category: 'timing',
+        title: 'Opening hours and appointment slots',
+        content:
+          'Open Monday to Saturday, 9:00 AM to 6:00 PM. Sunday closed. Appointment slots are 11:00 AM, 1:00 PM and 4:00 PM.',
+        tags: ['timings', 'hours', 'slots'],
+      },
+      {
+        tenantId: tenant._id,
+        category: 'policy',
+        title: 'Booking and cancellation policy',
+        content:
+          'Appointments can be booked up to 30 days ahead. Rescheduling is free up to 4 hours before the slot. Cancellations within 4 hours of the slot are charged Rs 199.',
+        tags: ['booking', 'cancellation', 'policy'],
+      },
+      {
+        tenantId: tenant._id,
+        category: 'contact',
+        title: 'Contact and service area',
+        content:
+          'Service area: Bengaluru city. Phone and WhatsApp: +91 90000 00000. Email: hello@example.com. Same-day emergency visits are available subject to availability.',
+        tags: ['contact', 'service area', 'emergency'],
+      },
+    ]);
+  }
+
+  return tenant;
+}
+
 async function createUser({ name, email, password, role, tenantId = null, phone = '', designation = '' }) {
   const existing = await User.findOne({ email });
   if (existing) {
@@ -835,8 +957,11 @@ export async function runSeed({ quiet = false } = {}) {
     designation: 'Director',
   });
 
+  await ensurePublicDemoWorkspace();
+
   log('');
   log('  Demo workspace ready');
+  log(`  Public demo  : /chat/${PUBLIC_DEMO_SLUG}`);
   log('  ---------------------------------------------------------');
   log(`  Super Admin  : ${DEMO_CREDENTIALS.superAdmin.email} / ${DEMO_CREDENTIALS.superAdmin.password}`);
   log(`  Business Admin: ${DEMO_CREDENTIALS.businessAdmin.email} / ${DEMO_CREDENTIALS.businessAdmin.password}`);

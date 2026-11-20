@@ -344,7 +344,12 @@ const HI = {
   'Assign staff': 'स्टाफ़ सौंपें',
   'Assign to': 'सौंपें',
   'Customer name': 'ग्राहक का नाम',
-  'Interested course': 'इच्छुक कोर्स',
+  'Service / interest': 'सेवा / रुचि',
+  'Search name, phone, service': 'नाम, फ़ोन, सेवा खोजें',
+  'Consultations and service slots. Double bookings are blocked automatically.':
+    'परामर्श और सेवा स्लॉट। डबल बुकिंग अपने आप रुकती है।',
+  'Book an appointment manually, or let the AI receptionist book it during a conversation.':
+    'अपॉइंटमेंट मैन्युअल बुक करें, या बातचीत के दौरान AI रिसेप्शनिस्ट से बुक कराएं।',
   'Interested courses': 'इच्छुक कोर्स',
   'Follow-up date': 'फ़ॉलो-अप तारीख',
   'Start time': 'शुरू का समय',

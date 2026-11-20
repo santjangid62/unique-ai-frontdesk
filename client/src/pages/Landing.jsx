@@ -57,6 +57,9 @@ const STEPS = [
   { title: 'Go live everywhere', text: 'Paste the widget code, connect WhatsApp or forward your number. Every enquiry is answered instantly.' },
 ];
 
+/** Neutral seeded workspace (/chat/demo) that mirrors the landing page messaging. */
+const DEMO_CHAT = '/chat/demo';
+
 const INDUSTRIES = [
   'Clinics & dentists',
   'Salons & spas',
@@ -94,7 +97,7 @@ export default function Landing() {
             <a href="#industries" className="hover:text-slate-900">{t('For your business')}</a>
             <a href="#how" className="hover:text-slate-900">{t('How it works')}</a>
             <a href="#pricing" className="hover:text-slate-900">{t('Pricing')}</a>
-            <Link to="/chat/unique-computers" className="hover:text-slate-900">{t('Live demo')}</Link>
+            <Link to={DEMO_CHAT} className="hover:text-slate-900">{t('Live demo')}</Link>
           </nav>
           <div className="flex items-center gap-2">
             <LanguageSwitcher className="hidden sm:inline-flex" />
@@ -123,7 +126,7 @@ export default function Landing() {
               <Link to="/register" className="btn-primary px-5 py-3">
                 {t('Start your free trial')} <ArrowRight size={16} />
               </Link>
-              <Link to="/chat/unique-computers" className="btn-secondary px-5 py-3">
+              <Link to={DEMO_CHAT} className="btn-secondary px-5 py-3">
                 <Headphones size={16} /> {t('Try the live chatbot')}
               </Link>
             </div>
@@ -282,7 +285,7 @@ export default function Landing() {
             <Link to="/register" className="btn-primary px-5 py-3">
               {t('Start free trial')} <ArrowRight size={16} />
             </Link>
-            <Link to="/chat/unique-computers" className="btn px-5 py-3 bg-white/10 text-white hover:bg-white/15">
+            <Link to={DEMO_CHAT} className="btn px-5 py-3 bg-white/10 text-white hover:bg-white/15">
               <BookOpen size={16} /> {t('Chat with the live demo')}
             </Link>
           </div>
@@ -295,7 +298,7 @@ export default function Landing() {
           <div className="flex items-center gap-5">
             <Link to="/login" className="hover:text-slate-800">{t('Sign in')}</Link>
             <Link to="/register" className="hover:text-slate-800">{t('Get started')}</Link>
-            <Link to="/chat/unique-computers" className="hover:text-slate-800">{t('Demo')}</Link>
+            <Link to={DEMO_CHAT} className="hover:text-slate-800">{t('Demo')}</Link>
             <LanguageSwitcher />
           </div>
         </div>

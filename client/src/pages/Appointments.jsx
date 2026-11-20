@@ -88,7 +88,7 @@ export default function Appointments() {
       <PageHeader
         eyebrow="Calendar"
         title="Appointments"
-        subtitle="Demo classes, counselling and admission slots. Double bookings are blocked automatically."
+        subtitle="Consultations and service slots. Double bookings are blocked automatically."
         actions={
           <>
             <Tabs
@@ -119,7 +119,7 @@ export default function Appointments() {
         <Card>
           <EmptyState
             title="No appointments in this view"
-            description="Book a demo class manually, or let the AI receptionist book it during a conversation."
+            description="Book an appointment manually, or let the AI receptionist book it during a conversation."
             action={
               <button type="button" className="btn-primary" onClick={() => setOpen(true)}>
                 <CalendarPlus size={16} /> New appointment
@@ -152,7 +152,7 @@ export default function Appointments() {
                         <Clock size={13} /> {timeLabel(appointment.startAt)} – {timeLabel(appointment.endAt)} ·{' '}
                         {dayLabel(appointment.startAt)}
                       </p>
-                      <p>{titleCase(appointment.type)} · {appointment.course || 'General enquiry'}</p>
+                      <p>{titleCase(appointment.type)} · {appointment.course || 'General'}</p>
                       <p className="text-slate-400">
                         {appointment.staffId?.name ? `With ${appointment.staffId.name}` : 'Unassigned staff'} · via{' '}
                         {titleCase(appointment.channel)}
@@ -220,7 +220,7 @@ export default function Appointments() {
           <Field label="Email">
             <input className="input" type="email" value={form.customerEmail} onChange={(event) => setForm({ ...form, customerEmail: event.target.value })} />
           </Field>
-          <Field label="Course">
+          <Field label="Service / interest">
             <input className="input" value={form.course} onChange={(event) => setForm({ ...form, course: event.target.value })} />
           </Field>
           <Field label="Type">
