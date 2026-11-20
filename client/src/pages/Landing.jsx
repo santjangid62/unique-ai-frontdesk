@@ -293,8 +293,23 @@ export default function Landing() {
       </section>
 
       <footer className="border-t border-slate-100 bg-white py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-5 text-sm text-slate-500 sm:flex-row">
-          <p>© {new Date().getFullYear()} Unique IT Solutions · {t('Unique AI Frontdesk')}</p>
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-5 text-sm text-slate-500 sm:flex-row sm:items-start">
+          <div className="text-center sm:text-left">
+            <p>
+              © {new Date().getFullYear()} Unique IT Solutions — {t('A Unit of Unique Computers, The Best One.')}{' '}
+              {t('All rights reserved.')}
+            </p>
+            <p className="mt-1 text-xs">
+              <a
+                href="https://uniqueitsolutionsjaipur.com"
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-brand-600 hover:text-brand-700"
+              >
+                uniqueitsolutionsjaipur.com
+              </a>
+            </p>
+          </div>
           <div className="flex items-center gap-5">
             <Link to="/login" className="hover:text-slate-800">{t('Sign in')}</Link>
             <Link to="/register" className="hover:text-slate-800">{t('Get started')}</Link>

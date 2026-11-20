@@ -264,7 +264,15 @@ export default function PublicChat() {
         </form>
         {config?.widget?.showBranding ? (
           <p className="pb-3 text-center text-[10px] font-medium uppercase tracking-wide text-slate-400">
-            Powered by Unique AI Frontdesk
+            Powered by Unique AI Frontdesk ·{' '}
+            <a
+              href="https://uniqueitsolutionsjaipur.com"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-slate-600"
+            >
+              uniqueitsolutionsjaipur.com
+            </a>
           </p>
         ) : null}
       </div>

@@ -57,7 +57,20 @@ function AuthShell({ title, subtitle, children, footer }) {
             <li>• {t('Built for any industry — coaching, clinics, salons, retail and more')}</li>
           </ul>
         </div>
-        <p className="relative text-xs text-slate-500">© {new Date().getFullYear()} Unique IT Solutions</p>
+        <div className="relative text-xs leading-relaxed text-slate-500">
+          <p>
+            © {new Date().getFullYear()} Unique IT Solutions — {t('A Unit of Unique Computers, The Best One.')}{' '}
+            {t('All rights reserved.')}
+          </p>
+          <a
+            href="https://uniqueitsolutionsjaipur.com"
+            target="_blank"
+            rel="noreferrer"
+            className="mt-1 inline-block font-medium text-slate-400 hover:text-slate-200"
+          >
+            uniqueitsolutionsjaipur.com
+          </a>
+        </div>
       </div>
 
       <div className="flex flex-col justify-center bg-white px-5 py-10 sm:px-12">

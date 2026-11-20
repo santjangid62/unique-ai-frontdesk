@@ -40,7 +40,9 @@ export default function Subscription() {
       `Period: ${dateTime(invoice.periodStart)} - ${dateTime(invoice.periodEnd)}`,
       `Issued: ${dateTime(invoice.issuedAt)}`,
       '',
-      'Unique IT Solutions · Unique AI Frontdesk',
+      'Unique IT Solutions — A Unit of Unique Computers, The Best One.',
+      'Unique AI Frontdesk · uniqueitsolutionsjaipur.com',
+      'All rights reserved.',
     ].join('\n');
     const blob = new Blob([lines], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);

@@ -1,5 +1,8 @@
 # Unique AI Frontdesk
 
+Unique AI Frontdesk — a product of **Unique IT Solutions, a unit of Unique Computers, The Best One**
+([uniqueitsolutionsjaipur.com](https://uniqueitsolutionsjaipur.com)). All rights reserved.
+
 Multi-tenant AI receptionist SaaS for coaching institutes — website chat, WhatsApp, voice calls, lead CRM,
 demo-class booking and human handoff, built to the **Unique AI Frontdesk PRD v1.0**.
 

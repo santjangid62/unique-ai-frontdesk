@@ -223,6 +223,19 @@ export default function Shell() {
               <LogOut size={16} />
             </button>
           </div>
+          <p className="px-2 text-center text-[10px] leading-relaxed text-slate-500">
+            © {new Date().getFullYear()} Unique IT Solutions
+            <span className="block">
+              <a
+                href="https://uniqueitsolutionsjaipur.com"
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-slate-300"
+              >
+                uniqueitsolutionsjaipur.com
+              </a>
+            </span>
+          </p>
         </div>
       </aside>
 

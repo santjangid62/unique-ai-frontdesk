@@ -44,6 +44,8 @@ const HI = {
   'Platform Console': 'प्लेटफ़ॉर्म कंसोल',
   'Business workspace': 'व्यवसाय वर्कस्पेस',
   'Unique AI Frontdesk': 'यूनिक AI फ्रंटडेस्क',
+  'A Unit of Unique Computers, The Best One.': 'यूनिक कंप्यूटर्स, द बेस्ट वन की एक इकाई।',
+  'All rights reserved.': 'सर्वाधिकार सुरक्षित।',
   '24/7 AI receptionist · never miss a customer': '24/7 AI रिसेप्शनिस्ट · कोई ग्राहक न छूटे',
   'Open navigation': 'नेविगेशन खोलें',
   'Close navigation': 'नेविगेशन बंद करें',
