@@ -431,18 +431,36 @@ const HI = {
   Pricing: 'कीमत',
   'Live demo': 'लाइव डेमो',
   'Start free': 'मुफ़्त शुरू करें',
-  'AI receptionist for coaching institutes': 'कोचिंग संस्थानों के लिए AI रिसेप्शनिस्ट',
+  'AI receptionist for every business': 'हर व्यवसाय के लिए AI रिसेप्शनिस्ट',
+  'For your business': 'आपके व्यवसाय के लिए',
+  'Built for': 'इनके लिए बना',
+  'Clinics & dentists': 'क्लिनिक और दंत चिकित्सक',
+  'Salons & spas': 'सैलून और स्पा',
+  'Coaching centres': 'कोचिंग सेंटर',
+  'Retail stores': 'रिटेल स्टोर',
+  'Real estate': 'रियल एस्टेट',
+  'Agencies & services': 'एजेंसियां और सेवाएं',
+  'Hotels & travel': 'होटल और यात्रा',
+  'Home services': 'होम सर्विस',
   'Your Business Never Misses a Customer.': 'आपका व्यवसाय कोई ग्राहक कभी नहीं खोता।',
-  'Answer every call, WhatsApp message and website chat 24/7 with an AI front desk that knows your courses, fees and batch timings — and books the demo class for you.':
-    'हर कॉल, WhatsApp संदेश और वेबसाइट चैट का 24/7 जवाब दें — AI फ्रंट डेस्क आपके कोर्स, फीस और बैच समय जानता है और डेमो क्लास भी बुक करता है।',
+  'Answer every call, WhatsApp message and website chat 24/7 with an AI front desk that knows your services, prices and timings — and books appointments while you work.':
+    'हर कॉल, WhatsApp संदेश और वेबसाइट चैट का 24/7 जवाब दें — AI फ्रंट डेस्क आपकी सेवाएं, कीमतें और समय जानता है और काम के दौरान ही अपॉइंटमेंट भी बुक कर देता है।',
+  'yourbusiness.com · AI receptionist': 'yourbusiness.com · AI रिसेप्शनिस्ट',
+  'Hi, do you have a slot this Saturday?': 'नमस्ते, इस शनिवार कोई स्लॉट खाली है?',
+  'Yes — Saturday has 11:00 AM and 4:00 PM open. Our standard service starts at ₹499. Shall I book 11:00 AM?':
+    'हां — शनिवार को सुबह 11:00 और शाम 4:00 बजे खाली है। हमारी सामान्य सेवा ₹499 से शुरू होती है। क्या मैं 11:00 बजे बुक कर दूं?',
+  '11 AM works, please.': '11 बजे ठीक है, बुक कर दीजिए।',
+  'Booked for Saturday, 11:00 AM. I have saved your details — the team will confirm on WhatsApp shortly.':
+    'शनिवार सुबह 11:00 बजे बुक हो गया। आपकी जानकारी सेव कर ली है — टीम जल्द WhatsApp पर पुष्टि करेगी।',
+  'Enquiry captured · Appointment booked · No staff needed': 'पूछताछ दर्ज · अपॉइंटमेंट बुक · स्टाफ़ की ज़रूरत नहीं',
   'Start your free trial': 'अपना मुफ़्त ट्रायल शुरू करें',
   'Try the live chatbot': 'लाइव चैटबॉट आज़माएं',
   '14-day trial · No credit card · Website chat, WhatsApp and voice in one platform':
     '14-दिन ट्रायल · क्रेडिट कार्ड नहीं · वेबसाइट चैट, WhatsApp और वॉइस एक ही प्लेटफ़ॉर्म पर',
   'Everything in one front desk': 'सब कुछ एक फ्रंट डेस्क में',
-  'Built for the way institutes actually work': 'संस्थान जैसे चलते हैं, वैसे ही बना',
-  'Replace missed calls and scattered WhatsApp chats with a single AI receptionist that captures, qualifies and routes every enquiry.':
-    'छूटी कॉल और बिखरी WhatsApp चैट की जगह एक AI रिसेप्शनिस्ट, जो हर पूछताछ कैप्चर, क्वालिफ़ाई और सही जगह भेजता है।',
+  'Built for the way real businesses work': 'असली व्यवसाय जैसे चलते हैं, वैसे ही बना',
+  'Replace missed calls and scattered WhatsApp chats with a single AI receptionist that captures, qualifies and routes every enquiry — whether you sell services, courses, appointments or products.':
+    'छूटी कॉल और बिखरी WhatsApp चैट की जगह एक AI रिसेप्शनिस्ट, जो हर पूछताछ कैप्चर, क्वालिफ़ाई और सही जगह भेजता है — चाहे आप सेवाएं, कोर्स, अपॉइंटमेंट या प्रोडक्ट बेचते हों।',
   'Live in three steps': 'तीन स्टेप में लाइव',
   'Create your workspace': 'अपना वर्कस्पेस बनाएं',
   'Simple plans that grow with you': 'आपके साथ बढ़ने वाले आसान प्लान',
@@ -455,32 +473,34 @@ const HI = {
   'Your AI receptionist answers instantly, in English or Hindi, and hands over to your team with full context when a human is needed.':
     'आपका AI रिसेप्शनिस्ट अंग्रेज़ी या हिंदी में तुरंत जवाब देता है और ज़रूरत पड़ने पर पूरी जानकारी के साथ आपकी टीम को सौंप देता है।',
   'Start free trial': 'मुफ़्त ट्रायल शुरू करें',
-  'Chat with the demo institute': 'डेमो संस्थान से चैट करें',
+  'Chat with the live demo': 'लाइव डेमो से चैट करें',
+  'No industry setup calls. Add what your business offers and the assistant speaks as your business.':
+    'किसी industry-specific setup की ज़रूरत नहीं। अपने व्यवसाय की जानकारी जोड़ें और असिस्टेंट आपके व्यवसाय की तरह बात करेगा।',
   'Get started': 'शुरू करें',
   Demo: 'डेमो',
   'Website AI chatbot': 'वेबसाइट AI चैटबॉट',
   'WhatsApp automation': 'WhatsApp ऑटोमेशन',
   'AI voice receptionist': 'AI वॉइस रिसेप्शनिस्ट',
   'Lead CRM': 'लीड CRM',
-  'Demo class booking': 'डेमो क्लास बुकिंग',
+  'Appointment booking': 'अपॉइंटमेंट बुकिंग',
   'Multi-tenant by design': 'मल्टी-टेनेंट डिज़ाइन',
   'Add your business facts': 'अपने व्यवसाय के तथ्य जोड़ें',
   'Train your front desk': 'अपना फ्रंट डेस्क ट्रेन करें',
   'Go live everywhere': 'हर जगह लाइव जाएं',
-  'Courses, fees, batch timings, FAQs and policies — or upload a PDF and let it chunk automatically.':
-    'कोर्स, फीस, बैच समय, FAQs और नियम — या PDF अपलोड करें, वह अपने आप बंट जाएगा।',
+  'Services, prices, opening hours, FAQs and policies — or upload a PDF and let it chunk automatically.':
+    'सेवाएं, कीमतें, खुलने का समय, FAQs और नियम — या PDF अपलोड करें, वह अपने आप बंट जाएगा।',
   'Set the tone, language, greeting and handoff rules for each AI receptionist agent.':
     'हर AI रिसेप्शनिस्ट एजेंट के लिए टोन, भाषा, अभिवादन और हैंडऑफ़ नियम सेट करें।',
   'Paste the widget code, connect WhatsApp or forward your number. Every enquiry is answered instantly.':
     'विजेट कोड लगाएं, WhatsApp जोड़ें या अपना नंबर फ़ॉरवर्ड करें। हर पूछताछ का तुरंत जवाब मिलेगा।',
-  'An embeddable widget that answers from your verified course, fee and timing information — then captures the lead.':
-    'एक एम्बेड करने योग्य विजेट जो आपके सत्यापित कोर्स, फीस और समय की जानकारी से जवाब देता है — और लीड कैप्चर करता है।',
+  'An embeddable widget that answers from your verified services, prices and timings — then captures the enquiry as a lead.':
+    'एक एम्बेड करने योग्य विजेट जो आपकी सत्यापित सेवाओं, कीमतों और समय से जवाब देता है — और पूछताछ को लीड के रूप में कैप्चर करता है।',
   'Official WhatsApp Business Cloud API webhooks route every conversation to the right business and reply with AI.':
     'आधिकारिक WhatsApp Business Cloud API वेबहुक हर बातचीत सही व्यवसाय तक भेजते हैं और AI से जवाब देते हैं।',
   'Twilio-compatible call handling with speech input, spoken answers, call transcripts and human transfer.':
     'Twilio-संगत कॉल हैंडलिंग, वॉइस इनपुट, बोले गए जवाब, ट्रांसक्रिप्ट और मानव ट्रांसफ़र के साथ।',
-  'Every enquiry becomes a deduplicated lead with source, course interest, assignee and follow-up date.':
-    'हर पूछताछ स्रोत, कोर्स रुचि, असाइनी और फ़ॉलो-अप तारीख के साथ डुप्लीकेट-मुक्त लीड बनती है।',
+  'Every enquiry becomes a deduplicated lead with source, service interest, assignee and follow-up date.':
+    'हर पूछताछ स्रोत, सेवा रुचि, असाइनी और फ़ॉलो-अप तारीख के साथ डुप्लीकेट-मुक्त लीड बनती है।',
   'The AI checks real availability, prevents double booking and confirms only after the appointment is saved.':
     'AI असली उपलब्धता देखता है, डबल बुकिंग रोकता है और अपॉइंटमेंट सेव होने के बाद ही पुष्टि करता है।',
   'Server-enforced tenant isolation, role-based access, audit logs and encrypted credentials per business.':
@@ -502,18 +522,18 @@ const HI = {
   'Business Admin sign in': 'व्यवसाय एडमिन साइन इन',
   'Staff sign in': 'स्टाफ़ साइन इन',
   'Super Admin sign in': 'सुपर एडमिन साइन इन',
-  'One AI receptionist for website chat, WhatsApp and phone calls — capturing leads, booking demo classes and handing off to your team when it matters.':
-    'वेबसाइट चैट, WhatsApp और फ़ोन कॉल के लिए एक AI रिसेप्शनिस्ट — लीड्स कैप्चर, डेमो क्लास बुकिंग और ज़रूरत पर टीम को हैंडऑफ़।',
+  'One AI receptionist for website chat, WhatsApp and phone calls — capturing leads, booking appointments and handing off to your team when it matters.':
+    'वेबसाइट चैट, WhatsApp और फ़ोन कॉल के लिए एक AI रिसेप्शनिस्ट — लीड्स कैप्चर, अपॉइंटमेंट बुकिंग और ज़रूरत पर टीम को हैंडऑफ़।',
   'Grounded answers from your own knowledge base': 'आपके अपने नॉलेज बेस से सही जवाब',
   'Leads and appointments saved automatically': 'लीड्स और अपॉइंटमेंट अपने आप सेव',
-  'Built for coaching institutes, ready for any industry': 'कोचिंग संस्थानों के लिए बना, हर उद्योग के लिए तैयार',
+  'Built for any industry — coaching, clinics, salons, retail and more': 'हर उद्योग के लिए — कोचिंग, क्लिनिक, सैलून, रिटेल और बहुत कुछ',
   'We will email a 6-digit verification code.': 'हम 6 अंकों का सत्यापन कोड ईमेल करेंगे।',
   '10-digit Indian number — no +91 needed.': '10 अंकों का भारतीय नंबर — +91 लिखने की ज़रूरत नहीं।',
   'Choose how you want to sign in': 'चुनें कि आप कैसे साइन इन करना चाहते हैं',
   'Three separate sign-in portals keep platform, business and staff access apart.':
     'तीन अलग साइन-इन पोर्टल प्लेटफ़ॉर्म, व्यवसाय और स्टाफ़ का एक्सेस अलग रखते हैं।',
   'Platform console, businesses, plans and audit logs.': 'प्लेटफ़ॉर्म कंसोल, व्यवसाय, प्लान और ऑडिट लॉग।',
-  'Your institute workspace: AI, leads, staff and billing.': 'आपका संस्थान वर्कस्पेस: AI, लीड्स, स्टाफ़ और बिलिंग।',
+  'Your workspace: AI, leads, staff and billing.': 'आपका वर्कस्पेस: AI, लीड्स, स्टाफ़ और बिलिंग।',
   'Page {page} of {pages}': 'पेज {page} / {pages}',
   '{count} records': '{count} रिकॉर्ड',
   'Enquiry trend': 'पूछताछ का रुझान',

@@ -22,7 +22,7 @@ const FEATURES = [
   {
     icon: Globe2,
     title: 'Website AI chatbot',
-    text: 'An embeddable widget that answers from your verified course, fee and timing information — then captures the lead.',
+    text: 'An embeddable widget that answers from your verified services, prices and timings — then captures the enquiry as a lead.',
   },
   {
     icon: MessageCircle,
@@ -37,11 +37,11 @@ const FEATURES = [
   {
     icon: Users,
     title: 'Lead CRM',
-    text: 'Every enquiry becomes a deduplicated lead with source, course interest, assignee and follow-up date.',
+    text: 'Every enquiry becomes a deduplicated lead with source, service interest, assignee and follow-up date.',
   },
   {
     icon: CalendarCheck,
-    title: 'Demo class booking',
+    title: 'Appointment booking',
     text: 'The AI checks real availability, prevents double booking and confirms only after the appointment is saved.',
   },
   {
@@ -52,9 +52,20 @@ const FEATURES = [
 ];
 
 const STEPS = [
-  { title: 'Add your business facts', text: 'Courses, fees, batch timings, FAQs and policies — or upload a PDF and let it chunk automatically.' },
+  { title: 'Add your business facts', text: 'Services, prices, opening hours, FAQs and policies — or upload a PDF and let it chunk automatically.' },
   { title: 'Train your front desk', text: 'Set the tone, language, greeting and handoff rules for each AI receptionist agent.' },
   { title: 'Go live everywhere', text: 'Paste the widget code, connect WhatsApp or forward your number. Every enquiry is answered instantly.' },
+];
+
+const INDUSTRIES = [
+  'Clinics & dentists',
+  'Salons & spas',
+  'Coaching centres',
+  'Retail stores',
+  'Real estate',
+  'Agencies & services',
+  'Hotels & travel',
+  'Home services',
 ];
 
 export default function Landing() {
@@ -80,6 +91,7 @@ export default function Landing() {
           </Link>
           <nav className="hidden items-center gap-7 text-sm font-medium text-slate-600 md:flex">
             <a href="#features" className="hover:text-slate-900">{t('Features')}</a>
+            <a href="#industries" className="hover:text-slate-900">{t('For your business')}</a>
             <a href="#how" className="hover:text-slate-900">{t('How it works')}</a>
             <a href="#pricing" className="hover:text-slate-900">{t('Pricing')}</a>
             <Link to="/chat/unique-computers" className="hover:text-slate-900">{t('Live demo')}</Link>
@@ -97,14 +109,14 @@ export default function Landing() {
         <div className="mx-auto grid max-w-6xl gap-12 px-5 pb-16 pt-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:pb-24 lg:pt-20">
           <div>
             <span className="chip bg-brand-50 text-brand-700">
-              <Zap size={13} /> {t('AI receptionist for coaching institutes')}
+              <Zap size={13} /> {t('AI receptionist for every business')}
             </span>
             <h1 className="mt-5 text-4xl font-extrabold leading-[1.08] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem]">
               {t('Your Business Never Misses a Customer.')}
             </h1>
             <p className="mt-5 max-w-xl text-lg text-slate-600">
               {t(
-                'Answer every call, WhatsApp message and website chat 24/7 with an AI front desk that knows your courses, fees and batch timings — and books the demo class for you.',
+                'Answer every call, WhatsApp message and website chat 24/7 with an AI front desk that knows your services, prices and timings — and books appointments while you work.',
               )}
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -126,28 +138,45 @@ export default function Landing() {
                 <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
                 <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
                 <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                <p className="ml-2 text-xs font-semibold text-slate-400">uniquecomputers.in · AI receptionist</p>
+                <p className="ml-2 text-xs font-semibold text-slate-400">
+                  {t('yourbusiness.com · AI receptionist')}
+                </p>
               </div>
               <div className="space-y-3 pt-4 text-sm">
                 <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-slate-100 px-4 py-2.5 text-slate-700">
-                  Hi, I want to learn Python. I am a beginner.
+                  {t('Hi, do you have a slot this Saturday?')}
                 </div>
                 <div className="ml-auto max-w-[88%] rounded-2xl rounded-tr-sm bg-brand-600 px-4 py-2.5 text-white">
-                  We offer Python Programming (₹12,000, 2 months) and Python Full Stack Development. As a beginner,
-                  Python Programming is a great start. Would you like a free demo class?
+                  {t(
+                    'Yes — Saturday has 11:00 AM and 4:00 PM open. Our standard service starts at ₹499. Shall I book 11:00 AM?',
+                  )}
                 </div>
                 <div className="max-w-[70%] rounded-2xl rounded-tl-sm bg-slate-100 px-4 py-2.5 text-slate-700">
-                  Yes, Saturday morning please.
+                  {t('11 AM works, please.')}
                 </div>
                 <div className="ml-auto max-w-[88%] rounded-2xl rounded-tr-sm bg-brand-600 px-4 py-2.5 text-white">
-                  Your demo is confirmed for Saturday, 11:00 AM. I have saved your details — our counsellor will call
-                  you today.
+                  {t(
+                    'Booked for Saturday, 11:00 AM. I have saved your details — the team will confirm on WhatsApp shortly.',
+                  )}
                 </div>
               </div>
               <div className="mt-4 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
-                <Check size={14} /> Lead captured · Appointment booked · No staff needed
+                <Check size={14} /> {t('Enquiry captured · Appointment booked · No staff needed')}
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="industries" className="border-y border-slate-100 bg-slate-50/70">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-5 py-6 sm:flex-row sm:items-center">
+          <p className="shrink-0 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">{t('Built for')}</p>
+          <div className="flex flex-wrap gap-2">
+            {INDUSTRIES.map((industry) => (
+              <span key={industry} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">
+                {t(industry)}
+              </span>
+            ))}
           </div>
         </div>
       </section>
@@ -155,9 +184,9 @@ export default function Landing() {
       <section id="features" className="mx-auto max-w-6xl px-5 py-16">
         <div className="max-w-2xl">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-brand-600">{t('Everything in one front desk')}</p>
-          <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">{t('Built for the way institutes actually work')}</h2>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">{t('Built for the way real businesses work')}</h2>
           <p className="mt-3 text-slate-600">
-            {t('Replace missed calls and scattered WhatsApp chats with a single AI receptionist that captures, qualifies and routes every enquiry.')}
+            {t('Replace missed calls and scattered WhatsApp chats with a single AI receptionist that captures, qualifies and routes every enquiry — whether you sell services, courses, appointments or products.')}
           </p>
         </div>
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -246,12 +275,15 @@ export default function Landing() {
           <p className="mx-auto mt-3 max-w-xl text-slate-300">
             {t('Your AI receptionist answers instantly, in English or Hindi, and hands over to your team with full context when a human is needed.')}
           </p>
+          <p className="mx-auto mt-4 max-w-xl text-sm text-slate-400">
+            {t('No industry setup calls. Add what your business offers and the assistant speaks as your business.')}
+          </p>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
             <Link to="/register" className="btn-primary px-5 py-3">
               {t('Start free trial')} <ArrowRight size={16} />
             </Link>
             <Link to="/chat/unique-computers" className="btn px-5 py-3 bg-white/10 text-white hover:bg-white/15">
-              <BookOpen size={16} /> {t('Chat with the demo institute')}
+              <BookOpen size={16} /> {t('Chat with the live demo')}
             </Link>
           </div>
         </div>

@@ -11,7 +11,7 @@ const PORTALS = {
   business: {
     label: 'Business Admin',
     title: 'Business Admin sign in',
-    subtitle: 'Your institute workspace: AI, leads, staff and billing.',
+    subtitle: 'Your workspace: AI, leads, staff and billing.',
     icon: Building2,
     demo: { email: 'owner@uniquecomputers.in', password: 'Owner@12345' },
   },
@@ -48,13 +48,13 @@ function AuthShell({ title, subtitle, children, footer }) {
           <h2 className="text-4xl font-bold leading-tight">{t('Your Business Never Misses a Customer.')}</h2>
           <p className="mt-4 text-slate-300">
             {t(
-              'One AI receptionist for website chat, WhatsApp and phone calls — capturing leads, booking demo classes and handing off to your team when it matters.',
+              'One AI receptionist for website chat, WhatsApp and phone calls — capturing leads, booking appointments and handing off to your team when it matters.',
             )}
           </p>
           <ul className="mt-8 space-y-3 text-sm text-slate-300">
             <li>• {t('Grounded answers from your own knowledge base')}</li>
             <li>• {t('Leads and appointments saved automatically')}</li>
-            <li>• {t('Built for coaching institutes, ready for any industry')}</li>
+            <li>• {t('Built for any industry — coaching, clinics, salons, retail and more')}</li>
           </ul>
         </div>
         <p className="relative text-xs text-slate-500">© {new Date().getFullYear()} Unique IT Solutions</p>
