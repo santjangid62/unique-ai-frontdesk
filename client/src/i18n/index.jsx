@@ -372,6 +372,7 @@ const HI = {
   'Create your business workspace — no credit card required.':
     'अपना व्यवसाय वर्कस्पेस बनाएं — क्रेडिट कार्ड ज़रूरी नहीं।',
   'Back to website': 'वेबसाइट पर वापस',
+  Back: 'वापस',
   'Sign in': 'साइन इन',
   'Forgot password?': 'पासवर्ड भूल गए?',
   'Create an account': 'खाता बनाएं',

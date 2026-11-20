@@ -1,7 +1,7 @@
 import { Tx } from '../components/ui.jsx';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Loader2, Send, Sparkles, CalendarPlus } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Loader2, Send, Sparkles, CalendarPlus } from 'lucide-react';
 import api, { errorMessage } from '../lib/api.js';
 
 const VISITOR_KEY = 'uaf_visitor_id';
@@ -17,6 +17,7 @@ function getVisitorId() {
 
 export default function PublicChat() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [config, setConfig] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -123,6 +124,16 @@ export default function PublicChat() {
     }
   };
 
+  // Opened from the site: go back to the previous page. Opened directly in a
+  // new tab there is no in-app history, so fall back to the landing page.
+  const goBack = () => {
+    if (window.history.state?.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
+
   const accent = config?.widget?.primaryColor || '#4f46e5';
 
   if (error && !config) {
@@ -131,6 +142,9 @@ export default function PublicChat() {
         <div className="card max-w-sm p-6 text-center">
           <p className="text-sm font-semibold text-slate-800"><Tx>Chat unavailable</Tx></p>
           <p className="mt-1 text-sm text-slate-500">{error}</p>
+          <button type="button" className="btn-secondary mx-auto mt-4" onClick={goBack}>
+            <ArrowLeft size={15} /> <Tx>Back</Tx>
+          </button>
         </div>
       </div>
     );
@@ -140,6 +154,15 @@ export default function PublicChat() {
     <div className="flex min-h-screen flex-col bg-slate-100">
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col bg-white shadow-xl sm:my-6 sm:min-h-[720px] sm:rounded-3xl sm:shadow-pop">
         <header className="flex items-center gap-3 rounded-t-none border-b border-slate-100 px-5 py-4 sm:rounded-t-3xl" style={{ backgroundColor: `${accent}0d` }}>
+          <button
+            type="button"
+            onClick={goBack}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+            aria-label="Back"
+            title="Back"
+          >
+            <ArrowLeft size={16} />
+          </button>
           <span className="grid h-10 w-10 place-items-center rounded-xl text-white" style={{ backgroundColor: accent }}>
             <Sparkles size={18} />
           </span>
