@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Loader2, Send, Sparkles, CalendarPlus } from 'lucide-react';
 import api, { errorMessage } from '../lib/api.js';
+import { useI18n } from '../i18n/index.jsx';
 
 const VISITOR_KEY = 'uaf_visitor_id';
 
@@ -18,6 +19,7 @@ function getVisitorId() {
 export default function PublicChat() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [config, setConfig] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -81,7 +83,7 @@ export default function PublicChat() {
           {
             id: `ai-${Date.now()}`,
             role: 'ai',
-            content: data.data.reply || 'Our team will get back to you shortly.',
+            content: data.data.reply || t('Our team will get back to you shortly.'),
             escalated: data.data.escalated,
           },
         ]);
@@ -91,7 +93,7 @@ export default function PublicChat() {
             {
               id: `sys-${Date.now()}`,
               role: 'system',
-              content: 'A team member has been notified and will join this conversation.',
+              content: t('A team member has been notified and will join this conversation.'),
             },
           ]);
         }
@@ -101,7 +103,7 @@ export default function PublicChat() {
         setBusy(false);
       }
     },
-    [input, busy, slug, visitorId],
+    [input, busy, slug, visitorId, t],
   );
 
   const bookDemo = async (event) => {
@@ -113,11 +115,15 @@ export default function PublicChat() {
         dateStyle: 'medium',
         timeStyle: 'short',
       });
-      setBookingState({ busy: false, message: `Appointment booked for ${when}.`, error: '' });
+      setBookingState({ busy: false, message: t('Appointment booked for {when}.', { when }), error: '' });
       setShowBooking(false);
       setMessages((prev) => [
         ...prev,
-        { id: `book-${Date.now()}`, role: 'system', content: `Appointment booked for ${when}. See you there!` },
+        {
+          id: `book-${Date.now()}`,
+          role: 'system',
+          content: t('Appointment booked for {when}. See you there!', { when }),
+        },
       ]);
     } catch (err) {
       setBookingState({ busy: false, message: '', error: errorMessage(err, 'Could not book this slot') });
@@ -158,8 +164,8 @@ export default function PublicChat() {
             type="button"
             onClick={goBack}
             className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
-            aria-label="Back"
-            title="Back"
+            aria-label={t('Back')}
+            title={t('Back')}
           >
             <ArrowLeft size={16} />
           </button>
@@ -167,14 +173,14 @@ export default function PublicChat() {
             <Sparkles size={18} />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-slate-900">{config?.business?.name || 'Loading…'}</p>
+            <p className="truncate text-sm font-bold text-slate-900">{config?.business?.name || t('Loading…')}</p>
             <p className="text-xs text-slate-500">
-              {config?.widget?.agentName || 'AI assistant'} · replies instantly
+              {config?.widget?.agentName || t('AI assistant')} · {t('replies instantly')}
             </p>
           </div>
           {config?.demoAvailable ? (
             <button type="button" className="btn-secondary px-3 py-2 text-xs" onClick={() => setShowBooking((value) => !value)}>
-              <CalendarPlus size={14} /> Book appointment
+              <CalendarPlus size={14} /> {t('Book appointment')}
             </button>
           ) : null}
         </header>
@@ -185,21 +191,21 @@ export default function PublicChat() {
             <div className="grid gap-3 sm:grid-cols-2">
               <input
                 className="input"
-                placeholder="Your name"
+                placeholder={t('Your name')}
                 required
                 value={booking.name}
                 onChange={(event) => setBooking({ ...booking, name: event.target.value })}
               />
               <input
                 className="input"
-                placeholder="Phone number"
+                placeholder={t('Phone number')}
                 required
                 value={booking.phone}
                 onChange={(event) => setBooking({ ...booking, phone: event.target.value })}
               />
               <input
                 className="input"
-                placeholder="Service / interest"
+                placeholder={t('Service / interest')}
                 value={booking.course}
                 onChange={(event) => setBooking({ ...booking, course: event.target.value })}
               />
@@ -222,10 +228,10 @@ export default function PublicChat() {
             </div>
             <div className="flex gap-2">
               <button type="submit" className="btn-primary flex-1" style={{ backgroundColor: accent }} disabled={bookingState.busy}>
-                {bookingState.busy ? 'Booking…' : 'Confirm appointment'}
+                {bookingState.busy ? t('Booking…') : t('Confirm appointment')}
               </button>
               <button type="button" className="btn-secondary" onClick={() => setShowBooking(false)}>
-                Cancel
+                {t('Cancel')}
               </button>
             </div>
           </form>
@@ -255,7 +261,7 @@ export default function PublicChat() {
           })}
           {busy ? (
             <div className="flex items-center gap-2 rounded-2xl bg-slate-100 px-4 py-2.5 text-sm text-slate-500">
-              <Loader2 size={14} className="animate-spin" /> thinking…
+              <Loader2 size={14} className="animate-spin" /> {t('thinking…')}
             </div>
           ) : null}
           {error ? <p className="text-xs font-medium text-rose-600">{error}</p> : null}
@@ -270,7 +276,7 @@ export default function PublicChat() {
         <form onSubmit={send} className="flex items-center gap-2 border-t border-slate-100 px-4 py-3">
           <input
             className="input flex-1"
-            placeholder="Ask about services, prices or an appointment…"
+            placeholder={t('Ask about services, prices or an appointment…')}
             value={input}
             onChange={(event) => setInput(event.target.value)}
             disabled={!config}
@@ -280,14 +286,14 @@ export default function PublicChat() {
             className="grid h-11 w-11 place-items-center rounded-xl text-white disabled:opacity-50"
             style={{ backgroundColor: accent }}
             disabled={busy || !input.trim()}
-            aria-label="Send message"
+            aria-label={t('Send message')}
           >
             <Send size={17} />
           </button>
         </form>
         {config?.widget?.showBranding ? (
           <p className="pb-3 text-center text-[10px] font-medium uppercase tracking-wide text-slate-400">
-            Powered by Unique AI Frontdesk ·{' '}
+            {t('Powered by Unique AI Frontdesk')} ·{' '}
             <a
               href="https://uniqueitsolutionsjaipur.com"
               target="_blank"

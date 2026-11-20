@@ -791,6 +791,27 @@ Object.assign(HI, {
   Workspace: 'वर्कस्पेस',
 });
 
+// Public website chat (visitor-facing widget page).
+Object.assign(HI, {
+  'replies instantly': 'तुरंत जवाब',
+  'AI assistant': 'AI सहायक',
+  'Book appointment': 'अपॉइंटमेंट बुक करें',
+  'Phone number': 'फ़ोन नंबर',
+  'Confirm appointment': 'अपॉइंटमेंट पक्का करें',
+  'Booking…': 'बुक हो रहा है…',
+  'thinking…': 'सोच रहा है…',
+  'Ask about services, prices or an appointment…': 'सेवाओं, कीमतों या अपॉइंटमेंट के बारे में पूछें…',
+  'This chat is unavailable': 'यह चैट उपलब्ध नहीं है',
+  'Message could not be sent': 'संदेश नहीं भेजा जा सका',
+  'Could not book this slot': 'यह स्लॉट बुक नहीं हो सका',
+  'Our team will get back to you shortly.': 'हमारी टीम जल्द ही आपसे संपर्क करेगी।',
+  'A team member has been notified and will join this conversation.':
+    'टीम के सदस्य को सूचित कर दिया गया है, वे इस बातचीत से जुड़ेंगे।',
+  'Appointment booked for {when}.': '{when} के लिए अपॉइंटमेंट बुक हो गया।',
+  'Appointment booked for {when}. See you there!': '{when} के लिए अपॉइंटमेंट बुक हो गया। मिलते हैं!',
+  'Powered by Unique AI Frontdesk': 'Unique AI Frontdesk द्वारा संचालित',
+});
+
 const I18nContext = createContext(null);
 
 export function LanguageProvider({ children }) {
