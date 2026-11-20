@@ -94,6 +94,131 @@ async function login(email, password) {
   const unauth = await request('/api/leads');
   check('Protected route rejects anonymous access', unauth.status === 401);
 
+  // ---- Business signup: Indian mobile validation + email verification ----
+  const signupEmail = `smoke.verify.${Date.now()}@example.com`;
+  const signupPassword = 'Smoke@12345';
+
+  const badPhone = await request('/api/auth/register', {
+    method: 'POST',
+    body: {
+      businessName: 'Smoke Verify Institute',
+      ownerName: 'Smoke Owner',
+      email: signupEmail,
+      password: signupPassword,
+      phone: '12345',
+    },
+  });
+  const phoneDetail = (badPhone.payload?.error?.details || []).find((item) => item.path === 'phone');
+  check(
+    'Registration rejects an invalid Indian mobile number',
+    badPhone.status === 400 && Boolean(phoneDetail),
+    JSON.stringify(badPhone.payload),
+  );
+
+  const registered = await request('/api/auth/register', {
+    method: 'POST',
+    body: {
+      businessName: 'Smoke Verify Institute',
+      ownerName: 'Smoke Owner',
+      email: signupEmail,
+      password: signupPassword,
+      // +91 and spaces must be normalised away, not rejected.
+      phone: '+91 98290 11223',
+    },
+  });
+  check(
+    'Registration requires email verification (no session)',
+    registered.status === 201 &&
+      registered.payload?.data?.requiresEmailVerification === true &&
+      !registered.payload?.data?.accessToken,
+    JSON.stringify(registered.payload),
+  );
+
+  const devCode = registered.payload?.data?.devCode;
+  check('A 6-digit verification code is issued', /^\d{6}$/.test(String(devCode || '')), `code=${devCode}`);
+
+  const unverifiedLogin = await request('/api/auth/login', {
+    method: 'POST',
+    body: { email: signupEmail, password: signupPassword, portal: 'business' },
+  });
+  check(
+    'Unverified business admin cannot sign in',
+    unverifiedLogin.status === 403 && unverifiedLogin.payload?.error?.code === 'EMAIL_NOT_VERIFIED',
+    JSON.stringify(unverifiedLogin.payload),
+  );
+
+  const resendTooSoon = await request('/api/auth/resend-verification', {
+    method: 'POST',
+    body: { email: signupEmail },
+  });
+  check('Verification resend is throttled', resendTooSoon.status === 429, `status=${resendTooSoon.status}`);
+
+  const wrongCode = await request('/api/auth/verify-email', {
+    method: 'POST',
+    body: { email: signupEmail, code: '000000' },
+  });
+  check('Incorrect verification code is rejected', wrongCode.status === 400, `status=${wrongCode.status}`);
+
+  const verified = await request('/api/auth/verify-email', {
+    method: 'POST',
+    body: { email: signupEmail, code: devCode },
+  });
+  check(
+    'Correct code verifies the email and returns a session',
+    verified.status === 200 &&
+      verified.payload?.data?.user?.emailVerified === true &&
+      Boolean(verified.payload?.data?.accessToken),
+    JSON.stringify(verified.payload),
+  );
+  check(
+    'Mobile number is stored as 10 digits',
+    verified.payload?.data?.user?.phone === '9829011223',
+    `phone=${verified.payload?.data?.user?.phone}`,
+  );
+
+  // ---- Role-specific sign-in portals ----
+  const signupWrongPortal = await request('/api/auth/login', {
+    method: 'POST',
+    body: { email: signupEmail, password: signupPassword, portal: 'staff' },
+  });
+  check(
+    'Business admin is rejected on the staff portal',
+    signupWrongPortal.status === 403 && signupWrongPortal.payload?.error?.code === 'WRONG_PORTAL',
+    JSON.stringify(signupWrongPortal.payload),
+  );
+
+  const signupRightPortal = await request('/api/auth/login', {
+    method: 'POST',
+    body: { email: signupEmail, password: signupPassword, portal: 'business' },
+  });
+  check('Business admin signs in on the business portal', signupRightPortal.status === 200);
+
+  const staffOnSuperAdmin = await request('/api/auth/login', {
+    method: 'POST',
+    body: { email: 'staff@uniquecomputers.in', password: 'Staff@12345', portal: 'super-admin' },
+  });
+  check(
+    'Staff is rejected on the super admin portal',
+    staffOnSuperAdmin.status === 403 && staffOnSuperAdmin.payload?.error?.code === 'WRONG_PORTAL',
+    JSON.stringify(staffOnSuperAdmin.payload),
+  );
+
+  const superAdminOnBusiness = await request('/api/auth/login', {
+    method: 'POST',
+    body: { email: 'admin@uniqueit.in', password: 'Admin@12345', portal: 'business' },
+  });
+  check(
+    'Super admin is rejected on the business portal',
+    superAdminOnBusiness.status === 403 && superAdminOnBusiness.payload?.error?.code === 'WRONG_PORTAL',
+    JSON.stringify(superAdminOnBusiness.payload),
+  );
+
+  const superAdminOnOwnPortal = await request('/api/auth/login', {
+    method: 'POST',
+    body: { email: 'admin@uniqueit.in', password: 'Admin@12345', portal: 'super-admin' },
+  });
+  check('Super admin signs in on the super admin portal', superAdminOnOwnPortal.status === 200);
+
   const overview = await request('/api/analytics/business/overview', { token: owner.accessToken });
   check('Business overview analytics', overview.status === 200 && typeof overview.payload?.data?.kpis?.leadTotal === 'number');
 
