@@ -276,8 +276,9 @@ npm run lock:check    # fails if package-lock.json drifted from package.json (ro
 ```
 
 The signup checks create a throwaway business (`Smoke Verify Institute`). When `MONGODB_URI` is
-available, `scripts/smoke-cleanup.js` removes it and its data at the end of the run; the guard only
-deletes a tenant with that exact name, the run's own random contact email and an age under one hour.
+available, `scripts/smoke-cleanup.js` removes it and its data at the end of the run. It also sweeps
+leftovers from earlier crashed runs at the start (capped at 25 per run). Every deletion is guarded by
+the exact tenant name, the `smoke.verify.<timestamp>@example.com` contact email and an age window.
 
 `npm run smoke:ci` needs no database or server: it starts a throwaway in-memory MongoDB, seeds the demo
 workspace, serves the app on an ephemeral port and runs `npm run smoke` against it. CI runs the client build,

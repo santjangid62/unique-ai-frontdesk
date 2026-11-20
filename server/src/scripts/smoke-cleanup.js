@@ -1,17 +1,27 @@
 import mongoose from 'mongoose';
 
 /**
- * Removes the throwaway business that smoke.js creates for the signup and
- * email-verification checks.
+ * Cleanup helpers for the throwaway business that smoke.js creates for the
+ * signup and email-verification checks.
  *
- * Safety rules, all enforced before anything is deleted:
- *  - an explicit tenant id and the exact signup email are required;
- *  - the tenant must still be named "Smoke Verify Institute";
- *  - its contact email must be the smoke run's own random address;
- *  - it must have been created within the last hour.
- * Only that tenant id and users carrying that email/tenant are touched.
+ * Two entry points:
+ *  - cleanupSmokeBusiness(): removes the tenant from the current run.
+ *  - sweepStaleSmokeBusinesses(): removes leftovers from earlier runs that
+ *    crashed before they could clean up after themselves.
+ *
+ * Both only ever touch a tenant named "Smoke Verify Institute" whose contact
+ * email matches the random smoke pattern, and they refuse recent records so a
+ * concurrent run cannot delete another run's tenant.
  */
 export const SMOKE_TENANT_NAME = 'Smoke Verify Institute';
+export const SMOKE_EMAIL_PATTERN = /^smoke\.verify\.\d+@example\.com$/;
+
+/** Leftovers must be older than this before the sweep will delete them. */
+const STALE_AGE_MS = 30 * 60 * 1000;
+/** A single run removes at most this many leftovers, so a bad filter cannot wipe data. */
+const SWEEP_LIMIT = 25;
+/** The current run's own tenant must still be fresh when it is cleaned up. */
+const MAX_AGE_MS = 60 * 60 * 1000;
 
 const TENANT_COLLECTIONS = [
   'aiagents',
@@ -31,24 +41,53 @@ const TENANT_COLLECTIONS = [
   'usagelogs',
 ];
 
-const MAX_AGE_MS = 60 * 60 * 1000;
+async function withDatabase(callback) {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) return { skipped: true, reason: 'MONGODB_URI is not set, skipping database cleanup' };
 
+  const ownsConnection = mongoose.connection.readyState !== 1;
+  if (ownsConnection) await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
+  try {
+    return await callback(mongoose.connection.db);
+  } finally {
+    if (ownsConnection) await mongoose.disconnect();
+  }
+}
+
+/** Deletes one verified smoke tenant and every record scoped to it. */
+async function removeSmokeTenant(db, tenant) {
+  const tenantObjectId = tenant._id;
+  const userIds = (
+    await db
+      .collection('users')
+      .find({ $or: [{ email: tenant.contactEmail }, { tenantId: tenantObjectId }] })
+      .project({ _id: 1 })
+      .toArray()
+  ).map((user) => user._id);
+
+  await db.collection('refreshtokens').deleteMany({ userId: { $in: userIds } });
+  await db.collection('passwordresets').deleteMany({ userId: { $in: userIds } });
+  const removedUsers = (await db.collection('users').deleteMany({ _id: { $in: userIds } })).deletedCount;
+
+  let removedDocuments = 0;
+  for (const name of TENANT_COLLECTIONS) {
+    const result = await db.collection(name).deleteMany({ tenantId: tenantObjectId });
+    removedDocuments += result.deletedCount;
+  }
+
+  const removedTenant = (await db.collection('tenants').deleteOne({ _id: tenantObjectId })).deletedCount;
+  return { removed: removedTenant === 1, removedTenant, removedUsers, removedDocuments };
+}
+
+/** Removes exactly the business created by this smoke run. */
 export async function cleanupSmokeBusiness({ tenantId, email }) {
   if (!tenantId || !email) return { removed: false, reason: 'tenantId and email are required' };
   if (!mongoose.Types.ObjectId.isValid(String(tenantId))) {
     return { removed: false, reason: 'tenantId is not a valid ObjectId' };
   }
 
-  const uri = process.env.MONGODB_URI;
-  if (!uri) return { removed: false, reason: 'MONGODB_URI is not set, skipping database cleanup' };
-
-  const ownsConnection = mongoose.connection.readyState !== 1;
-  if (ownsConnection) await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
-
-  try {
-    const db = mongoose.connection.db;
-    const tenantObjectId = new mongoose.Types.ObjectId(String(tenantId));
-    const tenant = await db.collection('tenants').findOne({ _id: tenantObjectId });
+  return withDatabase(async (db) => {
+    const tenant = await db.collection('tenants').findOne({ _id: new mongoose.Types.ObjectId(String(tenantId)) });
 
     if (!tenant) return { removed: false, reason: 'tenant not found' };
     if (tenant.name !== SMOKE_TENANT_NAME) {
@@ -61,29 +100,35 @@ export async function cleanupSmokeBusiness({ tenantId, email }) {
       return { removed: false, reason: 'refusing to delete a tenant older than one hour' };
     }
 
-    const userIds = (
-      await db
-        .collection('users')
-        .find({ $or: [{ email: String(email).toLowerCase() }, { tenantId: tenantObjectId }] })
-        .project({ _id: 1 })
-        .toArray()
-    ).map((user) => user._id);
+    return removeSmokeTenant(db, tenant);
+  });
+}
 
-    await db.collection('refreshtokens').deleteMany({ userId: { $in: userIds } });
-    await db.collection('passwordresets').deleteMany({ userId: { $in: userIds } });
-    const removedUsers = (await db.collection('users').deleteMany({ _id: { $in: userIds } })).deletedCount;
+/**
+ * Removes leftovers from earlier runs that crashed before cleanup ran. Guarded by
+ * the exact tenant name, the smoke email pattern and a minimum age, and capped per run.
+ */
+export async function sweepStaleSmokeBusinesses({ olderThanMs = STALE_AGE_MS, limit = SWEEP_LIMIT } = {}) {
+  return withDatabase(async (db) => {
+    const cutoff = new Date(Date.now() - olderThanMs);
+    const stale = await db
+      .collection('tenants')
+      .find({ name: SMOKE_TENANT_NAME, contactEmail: SMOKE_EMAIL_PATTERN, createdAt: { $lt: cutoff } })
+      .project({ _id: 1, slug: 1, contactEmail: 1, createdAt: 1 })
+      .limit(limit)
+      .toArray();
 
-    let removedDocuments = 0;
-    for (const name of TENANT_COLLECTIONS) {
-      const result = await db.collection(name).deleteMany({ tenantId: tenantObjectId });
-      removedDocuments += result.deletedCount;
+    const removed = [];
+    for (const tenant of stale) {
+      // Re-check the pattern in code as well as in the query.
+      if (!SMOKE_EMAIL_PATTERN.test(String(tenant.contactEmail || ''))) continue;
+      if (Date.now() - new Date(tenant.createdAt).getTime() < olderThanMs) continue;
+      const result = await removeSmokeTenant(db, tenant);
+      if (result.removed) removed.push(tenant.slug);
     }
 
-    const removedTenant = (await db.collection('tenants').deleteOne({ _id: tenantObjectId })).deletedCount;
-    return { removed: removedTenant === 1, removedTenant, removedUsers, removedDocuments };
-  } finally {
-    if (ownsConnection) await mongoose.disconnect();
-  }
+    return { removed: removed.length, slugs: removed, skipped: false };
+  });
 }
 
 export default cleanupSmokeBusiness;

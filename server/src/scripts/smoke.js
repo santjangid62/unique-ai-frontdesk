@@ -6,7 +6,7 @@
  * (see scripts/smoke-cleanup.js) when MONGODB_URI is available.
  */
 import 'dotenv/config';
-import { cleanupSmokeBusiness } from './smoke-cleanup.js';
+import { cleanupSmokeBusiness, sweepStaleSmokeBusinesses } from './smoke-cleanup.js';
 
 const BASE = process.env.SMOKE_BASE_URL || process.env.SMOKE_BASE || 'http://localhost:5000';
 
@@ -83,6 +83,24 @@ async function login(email, password) {
 
   const health = await request('/api/health');
   check('GET /api/health', health.status === 200 && health.payload?.data?.db === 'connected', JSON.stringify(health.payload));
+
+  // A crashed earlier run may have left its throwaway business behind. Sweep it
+  // first, so this run starts clean even if it is interrupted later on.
+  if (process.env.MONGODB_URI) {
+    let sweep = { removed: 0 };
+    try {
+      sweep = await sweepStaleSmokeBusinesses();
+    } catch (error) {
+      sweep = { error: error.message };
+    }
+    check(
+      'Stale smoke test businesses are swept',
+      !sweep.error,
+      sweep.error || `${sweep.removed} removed${sweep.slugs?.length ? `: ${sweep.slugs.join(', ')}` : ''}`,
+    );
+  } else {
+    console.log('  SKIP  Stale smoke test business sweep (MONGODB_URI is not set)');
+  }
 
   const owner = await login('owner@uniquecomputers.in', 'Owner@12345');
   check('Business admin login returns access token', Boolean(owner.accessToken));
