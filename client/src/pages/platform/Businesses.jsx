@@ -211,13 +211,13 @@ export default function Businesses() {
               ))}
             </select>
           </Field>
-          <Field label="Contact email">
+          <Field label="Contact email" hint="The business admin signs in with this email.">
             <input className="input" type="email" value={form.contactEmail} onChange={(event) => setForm({ ...form, contactEmail: event.target.value })} />
           </Field>
-          <Field label="Contact phone">
+          <Field label="Contact phone" hint="Used for account contact and support.">
             <input className="input" value={form.contactPhone} onChange={(event) => setForm({ ...form, contactPhone: event.target.value })} />
           </Field>
-          <Field label="Plan">
+          <Field label="Plan" hint="Limits AI messages, agents and staff seats for this business.">
             <select className="input" value={form.planCode} onChange={(event) => setForm({ ...form, planCode: event.target.value })}>
               {(plans || []).map((plan) => (
                 <option key={plan.code} value={plan.code}>

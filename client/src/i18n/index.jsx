@@ -815,6 +815,105 @@ Object.assign(HI, {
     'जो विज़िटर चैट हिन्दी में देखते हैं उन्हें यह दिखेगा। खाली छोड़ने पर अंग्रेज़ी संदेश दिखेगा।',
 });
 
+// Field-level help text that explains what to enter while training the AI.
+Object.assign(HI, {
+  'A short name your team will recognise.': 'ऐसा छोटा नाम जो आपकी टीम पहचान सके।',
+  'One line about what this agent handles.': 'एक पंक्ति में बताएं कि यह एजेंट क्या संभालता है।',
+  'The first message a customer sees. Keep it short and friendly.':
+    'ग्राहक को दिखने वाला पहला संदेश। छोटा और मिलनसार रखें।',
+  'How the AI sounds in every reply.': 'हर जवाब में AI का लहज़ा कैसा हो।',
+  'Language the AI replies in. Pick Hinglish for mixed Hindi-English customers.':
+    'AI किस भाषा में जवाब दे। हिन्दी-अंग्रेज़ी मिले ग्राहकों के लिए Hinglish चुनें।',
+  "A few words that guide the AI's style.": 'कुछ शब्द जो AI की शैली तय करें।',
+  'Used for AI phone calls. Pick the voice that fits your brand.':
+    'AI फ़ोन कॉल के लिए। अपने ब्रांड के अनुसार आवाज़ चुनें।',
+  'Rules the AI must follow: what to offer, what to avoid, and when to hand over to a human. Never promise fees or policies you have not added to the Knowledge Base.':
+    'AI के लिए नियम: क्या पेश करना है, क्या नहीं, और कब किसी इंसान को सौंपना है। जो फीस या नियम नॉलेज बेस में नहीं हैं, उनका वादा कभी न करें।',
+  'Where this agent answers. Website chat works right away; WhatsApp and voice need setup.':
+    'यह एजेंट कहां जवाब देगा। वेबसाइट चैट तुरंत चलती है; WhatsApp और वॉइस के लिए सेटअप चाहिए।',
+  'Chats and calls are handed to this number when a customer asks for a human.':
+    'ग्राहक के इंसान मांगने पर चैट/कॉल इस नंबर पर भेजे जाएंगे।',
+  'The AI quotes these facts word for word, so keep one topic per entry and update it whenever prices or timings change.':
+    'AI ये बातें शब्द-शब्द बताता है, इसलिए एक एंट्री में एक ही विषय रखें और कीमत या समय बदलने पर इसे अपडेट करें।',
+  'Pick the section this fact belongs to.': 'यह जानकारी किस श्रेणी की है, चुनें।',
+  'Short label, for example Python course fees.': 'छोटा शीर्षक, जैसे पाइथन कोर्स फीस।',
+  'Write the exact facts the AI may quote: prices, timings, address and policies. One topic per entry works best.':
+    'वही तथ्य लिखें जो AI ग्राहक को बता सकता है: कीमतें, समय, पता और नियम। एक एंट्री में एक ही विषय सबसे अच्छा रहता है।',
+  'First message visitors see. Mention what you help with and your timings.':
+    'विज़िटर को दिखने वाला पहला संदेश। बताएं कि आप किसमें मदद करते हैं और समय क्या है।',
+  'Used for the chat button and message bubbles.': 'चैट बटन और संदेशों के रंग में उपयोग होता है।',
+  'Where the chat button appears on your website.': 'आपकी वेबसाइट पर चैट बटन कहां दिखेगा।',
+  'Shown to customers and used when the AI introduces your business.':
+    'ग्राहकों को दिखता है और AI परिचय देते समय इसका उपयोग करता है।',
+  'Two or three lines about what you do. The AI uses this to introduce your business.':
+    'दो-तीन पंक्तियों में बताएं कि आप क्या करते हैं। AI इसी से आपके व्यवसाय का परिचय देता है।',
+  'The number the AI shares with customers.': 'यही नंबर AI ग्राहकों को देता है।',
+  'Where enquiry notifications are sent.': 'पूछताछ की सूचनाएं यहां भेजी जाती हैं।',
+  'Shared when a customer asks for your website.': 'ग्राहक वेबसाइट मांगे तो यही लिंक दिया जाता है।',
+  'Paste your Google Maps share link so the AI can send directions.':
+    'अपना Google Maps शेयर लिंक डालें ताकि AI रास्ता भेज सके।',
+  'Full address the AI can share, including a landmark.':
+    'पूरा पता जो AI बता सके, लैंडमार्क के साथ।',
+  'Used in replies, invoices and reports.': 'जवाबों, बिलों और रिपोर्ट में उपयोग होता है।',
+  'The AI only offers appointments within your working hours.':
+    'AI सिर्फ़ आपके काम के घंटों में ही अपॉइंटमेंट देता है।',
+  'Days you are open. Closed days are never offered for appointments.':
+    'जिन दिन आप खुले हैं। बंद दिनों में अपॉइंटमेंट कभी नहीं दिया जाता।',
+  'Languages your team can serve, comma separated.':
+    'आपकी टीम किन भाषाओं में सेवा देती है, कॉमा से अलग करें।',
+  'Lets the AI offer a free demo or trial slot.': 'AI मुफ़्त डेमो या ट्रायल स्लॉट पेश कर सकता है।',
+  'Steps a customer follows after showing interest. The AI explains these when asked.':
+    'रुचि दिखाने के बाद ग्राहक किन चरणों से गुज़रता है। पूछने पर AI यही बताता है।',
+  'What you tell customers about placement or job support.':
+    'प्लेसमेंट या नौकरी सहायता के बारे में आप ग्राहकों को क्या बताते हैं।',
+  'Add every course with its fee and batch timings — the AI answers fee, duration and batch questions from here.':
+    'हर कोर्स उसकी फीस और बैच समय के साथ जोड़ें — फीस, अवधि और बैच से जुड़े सवाल AI यहीं से जवाब देता है।',
+  'Name as customers know it.': 'वही नाम जो ग्राहक जानते हैं।',
+  'Total fee as you quote it.': 'कुल फीस, जैसे आप ग्राहकों को बताते हैं।',
+  'For example: 3 months.': 'जैसे: 3 महीने।',
+  'Comma separated, for example: 7 AM, 6 PM.': 'कॉमा से अलग करें, जैसे: सुबह 7, शाम 6।',
+  'Short list of topics covered. The AI shares this when asked.':
+    'विषयों की छोटी सूची। पूछने पर AI यही बताता है।',
+  '10-digit mobile number, used for calls and WhatsApp.':
+    '10 अंकों का मोबाइल नंबर, कॉल और WhatsApp के लिए।',
+  'What the customer asked about.': 'ग्राहक ने किस बारे में पूछा था।',
+  'Where this enquiry came from.': 'यह पूछताछ कहां से आई।',
+  'Current stage of your follow-up.': 'फ़ॉलो-अप का मौजूदा चरण।',
+  'Staff member responsible for this lead.': 'इस लीड के ज़िम्मेदार स्टाफ सदस्य।',
+  'Date for the next follow-up call.': 'अगली फ़ॉलो-अप कॉल की तारीख।',
+  'Anything the next person should know before calling.':
+    'कॉल से पहले अगले व्यक्ति को जो पता होना चाहिए।',
+  'Comma separated, for example: Python, Excel.': 'कॉमा से अलग करें, जैसे: पाइथन, एक्सेल।',
+  'Comma separated labels for grouping, for example: hot, repeat.':
+    'ग्रुपिंग के लिए लेबल, कॉमा से अलग, जैसे: hot, repeat।',
+  'What the customer is coming in for.': 'ग्राहक किस काम के लिए आ रहा है।',
+  'What kind of visit this is.': 'यह किस तरह की विज़िट है।',
+  'How long the slot stays blocked in the calendar.':
+    'कैलेंडर में स्लॉट कितनी देर ब्लॉक रहेगा।',
+  'Only your team sees these notes.': 'ये नोट्स सिर्फ़ आपकी टीम देखती है।',
+  'They will sign in with this email.': 'इसी ईमेल से वे साइन इन करेंगे।',
+  'Used for assignment notifications.': 'असाइनमेंट की सूचनाओं के लिए।',
+  'Shown next to their name across the app.': 'ऐप में उनके नाम के आगे दिखता है।',
+  'Staff see only work assigned to them; business admins manage everything.':
+    'स्टाफ़ को सिर्फ़ अपना काम दिखता है; बिज़नेस एडमिन सब कुछ संभालते हैं।',
+  'Email cannot be changed here.': 'ईमेल यहां से नहीं बदला जा सकता।',
+  'Used for verification codes and notifications.': 'सत्यापन कोड और सूचनाओं के लिए।',
+  'Shown to your team.': 'आपकी टीम को दिखता है।',
+  'The business admin signs in with this email.': 'बिज़नेस एडमिन इसी ईमेल से साइन इन करता है।',
+  'Used for account contact and support.': 'खाते के संपर्क और सहायता के लिए।',
+  'Limits AI messages, agents and staff seats for this business.':
+    'इस व्यवसाय के लिए AI संदेश, एजेंट और स्टाफ सीट की सीमा तय करता है।',
+  'Use 0 for a free plan.': 'मुफ़्त प्लान के लिए 0 डालें।',
+  'Total charged once a year.': 'साल में एक बार लिया जाने वाला कुल शुल्क।',
+  'How many AI replies this plan allows each month.': 'यह प्लान हर महीने कितने AI जवाब देने देता है।',
+  'Maximum number of AI receptionists.': 'AI रिसेप्शनिस्ट की अधिकतम संख्या।',
+  'Maximum team logins for one business.': 'एक व्यवसाय के लिए अधिकतम टीम लॉगिन।',
+  'Maximum knowledge base entries.': 'नॉलेज बेस में अधिकतम एंट्री।',
+  'Included AI call minutes.': 'शामिल AI कॉल मिनट।',
+  'Included WhatsApp messages.': 'शामिल WhatsApp संदेश।',
+  'Comma separated, shown on the pricing page.': 'कॉमा से अलग करें, प्राइसिंग पेज पर दिखता है।',
+});
+
 const I18nContext = createContext(null);
 
 export function LanguageProvider({ children }) {

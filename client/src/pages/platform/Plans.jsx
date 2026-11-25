@@ -174,31 +174,31 @@ export default function Plans() {
           <Field label="Description" className="sm:col-span-2">
             <input className="input" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
           </Field>
-          <Field label="Monthly price (INR)">
+          <Field label="Monthly price (INR)" hint="Use 0 for a free plan.">
             <input className="input" type="number" value={form.priceMonthly} onChange={(event) => setForm({ ...form, priceMonthly: event.target.value })} />
           </Field>
-          <Field label="Yearly price (INR)">
+          <Field label="Yearly price (INR)" hint="Total charged once a year.">
             <input className="input" type="number" value={form.priceYearly} onChange={(event) => setForm({ ...form, priceYearly: event.target.value })} />
           </Field>
-          <Field label="AI messages / month">
+          <Field label="AI messages / month" hint="How many AI replies this plan allows each month.">
             <input className="input" type="number" value={form.aiMessagesPerMonth} onChange={(event) => setForm({ ...form, aiMessagesPerMonth: event.target.value })} />
           </Field>
-          <Field label="AI agents">
+          <Field label="AI agents" hint="Maximum number of AI receptionists.">
             <input className="input" type="number" value={form.agents} onChange={(event) => setForm({ ...form, agents: event.target.value })} />
           </Field>
-          <Field label="Staff seats">
+          <Field label="Staff seats" hint="Maximum team logins for one business.">
             <input className="input" type="number" value={form.staff} onChange={(event) => setForm({ ...form, staff: event.target.value })} />
           </Field>
-          <Field label="Knowledge entries">
+          <Field label="Knowledge entries" hint="Maximum knowledge base entries.">
             <input className="input" type="number" value={form.knowledgeEntries} onChange={(event) => setForm({ ...form, knowledgeEntries: event.target.value })} />
           </Field>
-          <Field label="Voice minutes / month">
+          <Field label="Voice minutes / month" hint="Included AI call minutes.">
             <input className="input" type="number" value={form.voiceMinutesPerMonth} onChange={(event) => setForm({ ...form, voiceMinutesPerMonth: event.target.value })} />
           </Field>
-          <Field label="WhatsApp messages / month">
+          <Field label="WhatsApp messages / month" hint="Included WhatsApp messages.">
             <input className="input" type="number" value={form.whatsappMessagesPerMonth} onChange={(event) => setForm({ ...form, whatsappMessagesPerMonth: event.target.value })} />
           </Field>
-          <Field label="Features" className="sm:col-span-2" hint="Comma separated">
+          <Field label="Features" className="sm:col-span-2" hint="Comma separated, shown on the pricing page.">
             <textarea className="input" rows={2} value={form.features} onChange={(event) => setForm({ ...form, features: event.target.value })} />
           </Field>
         </form>

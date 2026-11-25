@@ -300,16 +300,16 @@ export default function Leads() {
           <Field label="Full name">
             <input className="input" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
           </Field>
-          <Field label="Phone">
+          <Field label="Phone" hint="10-digit mobile number, used for calls and WhatsApp.">
             <input className="input" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
           </Field>
           <Field label="Email">
             <input className="input" type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
           </Field>
-          <Field label="Service / interest">
+          <Field label="Service / interest" hint="What the customer asked about.">
             <input className="input" value={form.course} onChange={(event) => setForm({ ...form, course: event.target.value })} />
           </Field>
-          <Field label="Source">
+          <Field label="Source" hint="Where this enquiry came from.">
             <select className="input" value={form.source} onChange={(event) => setForm({ ...form, source: event.target.value })}>
               {SOURCES.map((source) => (
                 <option key={source} value={source}>
@@ -318,7 +318,7 @@ export default function Leads() {
               ))}
             </select>
           </Field>
-          <Field label="Status">
+          <Field label="Status" hint="Current stage of your follow-up.">
             <select className="input" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}>
               {STATUSES.map((status) => (
                 <option key={status} value={status}>
@@ -328,7 +328,7 @@ export default function Leads() {
             </select>
           </Field>
           {isBusinessAdmin ? (
-            <Field label="Assign to">
+            <Field label="Assign to" hint="Staff member responsible for this lead.">
               <select className="input" value={form.assigneeId} onChange={(event) => setForm({ ...form, assigneeId: event.target.value })}>
                 <option value=""><Tx>Unassigned</Tx></option>
                 {(team || []).map((member) => (
@@ -339,10 +339,10 @@ export default function Leads() {
               </select>
             </Field>
           ) : null}
-          <Field label="Follow-up date">
+          <Field label="Follow-up date" hint="Date for the next follow-up call.">
             <input className="input" type="date" value={form.followUpDate} onChange={(event) => setForm({ ...form, followUpDate: event.target.value })} />
           </Field>
-          <Field label="Note" className="sm:col-span-2">
+          <Field label="Note" className="sm:col-span-2" hint="Anything the next person should know before calling.">
             <textarea className="input" rows={3} value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
           </Field>
         </form>

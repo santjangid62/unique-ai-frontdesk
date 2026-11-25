@@ -85,13 +85,13 @@ export default function Profile() {
             <Field label="Full name">
               <input className="input" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
             </Field>
-            <Field label="Email">
+            <Field label="Email" hint="Email cannot be changed here.">
               <input className="input" value={user?.email || ''} disabled />
             </Field>
-            <Field label="Phone">
+            <Field label="Phone" hint="Used for verification codes and notifications.">
               <PhoneInput value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
             </Field>
-            <Field label="Designation">
+            <Field label="Designation" hint="Shown to your team.">
               <input className="input" value={form.designation} onChange={(event) => setForm({ ...form, designation: event.target.value })} />
             </Field>
             <div className="sm:col-span-2">

@@ -230,16 +230,16 @@ export default function Agents() {
           </div>
         ) : null}
         <form id="agent-form" onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-          <Field label="Agent name" className="sm:col-span-2">
+          <Field label="Agent name" className="sm:col-span-2" hint="A short name your team will recognise.">
             <input className="input" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
           </Field>
-          <Field label="Description" className="sm:col-span-2">
+          <Field label="Description" className="sm:col-span-2" hint="One line about what this agent handles.">
             <input className="input" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
           </Field>
-          <Field label="Greeting" className="sm:col-span-2">
+          <Field label="Greeting" className="sm:col-span-2" hint="The first message a customer sees. Keep it short and friendly.">
             <textarea className="input" rows={2} value={form.greeting} onChange={(event) => setForm({ ...form, greeting: event.target.value })} />
           </Field>
-          <Field label="Tone">
+          <Field label="Tone" hint="How the AI sounds in every reply.">
             <select className="input" value={form.tone} onChange={(event) => setForm({ ...form, tone: event.target.value })}>
               {['friendly', 'professional', 'enthusiastic'].map((tone) => (
                 <option key={tone} value={tone}>
@@ -248,7 +248,7 @@ export default function Agents() {
               ))}
             </select>
           </Field>
-          <Field label="Language">
+          <Field label="Language" hint="Language the AI replies in. Pick Hinglish for mixed Hindi-English customers.">
             <select className="input" value={form.language} onChange={(event) => setForm({ ...form, language: event.target.value })}>
               {['English', 'Hindi', 'Hinglish'].map((language) => (
                 <option key={language} value={language}>
@@ -257,10 +257,10 @@ export default function Agents() {
               ))}
             </select>
           </Field>
-          <Field label="Personality">
+          <Field label="Personality" hint="A few words that guide the AI's style.">
             <input className="input" value={form.personality} onChange={(event) => setForm({ ...form, personality: event.target.value })} />
           </Field>
-          <Field label="Voice profile">
+          <Field label="Voice profile" hint="Used for AI phone calls. Pick the voice that fits your brand.">
             <select className="input" value={form.voice} onChange={(event) => setForm({ ...form, voice: event.target.value })}>
               {['female-neutral', 'male-neutral', 'female-warm', 'male-deep'].map((voice) => (
                 <option key={voice} value={voice}>
@@ -269,7 +269,11 @@ export default function Agents() {
               ))}
             </select>
           </Field>
-          <Field label="Business instructions" className="sm:col-span-2" hint="Guardrails: never invent fees, availability or policies.">
+          <Field
+            label="Business instructions"
+            className="sm:col-span-2"
+            hint="Rules the AI must follow: what to offer, what to avoid, and when to hand over to a human. Never promise fees or policies you have not added to the Knowledge Base."
+          >
             <textarea
               className="input"
               rows={4}
@@ -277,7 +281,7 @@ export default function Agents() {
               onChange={(event) => setForm({ ...form, instructions: event.target.value })}
             />
           </Field>
-          <Field label="Enabled channels" className="sm:col-span-2">
+          <Field label="Enabled channels" className="sm:col-span-2" hint="Where this agent answers. Website chat works right away; WhatsApp and voice need setup.">
             <div className="flex flex-wrap gap-4">
               {['website', 'whatsapp', 'voice'].map((channel) => (
                 <label key={channel} className="flex items-center gap-2 text-sm text-slate-600">
@@ -294,7 +298,7 @@ export default function Agents() {
               ))}
             </div>
           </Field>
-          <Field label="Transfer number (human handoff)">
+          <Field label="Transfer number (human handoff)" hint="Chats and calls are handed to this number when a customer asks for a human.">
             <input
               className="input"
               placeholder="+91 98290 11223"

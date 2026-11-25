@@ -294,6 +294,7 @@ export default function Knowledge() {
         open={open}
         onClose={() => setOpen(false)}
         title={editing ? 'Edit knowledge entry' : 'New knowledge entry'}
+        description="The AI quotes these facts word for word, so keep one topic per entry and update it whenever prices or timings change."
         size="lg"
         footer={
           <>
@@ -313,7 +314,7 @@ export default function Knowledge() {
         ) : null}
         <form id="knowledge-form" onSubmit={submit} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
-            <Field label="Category">
+            <Field label="Category" hint="Pick the section this fact belongs to.">
               <select className="input" value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>
                 {CATEGORIES.map((category) => (
                   <option key={category} value={category}>
@@ -322,11 +323,14 @@ export default function Knowledge() {
                 ))}
               </select>
             </Field>
-            <Field label="Title" className="sm:col-span-2">
+            <Field label="Title" className="sm:col-span-2" hint="Short label, for example Python course fees.">
               <input className="input" required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
             </Field>
           </div>
-          <Field label="Verified content" hint="Write facts exactly as the AI may state them to a customer.">
+          <Field
+            label="Verified content"
+            hint="Write the exact facts the AI may quote: prices, timings, address and policies. One topic per entry works best."
+          >
             <textarea className="input" rows={8} required value={form.content} onChange={(event) => setForm({ ...form, content: event.target.value })} />
           </Field>
           <Field label="Tags" hint="Comma separated, for example: python, fees, demo">

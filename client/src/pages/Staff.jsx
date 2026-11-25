@@ -127,19 +127,19 @@ export default function Staff() {
           <Field label="Full name">
             <input className="input" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
           </Field>
-          <Field label="Email">
+          <Field label="Email" hint="They will sign in with this email.">
             <input className="input" type="email" required value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
           </Field>
           <Field label="Password" hint="Minimum 8 characters with a number.">
             <input className="input" type="password" required value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />
           </Field>
-          <Field label="Phone">
+          <Field label="Phone" hint="Used for assignment notifications.">
             <PhoneInput value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
           </Field>
-          <Field label="Designation">
+          <Field label="Designation" hint="Shown next to their name across the app.">
             <input className="input" placeholder="Counsellor" value={form.designation} onChange={(event) => setForm({ ...form, designation: event.target.value })} />
           </Field>
-          <Field label="Access level">
+          <Field label="Access level" hint="Staff see only work assigned to them; business admins manage everything.">
             <select className="input" value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}>
               <option value="staff"><Tx>Staff (assigned work only)</Tx></option>
               <option value="business_admin"><Tx>Business admin (full access)</Tx></option>

@@ -103,7 +103,7 @@ export default function ChatWidget() {
             <h2 className="text-sm font-semibold text-slate-900"><Tx>Appearance</Tx></h2>
           </div>
           <form onSubmit={save} className="space-y-4">
-            <Field label="Welcome message">
+            <Field label="Welcome message" hint="First message visitors see. Mention what you help with and your timings.">
               <textarea
                 className="input"
                 rows={3}
@@ -120,7 +120,7 @@ export default function ChatWidget() {
               />
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Brand colour">
+              <Field label="Brand colour" hint="Used for the chat button and message bubbles.">
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
@@ -131,7 +131,7 @@ export default function ChatWidget() {
                   <input className="input" value={form.primaryColor} onChange={(event) => setForm({ ...form, primaryColor: event.target.value })} />
                 </div>
               </Field>
-              <Field label="Launcher position">
+              <Field label="Launcher position" hint="Where the chat button appears on your website.">
                 <select className="input" value={form.position} onChange={(event) => setForm({ ...form, position: event.target.value })}>
                   <option value="right"><Tx>Bottom right</Tx></option>
                   <option value="left"><Tx>Bottom left</Tx></option>

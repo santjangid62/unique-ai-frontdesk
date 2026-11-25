@@ -161,40 +161,44 @@ export default function Settings() {
         <Card className="p-5">
           <h2 className="mb-4 text-sm font-semibold text-slate-900">{t('Business profile')}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Business name" className="sm:col-span-2">
+            <Field label="Business name" className="sm:col-span-2" hint="Shown to customers and used when the AI introduces your business.">
               <input className="input" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
             </Field>
-            <Field label="About the business" className="sm:col-span-2" hint="Used by the AI to introduce your institute.">
+            <Field
+              label="About the business"
+              className="sm:col-span-2"
+              hint="Two or three lines about what you do. The AI uses this to introduce your business."
+            >
               <textarea className="input" rows={3} value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
             </Field>
-            <Field label="Phone">
+            <Field label="Phone" hint="The number the AI shares with customers.">
               <input className="input" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
             </Field>
-            <Field label="Email">
+            <Field label="Email" hint="Where enquiry notifications are sent.">
               <input className="input" type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
             </Field>
-            <Field label="Website">
+            <Field label="Website" hint="Shared when a customer asks for your website.">
               <input className="input" value={form.website} onChange={(event) => setForm({ ...form, website: event.target.value })} />
             </Field>
-            <Field label="Google Maps link">
+            <Field label="Google Maps link" hint="Paste your Google Maps share link so the AI can send directions.">
               <input className="input" value={form.mapUrl} onChange={(event) => setForm({ ...form, mapUrl: event.target.value })} />
             </Field>
-            <Field label="Address" className="sm:col-span-2">
+            <Field label="Address" className="sm:col-span-2" hint="Full address the AI can share, including a landmark.">
               <input className="input" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} />
             </Field>
-            <Field label="City">
+            <Field label="City" hint="Used in replies, invoices and reports.">
               <input className="input" value={form.city} onChange={(event) => setForm({ ...form, city: event.target.value })} />
             </Field>
-            <Field label="State">
+            <Field label="State" hint="Used in replies, invoices and reports.">
               <input className="input" value={form.state} onChange={(event) => setForm({ ...form, state: event.target.value })} />
             </Field>
-            <Field label="Opening time">
+            <Field label="Opening time" hint="The AI only offers appointments within your working hours.">
               <input className="input" type="time" value={form.openingTime} onChange={(event) => setForm({ ...form, openingTime: event.target.value })} />
             </Field>
-            <Field label="Closing time">
+            <Field label="Closing time" hint="The AI only offers appointments within your working hours.">
               <input className="input" type="time" value={form.closingTime} onChange={(event) => setForm({ ...form, closingTime: event.target.value })} />
             </Field>
-            <Field label="Working days" className="sm:col-span-2">
+            <Field label="Working days" className="sm:col-span-2" hint="Days you are open. Closed days are never offered for appointments.">
               <div className="flex flex-wrap gap-2">
                 {DAYS.map((day) => {
                   const active = form.workingDays.includes(day);
@@ -218,10 +222,10 @@ export default function Settings() {
                 })}
               </div>
             </Field>
-            <Field label="Supported languages" hint="Comma separated">
+            <Field label="Supported languages" hint="Languages your team can serve, comma separated.">
               <input className="input" value={form.languages} onChange={(event) => setForm({ ...form, languages: event.target.value })} />
             </Field>
-            <Field label="Demo classes">
+            <Field label="Demo classes" hint="Lets the AI offer a free demo or trial slot.">
               <label className="flex items-center gap-2 pt-2 text-sm text-slate-600">
                 <input
                   type="checkbox"
@@ -232,22 +236,25 @@ export default function Settings() {
                 Offer free demo classes
               </label>
             </Field>
-            <Field label="Admission process" className="sm:col-span-2">
+            <Field label="Admission process" className="sm:col-span-2" hint="Steps a customer follows after showing interest. The AI explains these when asked.">
               <textarea className="input" rows={2} value={form.admissionProcess} onChange={(event) => setForm({ ...form, admissionProcess: event.target.value })} />
             </Field>
-            <Field label="Placement assistance" className="sm:col-span-2">
+            <Field label="Placement assistance" className="sm:col-span-2" hint="What you tell customers about placement or job support.">
               <textarea className="input" rows={2} value={form.placementInfo} onChange={(event) => setForm({ ...form, placementInfo: event.target.value })} />
             </Field>
           </div>
         </Card>
 
         <Card className="p-5">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-2 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-900">{t('Courses')}</h2>
             <button type="button" className="btn-secondary px-3 py-1.5 text-xs" onClick={addCourse}>
               <Plus size={14} /> {t('Add course')}
             </button>
           </div>
+          <p className="mb-4 text-xs text-slate-500">
+            {t('Add every course with its fee and batch timings — the AI answers fee, duration and batch questions from here.')}
+          </p>
           {!form.courses.length ? (
             <p className="text-sm text-slate-500">No courses yet. Add your courses so the AI can answer fee and batch questions.</p>
           ) : (
@@ -255,16 +262,16 @@ export default function Settings() {
               {form.courses.map((course, index) => (
                 <div key={course._id || index} className="rounded-xl border border-slate-200 p-4">
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <Field label="Course name" className="sm:col-span-2">
+                    <Field label="Course name" className="sm:col-span-2" hint="Name as customers know it.">
                       <input className="input" value={course.name} onChange={(event) => updateCourse(index, { name: event.target.value })} />
                     </Field>
                     <Field label="Category">
                       <input className="input" value={course.category || ''} onChange={(event) => updateCourse(index, { category: event.target.value })} />
                     </Field>
-                    <Field label="Fee (INR)">
+                    <Field label="Fee (INR)" hint="Total fee as you quote it.">
                       <input className="input" type="number" value={course.fee || 0} onChange={(event) => updateCourse(index, { fee: event.target.value })} />
                     </Field>
-                    <Field label="Duration">
+                    <Field label="Duration" hint="For example: 3 months.">
                       <input className="input" value={course.duration || ''} onChange={(event) => updateCourse(index, { duration: event.target.value })} />
                     </Field>
                     <Field label="Mode">
@@ -276,14 +283,14 @@ export default function Settings() {
                         ))}
                       </select>
                     </Field>
-                    <Field label="Batch timings" hint="Comma separated" className="sm:col-span-2">
+                    <Field label="Batch timings" hint="Comma separated, for example: 7 AM, 6 PM." className="sm:col-span-2">
                       <input
                         className="input"
                         value={Array.isArray(course.batchTimings) ? course.batchTimings.join(', ') : course.batchTimings || ''}
                         onChange={(event) => updateCourse(index, { batchTimings: event.target.value.split(',').map((value) => value.trim()).filter(Boolean) })}
                       />
                     </Field>
-                    <Field label="Syllabus" className="sm:col-span-3 lg:col-span-4">
+                    <Field label="Syllabus" className="sm:col-span-3 lg:col-span-4" hint="Short list of topics covered. The AI shares this when asked.">
                       <textarea className="input" rows={2} value={course.syllabus || ''} onChange={(event) => updateCourse(index, { syllabus: event.target.value })} />
                     </Field>
                   </div>

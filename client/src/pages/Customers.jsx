@@ -153,17 +153,17 @@ export default function Customers() {
             <input className="input" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Phone">
+            <Field label="Phone" hint="10-digit mobile number, used for calls and WhatsApp.">
               <input className="input" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
             </Field>
             <Field label="Email">
               <input className="input" type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
             </Field>
           </div>
-          <Field label="Interested courses" hint="Comma separated">
+          <Field label="Interested courses" hint="Comma separated, for example: Python, Excel.">
             <input className="input" value={form.interestedCourses} onChange={(event) => setForm({ ...form, interestedCourses: event.target.value })} />
           </Field>
-          <Field label="Tags" hint="Comma separated">
+          <Field label="Tags" hint="Comma separated labels for grouping, for example: hot, repeat.">
             <input className="input" value={form.tags} onChange={(event) => setForm({ ...form, tags: event.target.value })} />
           </Field>
         </form>

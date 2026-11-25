@@ -220,10 +220,10 @@ export default function Appointments() {
           <Field label="Email">
             <input className="input" type="email" value={form.customerEmail} onChange={(event) => setForm({ ...form, customerEmail: event.target.value })} />
           </Field>
-          <Field label="Service / interest">
+          <Field label="Service / interest" hint="What the customer is coming in for.">
             <input className="input" value={form.course} onChange={(event) => setForm({ ...form, course: event.target.value })} />
           </Field>
-          <Field label="Type">
+          <Field label="Type" hint="What kind of visit this is.">
             <select className="input" value={form.type} onChange={(event) => setForm({ ...form, type: event.target.value })}>
               {TYPES.map((type) => (
                 <option key={type} value={type}>
@@ -248,7 +248,7 @@ export default function Appointments() {
           <Field label="Start time">
             <input className="input" type="time" required value={form.time} onChange={(event) => setForm({ ...form, time: event.target.value })} />
           </Field>
-          <Field label="Duration (minutes)">
+          <Field label="Duration (minutes)" hint="How long the slot stays blocked in the calendar.">
             <select className="input" value={form.durationMinutes} onChange={(event) => setForm({ ...form, durationMinutes: event.target.value })}>
               {[30, 45, 60, 90].map((minutes) => (
                 <option key={minutes} value={minutes}>
@@ -257,7 +257,7 @@ export default function Appointments() {
               ))}
             </select>
           </Field>
-          <Field label="Notes" className="sm:col-span-2">
+          <Field label="Notes" className="sm:col-span-2" hint="Only your team sees these notes.">
             <textarea className="input" rows={2} value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
           </Field>
         </form>
