@@ -130,10 +130,10 @@ export default function Staff() {
           <Field label="Email" hint="They will sign in with this email.">
             <input className="input" type="email" required value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
           </Field>
-          <Field label="Password" hint="Minimum 8 characters with a number.">
+          <Field label="Password" hint="Minimum 8 characters.">
             <input className="input" type="password" required value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />
           </Field>
-          <Field label="Phone" hint="Used for assignment notifications.">
+          <Field label="Phone" hint="Optional contact number for this team member.">
             <PhoneInput value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
           </Field>
           <Field label="Designation" hint="Shown next to their name across the app.">

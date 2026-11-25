@@ -294,7 +294,6 @@ export default function Knowledge() {
         open={open}
         onClose={() => setOpen(false)}
         title={editing ? 'Edit knowledge entry' : 'New knowledge entry'}
-        description="The AI quotes these facts word for word, so keep one topic per entry and update it whenever prices or timings change."
         size="lg"
         footer={
           <>
@@ -323,7 +322,7 @@ export default function Knowledge() {
                 ))}
               </select>
             </Field>
-            <Field label="Title" className="sm:col-span-2" hint="Short label, for example Python course fees.">
+            <Field label="Title" className="sm:col-span-2" hint="Short label, for example Fees or Opening hours.">
               <input className="input" required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
             </Field>
           </div>

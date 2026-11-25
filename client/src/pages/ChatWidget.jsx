@@ -141,7 +141,7 @@ export default function ChatWidget() {
             <div className="space-y-2">
               {[
                 ['isEnabled', 'Widget is enabled on my website'],
-                ['demoAvailable', 'Offer demo class booking in the widget'],
+                ['demoAvailable', 'Offer trial or demo booking in the widget'],
                 ['showBranding', 'Show "Powered by Unique AI Frontdesk"'],
               ].map(([key, label]) => (
                 <label key={key} className="flex items-center gap-2 text-sm text-slate-600">

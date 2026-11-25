@@ -174,7 +174,7 @@ export default function Settings() {
             <Field label="Phone" hint="The number the AI shares with customers.">
               <input className="input" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
             </Field>
-            <Field label="Email" hint="Where enquiry notifications are sent.">
+            <Field label="Email" hint="The address the AI gives customers who ask for email.">
               <input className="input" type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
             </Field>
             <Field label="Website" hint="Shared when a customer asks for your website.">
@@ -186,16 +186,16 @@ export default function Settings() {
             <Field label="Address" className="sm:col-span-2" hint="Full address the AI can share, including a landmark.">
               <input className="input" value={form.address} onChange={(event) => setForm({ ...form, address: event.target.value })} />
             </Field>
-            <Field label="City" hint="Used in replies, invoices and reports.">
+            <Field label="City">
               <input className="input" value={form.city} onChange={(event) => setForm({ ...form, city: event.target.value })} />
             </Field>
-            <Field label="State" hint="Used in replies, invoices and reports.">
+            <Field label="State">
               <input className="input" value={form.state} onChange={(event) => setForm({ ...form, state: event.target.value })} />
             </Field>
             <Field label="Opening time" hint="The AI only offers appointments within your working hours.">
               <input className="input" type="time" value={form.openingTime} onChange={(event) => setForm({ ...form, openingTime: event.target.value })} />
             </Field>
-            <Field label="Closing time" hint="The AI only offers appointments within your working hours.">
+            <Field label="Closing time">
               <input className="input" type="time" value={form.closingTime} onChange={(event) => setForm({ ...form, closingTime: event.target.value })} />
             </Field>
             <Field label="Working days" className="sm:col-span-2" hint="Days you are open. Closed days are never offered for appointments.">
@@ -222,10 +222,10 @@ export default function Settings() {
                 })}
               </div>
             </Field>
-            <Field label="Supported languages" hint="Languages your team can serve, comma separated.">
+            <Field label="Supported languages" hint="Languages the AI can reply in, comma separated.">
               <input className="input" value={form.languages} onChange={(event) => setForm({ ...form, languages: event.target.value })} />
             </Field>
-            <Field label="Demo classes" hint="Lets the AI offer a free demo or trial slot.">
+            <Field label="Free trial / demo">
               <label className="flex items-center gap-2 pt-2 text-sm text-slate-600">
                 <input
                   type="checkbox"
@@ -233,13 +233,13 @@ export default function Settings() {
                   checked={form.demoAvailable}
                   onChange={(event) => setForm({ ...form, demoAvailable: event.target.checked })}
                 />
-                Offer free demo classes
+                Offer a free trial or demo
               </label>
             </Field>
-            <Field label="Admission process" className="sm:col-span-2" hint="Steps a customer follows after showing interest. The AI explains these when asked.">
+            <Field label="Next steps after enquiry" className="sm:col-span-2" hint="Steps a customer follows after showing interest. The AI explains these when asked.">
               <textarea className="input" rows={2} value={form.admissionProcess} onChange={(event) => setForm({ ...form, admissionProcess: event.target.value })} />
             </Field>
-            <Field label="Placement assistance" className="sm:col-span-2" hint="What you tell customers about placement or job support.">
+            <Field label="Additional support" className="sm:col-span-2" hint="Any guarantee, after-sales help or extra service you offer. The AI shares this when asked.">
               <textarea className="input" rows={2} value={form.placementInfo} onChange={(event) => setForm({ ...form, placementInfo: event.target.value })} />
             </Field>
           </div>

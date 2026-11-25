@@ -88,7 +88,7 @@ export default function Profile() {
             <Field label="Email" hint="Email cannot be changed here.">
               <input className="input" value={user?.email || ''} disabled />
             </Field>
-            <Field label="Phone" hint="Used for verification codes and notifications.">
+            <Field label="Phone" hint="Optional contact number for your account.">
               <PhoneInput value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
             </Field>
             <Field label="Designation" hint="Shown to your team.">

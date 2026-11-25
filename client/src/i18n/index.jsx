@@ -121,9 +121,9 @@ const HI = {
   'Closing time': 'बंद होने का समय',
   'Working days': 'कार्य दिवस',
   'Supported languages': 'समर्थित भाषाएं',
-  'Demo classes': 'डेमो क्लास',
-  'Admission process': 'प्रवेश प्रक्रिया',
-  'Placement assistance': 'प्लेसमेंट सहायता',
+  'Free trial / demo': 'मुफ़्त ट्रायल / डेमो',
+  'Next steps after enquiry': 'पूछताछ के बाद के चरण',
+  'Additional support': 'अतिरिक्त सहायता',
   Courses: 'कोर्स',
   'Course name': 'कोर्स का नाम',
   'Fee (INR)': 'फीस (INR)',
@@ -153,7 +153,7 @@ const HI = {
     'आपके सेट किए पासवर्ड से वे तुरंत साइन इन कर सकते हैं।',
   'Staff see only leads assigned to them, their conversations and their appointments.':
     'स्टाफ़ को सिर्फ़ उन्हें सौंपे गए लीड्स, उनकी बातचीत और उनके अपॉइंटमेंट दिखते हैं।',
-  'Minimum 8 characters with a number.': 'कम से कम 8 अक्षर, जिसमें एक अंक हो।',
+  'Minimum 8 characters.': 'कम से कम 8 अक्षर।',
   'Minimum 8 characters with a letter and a number.': 'कम से कम 8 अक्षर, जिसमें एक अक्षर और एक अंक हो।',
   'At least 8 characters with a letter and a number.': 'कम से कम 8 अक्षर, जिसमें एक अक्षर और एक अंक हो।',
   'Comma separated': 'कॉमा से अलग करें',
@@ -824,7 +824,7 @@ Object.assign(HI, {
   'How the AI sounds in every reply.': 'हर जवाब में AI का लहज़ा कैसा हो।',
   'Language the AI replies in. Pick Hinglish for mixed Hindi-English customers.':
     'AI किस भाषा में जवाब दे। हिन्दी-अंग्रेज़ी मिले ग्राहकों के लिए Hinglish चुनें।',
-  "A few words that guide the AI's style.": 'कुछ शब्द जो AI की शैली तय करें।',
+  'Your own notes on style, for example: patient and never pushy.': 'शैली पर अपने शब्दों में नोट, जैसे: धैर्यवान और कभी दबाव न डालने वाला।',
   'Used for AI phone calls. Pick the voice that fits your brand.':
     'AI फ़ोन कॉल के लिए। अपने ब्रांड के अनुसार आवाज़ चुनें।',
   'Rules the AI must follow: what to offer, what to avoid, and when to hand over to a human. Never promise fees or policies you have not added to the Knowledge Base.':
@@ -833,10 +833,8 @@ Object.assign(HI, {
     'यह एजेंट कहां जवाब देगा। वेबसाइट चैट तुरंत चलती है; WhatsApp और वॉइस के लिए सेटअप चाहिए।',
   'Chats and calls are handed to this number when a customer asks for a human.':
     'ग्राहक के इंसान मांगने पर चैट/कॉल इस नंबर पर भेजे जाएंगे।',
-  'The AI quotes these facts word for word, so keep one topic per entry and update it whenever prices or timings change.':
-    'AI ये बातें शब्द-शब्द बताता है, इसलिए एक एंट्री में एक ही विषय रखें और कीमत या समय बदलने पर इसे अपडेट करें।',
   'Pick the section this fact belongs to.': 'यह जानकारी किस श्रेणी की है, चुनें।',
-  'Short label, for example Python course fees.': 'छोटा शीर्षक, जैसे पाइथन कोर्स फीस।',
+  'Short label, for example Fees or Opening hours.': 'छोटा शीर्षक, जैसे फीस या खुलने का समय।',
   'Write the exact facts the AI may quote: prices, timings, address and policies. One topic per entry works best.':
     'वही तथ्य लिखें जो AI ग्राहक को बता सकता है: कीमतें, समय, पता और नियम। एक एंट्री में एक ही विषय सबसे अच्छा रहता है।',
   'First message visitors see. Mention what you help with and your timings.':
@@ -848,24 +846,22 @@ Object.assign(HI, {
   'Two or three lines about what you do. The AI uses this to introduce your business.':
     'दो-तीन पंक्तियों में बताएं कि आप क्या करते हैं। AI इसी से आपके व्यवसाय का परिचय देता है।',
   'The number the AI shares with customers.': 'यही नंबर AI ग्राहकों को देता है।',
-  'Where enquiry notifications are sent.': 'पूछताछ की सूचनाएं यहां भेजी जाती हैं।',
+  'The address the AI gives customers who ask for email.': 'ग्राहक ईमेल मांगे तो AI यही पता देता है।',
   'Shared when a customer asks for your website.': 'ग्राहक वेबसाइट मांगे तो यही लिंक दिया जाता है।',
   'Paste your Google Maps share link so the AI can send directions.':
     'अपना Google Maps शेयर लिंक डालें ताकि AI रास्ता भेज सके।',
   'Full address the AI can share, including a landmark.':
     'पूरा पता जो AI बता सके, लैंडमार्क के साथ।',
-  'Used in replies, invoices and reports.': 'जवाबों, बिलों और रिपोर्ट में उपयोग होता है।',
   'The AI only offers appointments within your working hours.':
     'AI सिर्फ़ आपके काम के घंटों में ही अपॉइंटमेंट देता है।',
   'Days you are open. Closed days are never offered for appointments.':
     'जिन दिन आप खुले हैं। बंद दिनों में अपॉइंटमेंट कभी नहीं दिया जाता।',
-  'Languages your team can serve, comma separated.':
-    'आपकी टीम किन भाषाओं में सेवा देती है, कॉमा से अलग करें।',
-  'Lets the AI offer a free demo or trial slot.': 'AI मुफ़्त डेमो या ट्रायल स्लॉट पेश कर सकता है।',
+  'Languages the AI can reply in, comma separated.':
+    'AI किन भाषाओं में जवाब दे सकता है, कॉमा से अलग करें।',
   'Steps a customer follows after showing interest. The AI explains these when asked.':
     'रुचि दिखाने के बाद ग्राहक किन चरणों से गुज़रता है। पूछने पर AI यही बताता है।',
-  'What you tell customers about placement or job support.':
-    'प्लेसमेंट या नौकरी सहायता के बारे में आप ग्राहकों को क्या बताते हैं।',
+  'Any guarantee, after-sales help or extra service you offer. The AI shares this when asked.':
+    'आप जो गारंटी, बिक्री के बाद सहायता या अतिरिक्त सेवा देते हैं। पूछने पर AI यही बताता है।',
   'Add every course with its fee and batch timings — the AI answers fee, duration and batch questions from here.':
     'हर कोर्स उसकी फीस और बैच समय के साथ जोड़ें — फीस, अवधि और बैच से जुड़े सवाल AI यहीं से जवाब देता है।',
   'Name as customers know it.': 'वही नाम जो ग्राहक जानते हैं।',
@@ -892,12 +888,12 @@ Object.assign(HI, {
     'कैलेंडर में स्लॉट कितनी देर ब्लॉक रहेगा।',
   'Only your team sees these notes.': 'ये नोट्स सिर्फ़ आपकी टीम देखती है।',
   'They will sign in with this email.': 'इसी ईमेल से वे साइन इन करेंगे।',
-  'Used for assignment notifications.': 'असाइनमेंट की सूचनाओं के लिए।',
+  'Optional contact number for this team member.': 'इस टीम सदस्य के लिए वैकल्पिक संपर्क नंबर।',
   'Shown next to their name across the app.': 'ऐप में उनके नाम के आगे दिखता है।',
   'Staff see only work assigned to them; business admins manage everything.':
     'स्टाफ़ को सिर्फ़ अपना काम दिखता है; बिज़नेस एडमिन सब कुछ संभालते हैं।',
   'Email cannot be changed here.': 'ईमेल यहां से नहीं बदला जा सकता।',
-  'Used for verification codes and notifications.': 'सत्यापन कोड और सूचनाओं के लिए।',
+  'Optional contact number for your account.': 'आपके खाते के लिए वैकल्पिक संपर्क नंबर।',
   'Shown to your team.': 'आपकी टीम को दिखता है।',
   'The business admin signs in with this email.': 'बिज़नेस एडमिन इसी ईमेल से साइन इन करता है।',
   'Used for account contact and support.': 'खाते के संपर्क और सहायता के लिए।',

@@ -257,7 +257,7 @@ export default function Agents() {
               ))}
             </select>
           </Field>
-          <Field label="Personality" hint="A few words that guide the AI's style.">
+          <Field label="Personality" hint="Your own notes on style, for example: patient and never pushy.">
             <input className="input" value={form.personality} onChange={(event) => setForm({ ...form, personality: event.target.value })} />
           </Field>
           <Field label="Voice profile" hint="Used for AI phone calls. Pick the voice that fits your brand.">
