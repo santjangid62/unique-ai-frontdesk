@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Loader2, Send, Sparkles, CalendarPlus } from 'lucide-react';
 import api, { errorMessage } from '../lib/api.js';
-import { useI18n } from '../i18n/index.jsx';
+import { LanguageSwitcher, useI18n } from '../i18n/index.jsx';
 
 const VISITOR_KEY = 'uaf_visitor_id';
 
@@ -163,7 +163,7 @@ export default function PublicChat() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-100">
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col bg-white shadow-xl sm:my-6 sm:min-h-[720px] sm:rounded-3xl sm:shadow-pop">
-        <header className="flex items-center gap-3 rounded-t-none border-b border-slate-100 px-5 py-4 sm:rounded-t-3xl" style={{ backgroundColor: `${accent}0d` }}>
+        <header className="flex items-center gap-2 rounded-t-none border-b border-slate-100 px-4 py-4 sm:gap-3 sm:rounded-t-3xl sm:px-5" style={{ backgroundColor: `${accent}0d` }}>
           <button
             type="button"
             onClick={goBack}
@@ -182,9 +182,16 @@ export default function PublicChat() {
               {config?.widget?.agentName || t('AI assistant')} · {t('replies instantly')}
             </p>
           </div>
+          <LanguageSwitcher className="shrink-0" />
           {config?.demoAvailable ? (
-            <button type="button" className="btn-secondary px-3 py-2 text-xs" onClick={() => setShowBooking((value) => !value)}>
-              <CalendarPlus size={14} /> {t('Book appointment')}
+            <button
+              type="button"
+              className="btn-secondary shrink-0 px-2 py-2 text-xs sm:px-3"
+              onClick={() => setShowBooking((value) => !value)}
+              aria-label={t('Book appointment')}
+              title={t('Book appointment')}
+            >
+              <CalendarPlus size={14} /> <span className="hidden sm:inline">{t('Book appointment')}</span>
             </button>
           ) : null}
         </header>
