@@ -194,6 +194,8 @@ GET    /api/health
 3. Add environment variables in **Project → Settings → Environment Variables**:
    `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `CLIENT_ORIGIN` (your Vercel URL), and optionally
    `OPENAI_API_KEY`, `OPENAI_MODEL`, `TWILIO_AUTH_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`.
+   `MONGODB_URI` must be the Atlas `mongodb+srv://…` string: a local `mongodb://127.0.0.1…` URI cannot be
+   reached from a Vercel Function.
 4. Deploy, then seed the production database once from your machine:
    `MONGODB_URI="<atlas-uri>" npm run seed`
 5. Open the deployment URL and sign in with a demo account, or register a new business.
@@ -223,13 +225,19 @@ The script uses the Vercel REST API (no CLI install needed) to:
 5. verify the live URL: `/api/health` (`db: connected`), the SPA shell, a real login + `/api/auth/me`,
    tenant-scoped `/api/leads`, anonymous `401`, the public widget config, and that a wrong password is rejected
 
+If `MONGODB_URI` still points at a local mongod, the script stops at the credentials step without touching the
+Vercel project and prints the Atlas setup steps: free M0 cluster on cloud.mongodb.com → database user under
+**Database Access** → `0.0.0.0/0` under **Network Access** → copy the `mongodb+srv://…` string from
+**Connect → Drivers → Node.js** → paste it as `MONGODB_URI` in `.env`.
+
 It exits non-zero if any live check fails. Useful flags: `--skip-seed`, and
 `--skip-deploy --url https://app.vercel.app` to verify an existing deployment without redeploying.
 Secrets are never printed (the Mongo URI is masked), and an empty variable is never pushed to Vercel.
 
 `npm run test:deploy` runs this entire flow against a local mock Vercel API and a mock deployment —
-project creation, repo link, env upsert, polling, a healthy run, a disconnected database and a failed
-build — so the script can be verified without a token, network or database.
+project creation, repo link, env upsert, polling, a healthy run, a disconnected database, a failed build and a
+local MongoDB URI refused before any Vercel API call — so the script can be verified without a token, network or
+database.
 
 ### MongoDB Atlas
 
@@ -259,7 +267,8 @@ payload against a local mock of the Atlas API (no keys or network needed).
 ### Local MongoDB instead of Atlas
 
 `npm run db:local` starts a mongod from `.mongo/` (downloading it once) with data in `.mongo-data/`, and the app
-accepts credential-less local URIs such as `mongodb://127.0.0.1:27017/unique-frontdesk`.
+accepts credential-less local URIs such as `mongodb://127.0.0.1:27017/unique-frontdesk`. Local URIs are for
+development only — `npm run deploy` refuses one and prints the Atlas setup steps instead.
 
 ### Optional provider configuration
 
