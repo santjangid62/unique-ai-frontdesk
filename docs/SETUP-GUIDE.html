@@ -68,6 +68,9 @@
   .checklist{ list-style:none; padding-left:0; }
   .checklist li{ padding-left:20px; position:relative; }
   .checklist li:before{ content:"☐"; position:absolute; left:0; color:var(--brand); }
+  .shot{ margin:10px 0 14px; break-inside:avoid; }
+  .shot img{ width:100%; display:block; border:1px solid var(--line); border-radius:10px; }
+  .shot figcaption{ font-size:8.5pt; color:var(--muted); text-align:center; margin-top:4px; }
 </style>
 </head>
 <body>
@@ -125,7 +128,8 @@
   <h4>अभी local पर चल रहे live URLs</h4>
   <table>
     <tr><th>क्या</th><th>URL</th><th>कब use करें</th></tr>
-    <tr><td>Dashboard / login chooser</td><td><code>http://127.0.0.1:5173</code></td><td>सारा admin काम</td></tr>
+    <tr><td>Landing page</td><td><code>http://127.0.0.1:5173</code></td><td>public website + chat demo</td></tr>
+    <tr><td>Login chooser</td><td><code>http://127.0.0.1:5173/login</code></td><td>तीनों portals का चुनाव</td></tr>
     <tr><td>Public demo chat</td><td><code>http://127.0.0.1:5173/chat/demo</code></td><td>बिना login customer experience</td></tr>
     <tr><td>Unique Computers chat</td><td><code>http://127.0.0.1:5173/chat/unique-computers</code></td><td>coaching demo tenant</td></tr>
     <tr><td>API health</td><td><code>http://127.0.0.1:5000/api/health</code></td><td>DB connected है या नहीं</td></tr>
@@ -335,6 +339,16 @@
     <tr><td>Businesses बनाना, plan बदलना</td><td>Platform</td><td><code>/app/businesses</code>, <code>/app/plans</code></td><td>Super Admin</td></tr>
   </table>
 
+  <figure class="shot">
+    <img src="screens/01-dashboard.png" alt="Unique AI Frontdesk business dashboard with KPIs, enquiry trend, channel mix and latest activity" />
+    <figcaption>स्क्रीन 1 — Overview dashboard: KPI cards, enquiry trend, channel mix और upcoming activity</figcaption>
+  </figure>
+
+  <figure class="shot">
+    <img src="screens/04-appointments.png" alt="Appointments page grouped by date with status actions" />
+    <figcaption>स्क्रीन 2 — Appointments: date-wise bookings, status actions और upcoming/today/all filters</figcaption>
+  </figure>
+
   <h2 id="s5">5. AI को train करने के 3 layers</h2>
   <div class="grid3">
     <div class="box"><h4>1. Business Profile</h4><p style="margin:0">हर reply में पूरा profile जाता है — नाम, about, contact, hours, languages, services/courses. गलत profile = हर जवाब गलत।</p></div>
@@ -376,6 +390,11 @@
     <tr><td>Transfer number</td><td>Handoff के लिए staff/owner number</td></tr>
   </table>
 
+  <figure class="shot">
+    <img src="screens/02-ai-agent.png" alt="Edit AI agent form with name, greeting, tone, language, personality, voice and business instructions" />
+    <figcaption>स्क्रीन 3 — AI Receptionist: agent form (greeting, tone, language, personality, voice, instructions)</figcaption>
+  </figure>
+
   <div class="box good">
     <h4>Business instructions — हर business के लिए template</h4>
     <pre><code>- Customer की भाषा में जवाब दें (Hindi में पूछे तो Hindi/Hinglish, English में तो English).
@@ -406,6 +425,11 @@
     <tr><td>हर fact verified</td><td>Owner ने confirm किया हो — अंदाज़ा नहीं</td></tr>
     <tr><td>पुरानी entry disable करें</td><td>Contradiction न छोड़ें</td></tr>
   </table>
+  <figure class="shot">
+    <img src="screens/03-knowledge.png" alt="New knowledge entry form with category, title, verified content and tags" />
+    <figcaption>स्क्रीन 4 — Knowledge Base: नई entry के fields (category, title, verified content, tags)</figcaption>
+  </figure>
+
   <div class="grid2">
     <div class="box danger"><h4>❌ बुरा</h4><p style="margin:0"><b>Title:</b> Course info<br/><b>Content:</b> We have many courses with good fees. Contact us.</p><small>कोई exact fact नहीं → AI escalate करेगा।</small></div>
     <div class="box good"><h4>✅ अच्छा</h4><p style="margin:0"><b>Title:</b> Python course fees and duration<br/><b>Tags:</b> python, fees, price, kitna, duration<br/><b>Content:</b> Fees ₹12,000 (one-time). Duration 3 months. Batches 8 AM, 11 AM, 5 PM. Online और offline दोनों.</p></div>
@@ -446,9 +470,14 @@
   <ol>
     <li>Browser में खोलें: <code>http://127.0.0.1:5173/chat/demo</code></li>
     <li>पूछें: “What services do you offer?” → जवाब demo knowledge से आना चाहिए, कोई invented price नहीं।</li>
-    <li>ऊपर भाषा switcher से <b>हिन्दी</b> चुनें → greeting और labels Hindi में बदलने चाहिए।</li>
+    <li>भाषा landing/auth page के switcher से चुनी जाती है (chat page पर अलग switcher नहीं है)। <b>हिन्दी</b> चुनकर chat link फिर खोलें → greeting और labels Hindi में दिखने चाहिए।</li>
     <li>“Book appointment” दबाएँ → form भरें → confirmation में date/time दिखे।</li>
   </ol>
+
+  <figure class="shot">
+    <img src="screens/05-public-chat.png" alt="Public demo chat answering a service price question" />
+    <figcaption>स्क्रीन 5 — Public chat: बिना login customer experience, knowledge से सीधा जवाब</figcaption>
+  </figure>
 
   <h3>Test B — Business Admin flow</h3>
   <ol>
@@ -625,6 +654,7 @@ npm run db:check</code></pre>
     <tr><td>Booking नहीं हो रही</td><td>Closed day, hours के बाहर, past time, duplicate slot</td><td>Settings में days/hours ठीक करें; दूसरा slot चुनें</td></tr>
     <tr><td>Verification email नहीं आया</td><td><code>RESEND_API_KEY</code> नहीं है</td><td>Dev में code screen/log में दिखता है; production में Resend key डालें</td></tr>
     <tr><td>Vercel पर login fail</td><td>Production env vars missing या DB seed नहीं</td><td><code>npm run deploy</code> दोबारा चलाएँ (env + seed + verify करता है)</td></tr>
+    <tr><td>Deploy: repository linked नहीं</td><td>Vercel GitHub app उस repo के लिए install नहीं है</td><td>Vercel dashboard → GitHub app install करें, फिर <code>npm run deploy</code></td></tr>
     <tr><td>CORS error</td><td><code>CLIENT_ORIGIN</code> live URL से match नहीं</td><td>Vercel env में <code>CLIENT_ORIGIN=https://your-app.vercel.app</code> सेट करके redeploy</td></tr>
   </table>
 
