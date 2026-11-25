@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Unique AI Frontdesk - multi-tenant AI receptionist SaaS (voice, WhatsApp, website chat, leads, appointments)",
   "engines": {
-    "node": ">=20.x"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "node --watch --watch-path=server/src server/src/index.js",
