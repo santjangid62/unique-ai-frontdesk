@@ -156,7 +156,6 @@ const HI = {
   'Minimum 8 characters.': 'कम से कम 8 अक्षर।',
   'Minimum 8 characters with a letter and a number.': 'कम से कम 8 अक्षर, जिसमें एक अक्षर और एक अंक हो।',
   'At least 8 characters with a letter and a number.': 'कम से कम 8 अक्षर, जिसमें एक अक्षर और एक अंक हो।',
-  'Comma separated': 'कॉमा से अलग करें',
   'No invoices yet.': 'अभी कोई इनवॉइस नहीं।',
   Invoices: 'इनवॉइस',
   Invoice: 'इनवॉइस',
@@ -225,9 +224,7 @@ const HI = {
   'Reply as staff — this pauses the AI for this chat': 'स्टाफ़ के रूप में जवाब दें — इस चैट के लिए AI रुक जाएगा',
   'Send message': 'संदेश भेजें',
   'Ask a customer question': 'ग्राहक जैसा सवाल पूछें',
-  'Ask about courses, fees or a demo class…': 'कोर्स, फीस या डेमो क्लास के बारे में पूछें…',
   'Search name, phone or message': 'नाम, फ़ोन या संदेश खोजें',
-  'Search name, phone, course': 'नाम, फ़ोन, कोर्स खोजें',
   'Search name or email': 'नाम या ईमेल खोजें',
   'Search customers': 'ग्राहक खोजें',
   'Search knowledge': 'नॉलेज खोजें',
@@ -276,8 +273,6 @@ const HI = {
     'आपके व्यवसाय के चैनल प्रदर्शन, AI समाधान और कन्वर्ज़न।',
   'Every enquiry from chat, WhatsApp, calls and walk-ins — deduplicated by phone.':
     'चैट, WhatsApp, कॉल और वॉक-इन से हर पूछताछ — फ़ोन से डुप्लीकेट हटाकर।',
-  'Demo classes, counselling and admission slots. Double bookings are blocked automatically.':
-    'डेमो क्लास, काउंसलिंग और एडमिशन स्लॉट। डबल बुकिंग अपने आप रुकती है।',
   'Everyone your AI has spoken to, with their full conversation and appointment history.':
     'आपके AI से बात करने वाला हर व्यक्ति, पूरी बातचीत और अपॉइंटमेंट इतिहास के साथ।',
   'Inbound calls answered by the AI receptionist, with transcripts and summaries.':
@@ -286,8 +281,6 @@ const HI = {
     'विजेट को अपनी ब्रांडिंग से मिलाएं, फिर वेबसाइट पर एक लाइन का कोड लगाएं।',
   'Add fees, courses, timings and FAQs so the AI can answer accurately.':
     'फीस, कोर्स, समय और FAQs जोड़ें ताकि AI सही जवाब दे।',
-  'Book a demo class manually, or let the AI receptionist book it during a conversation.':
-    'डेमो क्लास मैन्युअली बुक करें, या AI रिसेप्शनिस्ट से बातचीत के दौरान बुक कराएं।',
   'Chats from your widget, WhatsApp and calls appear here.':
     'आपके विजेट, WhatsApp और कॉल की बातचीत यहां दिखती है।',
   'Create the first tenant to get started.': 'शुरुआत करने के लिए पहला व्यवसाय बनाएं।',
@@ -313,11 +306,6 @@ const HI = {
     'स्लॉट कार्य समय, छुट्टियों और मौजूदा बुकिंग से जांचा जाता है।',
   'Upload a PDF or text file — it is split into knowledge entries automatically.':
     'PDF या टेक्स्ट फ़ाइल अपलोड करें — वह अपने आप नॉलेज एंट्रीज़ में बंट जाती है।',
-  'Used by the AI to introduce your institute.': 'AI इसका इस्तेमाल आपके संस्थान को बताने के लिए करता है।',
-  'Write facts exactly as the AI may state them to a customer.':
-    'तथ्य वैसे लिखें जैसे AI ग्राहक को बता सकता है।',
-  'Guardrails: never invent fees, availability or policies.':
-    'नियम: फीस, उपलब्धता या पॉलिसी कभी न बनाएं।',
   'Lowercase identifier': 'छोटे अक्षरों में पहचान',
   'Comma separated, for example: python, fees, demo': 'कॉमा से अलग करें, जैसे: python, fees, demo',
 
