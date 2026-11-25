@@ -49,15 +49,27 @@ async function main() {
   const hindi = await ask(question, 'hi', `verify-hindi-${stamp}`);
   const english = await ask(question, 'en', `verify-hindi-${stamp}-en`);
 
+  // Unknown question: there is no English grounded answer to translate, so the
+  // reply must be an accurate Hindi escalation, never the English-answer notice.
+  const unknownQuestion = 'Do you repair helicopter engines?';
+  const hindiUnknown = await ask(unknownQuestion, 'hi', `verify-hindi-unknown-${stamp}`);
+  const englishUnknown = await ask(unknownQuestion, 'en', `verify-hindi-unknown-${stamp}-en`);
+
   check('Hindi reply is not empty', hindi.trim().length > 0, hindi);
   check('Hindi reply uses Devanagari', /[\u0900-\u097F]/.test(hindi), hindi);
   check('Hindi reply keeps the price fact', /499/.test(hindi), hindi);
   check('Hindi reply is not the English source', hindi.trim() !== english.trim());
   check('Hindi reply is real translation, not the fallback notice', !/AI अनुवाद अभी/.test(hindi), hindi);
   check('English reply stays English', !/[\u0900-\u097F]/.test(english) && /499/.test(english), english);
+  check('Hindi unknown question replies in Hindi', /[\u0900-\u097F]/.test(hindiUnknown), hindiUnknown);
+  check('Hindi unknown question has no English-answer notice', !/अंग्रेज़ी में मौजूद जानकारी/.test(hindiUnknown), hindiUnknown);
+  check('Hindi unknown question is not the English escalation', !/I don't have verified information/.test(hindiUnknown), hindiUnknown);
+  check('English unknown question stays English', !/[\u0900-\u097F]/.test(englishUnknown), englishUnknown);
 
   console.log('\nHindi mode:', hindi);
-  console.log('English mode:', english, '\n');
+  console.log('English mode:', english);
+  console.log('Hindi unknown:', hindiUnknown);
+  console.log('English unknown:', englishUnknown, '\n');
   for (const item of checks) {
     console.log(`${item.passed ? '✓' : '✗'} ${item.label}${item.passed || !item.detail ? '' : ` — got: ${item.detail}`}`);
   }

@@ -75,12 +75,17 @@ function hindiTranslationNotice(reason) {
     : 'हिन्दी में AI अनुवाद अभी उपलब्ध नहीं है, इसलिए नीचे का जवाब अंग्रेज़ी में मौजूद जानकारी से दिया जा रहा है:';
 }
 
+const HINDI_ESCALATION =
+  'इस सवाल की पक्की जानकारी मेरे पास नहीं है, इसलिए मैं अनुमान नहीं लगाऊँगा। मैं आपको हमारी टीम से जोड़ देता हूँ, जो आपकी ठीक से मदद कर सकेंगे — क्या आप अपना नाम और फ़ोन नंबर बता सकते हैं?';
+
 function fallbackReply({ knowledge, agent, channel, message, reason, language = 'en' }) {
   const best = knowledge?.[0];
   const intro = channel === 'voice' ? 'This is an automated assistant from the front desk. ' : '';
 
   let reply;
+  let grounded = false;
   if (best && best.score >= 3) {
+    grounded = true;
     reply = {
       reply: `${intro}${best.content.trim()}`,
       intent: 'general',
@@ -108,12 +113,19 @@ function fallbackReply({ knowledge, agent, channel, message, reason, language = 
     };
   }
 
+  if (language !== 'hi') return reply;
+
   // Hindi mode without a translation must not look like a silent English reply:
   // explain in Hindi that the answer below comes from English knowledge.
-  if (language === 'hi') {
+  if (grounded) {
     return { ...reply, reply: `${hindiTranslationNotice(reason)}\n\n${reply.reply}` };
   }
-  return reply;
+
+  // Nothing grounded was found, so there is no English answer to translate.
+  // The "answer below is from English knowledge" notice would be wrong here;
+  // escalate in Hindi instead.
+  const hindiIntro = channel === 'voice' ? 'यह फ्रंट डेस्क की स्वचालित सहायक है। ' : '';
+  return { ...reply, reply: `${hindiIntro}${HINDI_ESCALATION}` };
 }
 
 /**
