@@ -59,15 +59,12 @@ function validateInputs({ requireMongo = true, requireToken = true, requireRemot
   const accessSecret = (process.env.JWT_ACCESS_SECRET || '').trim();
   const refreshSecret = (process.env.JWT_REFRESH_SECRET || '').trim();
 
-  if (requireMongo || mongoUri) {
-    const uriIssue = mongoUriProblem(mongoUri);
-    if (uriIssue) problems.push(uriIssue);
-  }
+  const uriIssue = requireMongo || mongoUri ? mongoUriProblem(mongoUri) : null;
+  if (uriIssue) problems.push(uriIssue);
 
   // A local MongoDB is fine for development, but a Vercel Function cannot reach
   // this machine — stop before deploying instead of failing the live checks.
-  const localMongo =
-    requireRemoteMongo && Boolean(mongoUri) && !mongoUriProblem(mongoUri) && mongoUriIsLocal(mongoUri);
+  const localMongo = requireRemoteMongo && !uriIssue && mongoUriIsLocal(mongoUri);
   if (localMongo) {
     problems.push('MONGODB_URI points at a local MongoDB, which Vercel cannot reach — deploy needs MongoDB Atlas');
   }
@@ -93,11 +90,9 @@ function validateInputs({ requireMongo = true, requireToken = true, requireRemot
     for (const problem of problems) fail(problem);
     if (localMongo) {
       console.log('\n  Create a free MongoDB Atlas cluster, then deploy again:');
-      console.log('    1. Open https://cloud.mongodb.com and create a free M0 cluster (a region near your users)');
-      console.log('    2. Database Access → Add New Database User (save the username and password)');
-      console.log('    3. Network Access → Add IP Address → 0.0.0.0/0 (Vercel egress IPs change)');
-      console.log('    4. Clusters → Connect → Drivers → Node.js → copy the mongodb+srv://… connection string');
-      console.log('    5. Put it in .env as MONGODB_URI=… (one line, real password), then run `npm run deploy`');
+      console.log('    1. cloud.mongodb.com → free M0 cluster → Database Access: add a user');
+      console.log('    2. Network Access → 0.0.0.0/0 (Vercel egress IPs change, so allow all)');
+      console.log('    3. Connect → Drivers → Node.js → mongodb+srv://… → paste as MONGODB_URI in .env');
     }
     console.log('\n  Fix these, then run `npm run deploy` again.\n');
     process.exit(1);

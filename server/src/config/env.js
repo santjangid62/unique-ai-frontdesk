@@ -38,6 +38,17 @@ export const env = {
  */
 const LOCAL_MONGO_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '0.0.0.0']);
 
+/** Lower-cased host of a connection string ('' when there is none). */
+export function mongoUriHost(uri) {
+  const authority = String(uri || '')
+    .trim()
+    .replace(/^mongodb(\+srv)?:\/\//i, '')
+    .split('/')[0]
+    .split('?')[0];
+  const hostPort = authority.includes('@') ? authority.slice(authority.lastIndexOf('@') + 1) : authority;
+  return (hostPort.startsWith('[') ? hostPort.slice(1, hostPort.indexOf(']')) : hostPort.split(':')[0]).trim().toLowerCase();
+}
+
 export function mongoUriProblem(uri) {
   const value = String(uri || '').trim();
   if (!value) return 'MONGODB_URI is empty. Add your Atlas connection string to .env.';
@@ -61,11 +72,7 @@ export function mongoUriProblem(uri) {
   const authority = rest.split('/')[0].split('?')[0];
   const hasCredentials = authority.includes('@');
   const credentials = hasCredentials ? authority.slice(0, authority.lastIndexOf('@')) : '';
-  const hostPort = hasCredentials ? authority.slice(authority.lastIndexOf('@') + 1) : authority;
-  const host = (hostPort.startsWith('[')
-    ? hostPort.slice(1, hostPort.indexOf(']'))
-    : hostPort.split(':')[0]
-  ).trim().toLowerCase();
+  const host = mongoUriHost(value);
 
   if (!host) {
     return 'MONGODB_URI has no host. It should look like mongodb+srv://user:password@cluster0.xxxxx.mongodb.net.';
@@ -94,17 +101,7 @@ export function mongoUriProblem(uri) {
 
 /** True when the URI points at a database only this machine can reach. */
 export function mongoUriIsLocal(uri) {
-  const value = String(uri || '').trim();
-  if (!/^mongodb(\+srv)?:\/\//i.test(value)) return false;
-  const authority = value.replace(/^mongodb(\+srv)?:\/\//i, '').split('/')[0].split('?')[0];
-  const hostPort = authority.includes('@') ? authority.slice(authority.lastIndexOf('@') + 1) : authority;
-  const host = (hostPort.startsWith('[')
-    ? hostPort.slice(1, hostPort.indexOf(']'))
-    : hostPort.split(':')[0]
-  )
-    .trim()
-    .toLowerCase();
-  return LOCAL_MONGO_HOSTS.has(host);
+  return LOCAL_MONGO_HOSTS.has(mongoUriHost(uri));
 }
 
 export function assertProdConfig() {
