@@ -124,8 +124,6 @@ async function ensurePublicDemoWorkspace() {
       title: 'About Demo Business',
       content:
         'Demo Business is a sample service business used to demonstrate the AI front desk. Services: on-site service visits, consultations and annual maintenance. Address: 4th Floor, MG Road, Bengaluru. Phone: +91 90000 00000.',
-      contentHi:
-        'डेमो बिज़नेस एक सैंपल सर्विस बिज़नेस है जिसका उपयोग AI फ्रंट डेस्क दिखाने के लिए किया जाता है। सेवाएँ: ऑन-साइट सर्विस विज़िट, कंसल्टेशन और वार्षिक मेंटेनेंस। पता: 4th Floor, MG Road, बेंगलुरु। फ़ोन: +91 90000 00000।',
       tags: ['about', 'address', 'contact'],
     },
     {
@@ -134,8 +132,6 @@ async function ensurePublicDemoWorkspace() {
       title: 'Service prices',
       content:
         'Standard service visit: Rs 499 (inspection and first hour). Full service: Rs 1,499. Annual maintenance plan: Rs 4,999 per year, including two visits and priority slots. Prices include GST.',
-      contentHi:
-        'स्टैंडर्ड सर्विस विज़िट: ₹499 (निरीक्षण और पहला घंटा)। फुल सर्विस: ₹1,499। वार्षिक मेंटेनेंस प्लान: ₹4,999 प्रति वर्ष, जिसमें दो विज़िट और प्राथमिक स्लॉट शामिल हैं। कीमतों में GST शामिल है।',
       tags: ['price', 'fees', 'service'],
     },
     {
@@ -144,8 +140,6 @@ async function ensurePublicDemoWorkspace() {
       title: 'Opening hours and appointment slots',
       content:
         'Open Monday to Saturday, 9:00 AM to 6:00 PM. Sunday closed. Appointment slots are 11:00 AM, 1:00 PM and 4:00 PM.',
-      contentHi:
-        'सोमवार से शनिवार, सुबह 9:00 से शाम 6:00 बजे तक खुला रहता है। रविवार बंद। अपॉइंटमेंट स्लॉट: सुबह 11:00, दोपहर 1:00 और शाम 4:00 बजे।',
       tags: ['timings', 'hours', 'slots'],
     },
     {
@@ -154,8 +148,6 @@ async function ensurePublicDemoWorkspace() {
       title: 'Booking and cancellation policy',
       content:
         'Appointments can be booked up to 30 days ahead. Rescheduling is free up to 4 hours before the slot. Cancellations within 4 hours of the slot are charged Rs 199.',
-      contentHi:
-        'अपॉइंटमेंट 30 दिन पहले तक बुक किए जा सकते हैं। स्लॉट से 4 घंटे पहले तक रीशेड्यूलिंग मुफ़्त है। स्लॉट के 4 घंटे के भीतर रद्द करने पर ₹199 का शुल्क लगता है।',
       tags: ['booking', 'cancellation', 'policy'],
     },
     {
@@ -164,8 +156,6 @@ async function ensurePublicDemoWorkspace() {
       title: 'Contact and service area',
       content:
         'Service area: Bengaluru city. Phone and WhatsApp: +91 90000 00000. Email: hello@example.com. Same-day emergency visits are available subject to availability.',
-      contentHi:
-        'सेवा क्षेत्र: बेंगलुरु शहर। फ़ोन और WhatsApp: +91 90000 00000। ईमेल: hello@example.com। उपलब्धता के अनुसार उसी दिन आपातकालीन विज़िट उपलब्ध है।',
       tags: ['contact', 'service area', 'emergency'],
     },
   ];
@@ -173,16 +163,6 @@ async function ensurePublicDemoWorkspace() {
   if ((await KnowledgeEntry.countDocuments({ tenantId: tenant._id })) === 0) {
     await KnowledgeEntry.insertMany(demoKnowledge);
   }
-  // Keep the optional Hindi copy current on databases seeded before it existed.
-  await Promise.all(
-    demoKnowledge.map((entry) =>
-      KnowledgeEntry.updateOne(
-        { tenantId: tenant._id, title: entry.title },
-        { $set: { contentHi: entry.contentHi } },
-      ),
-    ),
-  );
-
   return tenant;
 }
 

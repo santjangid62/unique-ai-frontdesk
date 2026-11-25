@@ -74,9 +74,8 @@ function fallbackReply({ knowledge, agent, channel, message, reason, language = 
   const intro = channel === 'voice' ? (hindi ? 'यह फ्रंट डेस्क का स्वचालित सहायक है। ' : 'This is an automated assistant from the front desk. ') : '';
 
   if (best && best.score >= 3) {
-    const content = (hindi && best.contentHi) || best.content;
     return {
-      reply: `${intro}${content.trim()}`,
+      reply: `${intro}${best.content.trim()}`,
       intent: 'general',
       escalate: false,
       escalationReason: '',

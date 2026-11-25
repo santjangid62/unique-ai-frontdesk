@@ -52,7 +52,7 @@ export function tokenize(text) {
  */
 export async function retrieveKnowledge(tenantId, query, { limit = 6 } = {}) {
   const entries = await KnowledgeEntry.find({ tenantId, isEnabled: true })
-    .select('title content contentHi category tags version')
+    .select('title content category tags version')
     .limit(400)
     .lean();
 
@@ -67,17 +67,14 @@ export async function retrieveKnowledge(tenantId, query, { limit = 6 } = {}) {
     const titleTokens = new Set(tokenize(entry.title));
     const tagTokens = new Set(tokenize((entry.tags || []).join(' ')));
     const contentTokens = new Set(tokenize(entry.content));
-    const contentHiTokens = new Set(tokenize(entry.contentHi || ''));
     let score = 0;
 
     for (const token of queryTokens) {
       if (titleTokens.has(token)) score += 4;
       if (tagTokens.has(token)) score += 3;
       if (contentTokens.has(token)) score += 1;
-      // A Hindi query matching the curated Hindi translation is a strong signal.
-      if (contentHiTokens.has(token)) score += 3;
     }
-    if (phrase.length > 3 && `${entry.content} ${entry.contentHi || ''}`.toLowerCase().includes(phrase)) score += 6;
+    if (phrase.length > 3 && entry.content.toLowerCase().includes(phrase)) score += 6;
     if (phrase.length > 3 && entry.title.toLowerCase().includes(phrase)) score += 5;
     if (entry.category === 'business') score += 0.5;
 
@@ -93,7 +90,6 @@ export async function retrieveKnowledge(tenantId, query, { limit = 6 } = {}) {
     title: entry.title,
     category: entry.category,
     content: entry.content,
-    contentHi: entry.contentHi || '',
     version: entry.version,
     score: Number(score.toFixed(2)),
   }));

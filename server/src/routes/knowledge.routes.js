@@ -92,10 +92,7 @@ router.put(
     const tenantId = resolveTenantId(req);
     const entry = await KnowledgeEntry.findOne({ _id: req.params.id, tenantId });
     if (!entry) throw ApiError.notFound('Knowledge entry not found');
-    const contentChanged = req.body.content !== undefined && req.body.content !== entry.content;
     Object.assign(entry, req.body);
-    // A cached Hindi translation must not outlive the English text it came from.
-    if (contentChanged && req.body.contentHi === undefined) entry.contentHi = '';
     entry.version += 1;
     entry.updatedBy = req.user.id;
     await entry.save();

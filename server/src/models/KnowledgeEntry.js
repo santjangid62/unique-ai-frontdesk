@@ -9,9 +9,6 @@ const knowledgeEntrySchema = new mongoose.Schema(
     category: { type: String, enum: KNOWLEDGE_CATEGORIES, default: 'faq', index: true },
     title: { type: String, required: true, trim: true },
     content: { type: String, required: true },
-    // Optional Hindi translation used by the no-AI fallback when the visitor
-    // reads the chat in Hindi. With an AI key the model translates on the fly.
-    contentHi: { type: String, default: '' },
     tags: { type: [String], default: [] },
     isEnabled: { type: Boolean, default: true, index: true },
     source: { type: String, enum: ['manual', 'document', 'website'], default: 'manual' },
