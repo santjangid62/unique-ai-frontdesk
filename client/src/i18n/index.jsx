@@ -810,6 +810,9 @@ Object.assign(HI, {
   'Appointment booked for {when}.': '{when} के लिए अपॉइंटमेंट बुक हो गया।',
   'Appointment booked for {when}. See you there!': '{when} के लिए अपॉइंटमेंट बुक हो गया। मिलते हैं!',
   'Powered by Unique AI Frontdesk': 'Unique AI Frontdesk द्वारा संचालित',
+  'Welcome message (Hindi)': 'स्वागत संदेश (हिन्दी)',
+  'Shown to visitors viewing the chat in Hindi. Leave blank to show the English message.':
+    'जो विज़िटर चैट हिन्दी में देखते हैं उन्हें यह दिखेगा। खाली छोड़ने पर अंग्रेज़ी संदेश दिखेगा।',
 });
 
 const I18nContext = createContext(null);

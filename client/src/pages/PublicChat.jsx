@@ -19,7 +19,7 @@ function getVisitorId() {
 export default function PublicChat() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, isHindi } = useI18n();
   const [config, setConfig] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -141,6 +141,10 @@ export default function PublicChat() {
   };
 
   const accent = config?.widget?.primaryColor || '#4f46e5';
+  // Businesses can provide a Hindi greeting; visitors reading in Hindi get it
+  // instead of the English one, and fall back when they have not set it.
+  const welcomeMessage =
+    (isHindi && config?.widget?.welcomeMessageHi) || config?.widget?.welcomeMessage || '';
 
   if (error && !config) {
     return (
@@ -255,7 +259,7 @@ export default function PublicChat() {
                 }`}
                 style={mine ? { backgroundColor: accent } : undefined}
               >
-                {message.content}
+                {message.id === 'welcome' ? welcomeMessage : message.content}
               </div>
             );
           })}

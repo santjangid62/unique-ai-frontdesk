@@ -20,6 +20,7 @@ export default function ChatWidget() {
         primaryColor: profile.widget?.primaryColor || '#4f46e5',
         position: profile.widget?.position || 'right',
         welcomeMessage: profile.widget?.welcomeMessage || 'Hi! How can we help you today?',
+        welcomeMessageHi: profile.widget?.welcomeMessageHi || '',
         showBranding: profile.widget?.showBranding !== false,
         isEnabled: profile.widget?.isEnabled !== false,
         demoAvailable: profile.coaching?.demoAvailable !== false,
@@ -38,6 +39,7 @@ export default function ChatWidget() {
           primaryColor: form.primaryColor,
           position: form.position,
           welcomeMessage: form.welcomeMessage,
+          welcomeMessageHi: form.welcomeMessageHi,
           showBranding: form.showBranding,
           isEnabled: form.isEnabled,
         },
@@ -107,6 +109,14 @@ export default function ChatWidget() {
                 rows={3}
                 value={form.welcomeMessage}
                 onChange={(event) => setForm({ ...form, welcomeMessage: event.target.value })}
+              />
+            </Field>
+            <Field label="Welcome message (Hindi)" hint="Shown to visitors viewing the chat in Hindi. Leave blank to show the English message.">
+              <textarea
+                className="input"
+                rows={3}
+                value={form.welcomeMessageHi}
+                onChange={(event) => setForm({ ...form, welcomeMessageHi: event.target.value })}
               />
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">

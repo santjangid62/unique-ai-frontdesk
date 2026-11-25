@@ -50,6 +50,7 @@ router.get(
         primaryColor: profile?.widget?.primaryColor || '#4f46e5',
         position: profile?.widget?.position || 'right',
         welcomeMessage: profile?.widget?.welcomeMessage || agent?.greeting || 'Hi! How can we help you today?',
+        welcomeMessageHi: profile?.widget?.welcomeMessageHi || '',
         showBranding: profile?.widget?.showBranding !== false,
         agentName: agent?.name || 'AI Assistant',
       },

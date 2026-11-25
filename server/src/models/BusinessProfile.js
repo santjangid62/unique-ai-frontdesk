@@ -49,6 +49,7 @@ const businessProfileSchema = new mongoose.Schema(
       primaryColor: { type: String, default: '#4f46e5' },
       position: { type: String, enum: ['right', 'left'], default: 'right' },
       welcomeMessage: { type: String, default: 'Hi! How can we help you today?' },
+      welcomeMessageHi: { type: String, default: '' },
       showBranding: { type: Boolean, default: true },
       isEnabled: { type: Boolean, default: true },
     },

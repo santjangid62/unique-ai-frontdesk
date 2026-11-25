@@ -78,6 +78,7 @@ async function ensurePublicDemoWorkspace() {
           primaryColor: '#4f46e5',
           position: 'right',
           welcomeMessage: 'Hi! Ask me about our services, prices, timings or book an appointment.',
+          welcomeMessageHi: 'नमस्ते! हमारी सेवाओं, कीमतों, समय या अपॉइंटमेंट के बारे में पूछें।',
           showBranding: true,
           isEnabled: true,
         },
@@ -85,6 +86,12 @@ async function ensurePublicDemoWorkspace() {
       },
     },
     { upsert: true },
+  );
+
+  // Older demo rows were seeded before the bilingual greeting existed.
+  await BusinessProfile.updateOne(
+    { tenantId: tenant._id, 'widget.welcomeMessageHi': { $in: ['', null] } },
+    { $set: { 'widget.welcomeMessageHi': 'नमस्ते! हमारी सेवाओं, कीमतों, समय या अपॉइंटमेंट के बारे में पूछें।' } },
   );
 
   await AiAgent.findOneAndUpdate(

@@ -52,6 +52,7 @@ const profileSchema = z.object({
       primaryColor: z.string().max(20).optional(),
       position: z.enum(['right', 'left']).optional(),
       welcomeMessage: z.string().max(300).optional(),
+      welcomeMessageHi: z.string().max(300).optional(),
       showBranding: z.boolean().optional(),
       isEnabled: z.boolean().optional(),
     })
