@@ -22,6 +22,7 @@
     "deploy": "node server/src/scripts/deploy.js",
     "smoke": "node server/src/scripts/smoke.js",
     "smoke:ci": "node server/src/scripts/smoke-ci.js",
+    "verify:hindi": "node server/src/scripts/verify-hindi.js",
     "lock:check": "npm ci --dry-run --ignore-scripts && npm --prefix client ci --dry-run --ignore-scripts",
     "test": "node server/test/atlas-mock.test.js && node server/test/vercel-deploy.test.js",
     "test:atlas": "node server/test/atlas-mock.test.js",

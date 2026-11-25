@@ -68,10 +68,33 @@ function safeParseJson(text) {
   }
 }
 
+function translationUnavailableReply({ channel, reason }) {
+  const intro = channel === 'voice' ? 'यह फ्रंट डेस्क का स्वचालित सहायक है। ' : '';
+  const notConfigured = /not configured|key/i.test(reason || '');
+  const message = notConfigured
+    ? 'हिन्दी में जवाब देने के लिए AI अनुवाद अभी कॉन्फ़िगर नहीं है। कृपया अपना सवाल अंग्रेज़ी में पूछें।'
+    : 'हिन्दी में जवाब देने के लिए AI अनुवाद अभी उपलब्ध नहीं है। कृपया थोड़ी देर बाद फिर कोशिश करें या सवाल अंग्रेज़ी में पूछें।';
+  return {
+    reply: `${intro}${message}`,
+    intent: 'general',
+    escalate: false,
+    escalationReason: '',
+    confidence: 0.2,
+    sources: [],
+    mode: 'fallback',
+    lead: {},
+    appointment: {},
+    note: reason,
+  };
+}
+
 function fallbackReply({ knowledge, agent, channel, message, reason, language = 'en' }) {
+  // Never answer a Hindi visitor in English because a translation was not
+  // possible; say clearly that AI translation is not configured instead.
+  if (language === 'hi') return translationUnavailableReply({ channel, reason });
+
   const best = knowledge?.[0];
-  const hindi = language === 'hi';
-  const intro = channel === 'voice' ? (hindi ? 'यह फ्रंट डेस्क का स्वचालित सहायक है। ' : 'This is an automated assistant from the front desk. ') : '';
+  const intro = channel === 'voice' ? 'This is an automated assistant from the front desk. ' : '';
 
   if (best && best.score >= 3) {
     return {
@@ -89,9 +112,7 @@ function fallbackReply({ knowledge, agent, channel, message, reason, language = 
   }
 
   return {
-    reply: hindi
-      ? `${intro}मेरे पास अभी इसकी प्रमाणित जानकारी नहीं है, इसलिए मैं अनुमान नहीं लगाऊँगा। मैं आपको हमारी टीम से जोड़ता हूँ, जो आपकी सही मदद कर सकेगी — कृपया अपना नाम और फ़ोन नंबर बताएँ?`
-      : `${intro}I don't have verified information about that yet, so I'd rather not guess. Let me connect you with our team who can help you properly — could you share your name and phone number?`,
+    reply: `${intro}I don't have verified information about that yet, so I'd rather not guess. Let me connect you with our team who can help you properly — could you share your name and phone number?`,
     intent: 'general',
     escalate: true,
     escalationReason: reason || 'No grounded knowledge available',
