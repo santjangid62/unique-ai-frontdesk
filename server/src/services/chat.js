@@ -78,7 +78,7 @@ async function escalate(conversation, tenantId, reason, channel) {
  * Handles one inbound customer message end-to-end:
  * store -> ground -> reply -> capture lead -> optional booking -> handoff.
  */
-export async function processIncomingMessage({ tenantId, conversation, text, channel = 'website', authorName = '' }) {
+export async function processIncomingMessage({ tenantId, conversation, text, channel = 'website', authorName = '', language = 'en' }) {
   const content = String(text || '').trim().slice(0, 4000);
   if (!content) return { conversation, aiMessage: null, skipped: true };
 
@@ -117,6 +117,7 @@ export async function processIncomingMessage({ tenantId, conversation, text, cha
     history: history.filter((message) => String(message._id) !== String(customerMessage._id)),
     message: content,
     channel,
+    language,
   });
 
   const updates = {};

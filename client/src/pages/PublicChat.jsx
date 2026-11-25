@@ -19,7 +19,7 @@ function getVisitorId() {
 export default function PublicChat() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { t, isHindi } = useI18n();
+  const { t, lang, isHindi } = useI18n();
   const [config, setConfig] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -77,7 +77,7 @@ export default function PublicChat() {
       setMessages((prev) => [...prev, { id: `local-${Date.now()}`, role: 'customer', content: text }]);
       setBusy(true);
       try {
-        const { data } = await api.post(`/public/widget/${slug}/chat`, { message: text, visitorId });
+        const { data } = await api.post(`/public/widget/${slug}/chat`, { message: text, visitorId, language: lang });
         setMessages((prev) => [
           ...prev,
           {
@@ -103,7 +103,7 @@ export default function PublicChat() {
         setBusy(false);
       }
     },
-    [input, busy, slug, visitorId, t],
+    [input, busy, slug, visitorId, lang, t],
   );
 
   const bookDemo = async (event) => {

@@ -66,13 +66,14 @@ router.post(
     z.object({
       message: z.string().min(1).max(2000),
       visitorId: z.string().min(6).max(80),
+      language: z.enum(['en', 'hi']).optional().default('en'),
       name: z.string().max(120).optional().default(''),
       phone: z.string().max(24).optional().default(''),
     }),
   ),
   asyncHandler(async (req, res) => {
     const tenant = await resolveTenant(req.params.slug);
-    const { message, visitorId, name, phone } = req.body;
+    const { message, visitorId, name, phone, language } = req.body;
 
     const agent = await AiAgent.findOne({ tenantId: tenant._id, isActive: true }).sort({ isDefault: -1 }).lean();
     const conversation = await getOrCreateConversation({
@@ -93,6 +94,7 @@ router.post(
       text: message,
       channel: 'website',
       authorName: name || 'Website visitor',
+      language,
     });
 
     return ok(res, {

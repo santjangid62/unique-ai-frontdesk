@@ -11,7 +11,7 @@ RULES (must always follow):
 5. You may offer a demo class / appointment. NEVER say an appointment is confirmed until the system tells you it was saved; ask for a preferred date and time instead.
 6. If the customer is angry, asks for a human, or the query is complex, set "escalate": true with a short reason.
 7. On voice calls, identify yourself as an automated assistant in the first turn.
-8. Reply in the customer's language (English, Hindi or Hinglish style) when they use it.
+8. Reply in the visitor's selected interface language. When Hindi is selected, reply fully in Hindi (Devanagari) even if the verified context is written in English: translate the facts faithfully and keep names, numbers, prices, dates and contact details unchanged. Otherwise mirror the customer's language.
 
 Return ONLY valid JSON with this shape:
 {
@@ -68,13 +68,15 @@ function safeParseJson(text) {
   }
 }
 
-function fallbackReply({ knowledge, agent, channel, message, reason }) {
+function fallbackReply({ knowledge, agent, channel, message, reason, language = 'en' }) {
   const best = knowledge?.[0];
-  const intro = channel === 'voice' ? 'This is an automated assistant from the front desk. ' : '';
+  const hindi = language === 'hi';
+  const intro = channel === 'voice' ? (hindi ? 'यह फ्रंट डेस्क का स्वचालित सहायक है। ' : 'This is an automated assistant from the front desk. ') : '';
 
   if (best && best.score >= 3) {
+    const content = (hindi && best.contentHi) || best.content;
     return {
-      reply: `${intro}${best.content.trim()}`,
+      reply: `${intro}${content.trim()}`,
       intent: 'general',
       escalate: false,
       escalationReason: '',
@@ -88,7 +90,9 @@ function fallbackReply({ knowledge, agent, channel, message, reason }) {
   }
 
   return {
-    reply: `${intro}I don't have verified information about that yet, so I'd rather not guess. Let me connect you with our team who can help you properly — could you share your name and phone number?`,
+    reply: hindi
+      ? `${intro}मेरे पास अभी इसकी प्रमाणित जानकारी नहीं है, इसलिए मैं अनुमान नहीं लगाऊँगा। मैं आपको हमारी टीम से जोड़ता हूँ, जो आपकी सही मदद कर सकेगी — कृपया अपना नाम और फ़ोन नंबर बताएँ?`
+      : `${intro}I don't have verified information about that yet, so I'd rather not guess. Let me connect you with our team who can help you properly — could you share your name and phone number?`,
     intent: 'general',
     escalate: true,
     escalationReason: reason || 'No grounded knowledge available',
@@ -106,9 +110,9 @@ function fallbackReply({ knowledge, agent, channel, message, reason }) {
  * provider fails) a deterministic grounded fallback answers instead, so the
  * product never fabricates business facts.
  */
-export async function generateReply({ agent, profile, knowledge, history = [], message, channel = 'website' }) {
+export async function generateReply({ agent, profile, knowledge, history = [], message, channel = 'website', language = 'en' }) {
   if (!env.openaiKey) {
-    return fallbackReply({ knowledge, agent, channel, message, reason: 'AI key not configured' });
+    return fallbackReply({ knowledge, agent, channel, message, language, reason: 'AI key not configured' });
   }
 
   const context = [
@@ -120,7 +124,14 @@ export async function generateReply({ agent, profile, knowledge, history = [], m
   ].join('\n');
 
   const messages = [
-    { role: 'system', content: `${SYSTEM_PROMPT}\n\nAGENT: ${agent?.name || 'Front desk AI'} | Tone: ${agent?.tone || 'friendly'} | Language: ${agent?.language || 'English'}` },
+    {
+      role: 'system',
+      content: `${SYSTEM_PROMPT}\n\n${
+        language === 'hi'
+          ? 'INTERFACE LANGUAGE: Hindi (Devanagari). The visitor chose Hindi in the chat header. Write the entire reply in Hindi, even when the context above is English. Translate facts faithfully; never add facts.\n\n'
+          : ''
+      }AGENT: ${agent?.name || 'Front desk AI'} | Tone: ${agent?.tone || 'friendly'} | Language: ${agent?.language || 'English'}`,
+    },
     { role: 'system', content: context },
     ...history.slice(-8).map((entry) => ({
       role: entry.role === 'customer' ? 'user' : 'assistant',
@@ -152,13 +163,13 @@ export async function generateReply({ agent, profile, knowledge, history = [], m
     if (!response.ok) {
       const detail = await response.text();
       console.error('[ai] provider error', response.status, detail.slice(0, 300));
-      return fallbackReply({ knowledge, agent, channel, message, reason: 'AI provider unavailable' });
+      return fallbackReply({ knowledge, agent, channel, message, language, reason: 'AI provider unavailable' });
     }
 
     const payload = await response.json();
     const parsed = safeParseJson(payload?.choices?.[0]?.message?.content);
     if (!parsed?.reply) {
-      return fallbackReply({ knowledge, agent, channel, message, reason: 'AI response was not usable' });
+      return fallbackReply({ knowledge, agent, channel, message, language, reason: 'AI response was not usable' });
     }
 
     const reply = String(parsed.reply).slice(0, 2000);
@@ -176,7 +187,7 @@ export async function generateReply({ agent, profile, knowledge, history = [], m
     };
   } catch (error) {
     console.error('[ai] request failed', error.message);
-    return fallbackReply({ knowledge, agent, channel, message, reason: 'AI request failed' });
+    return fallbackReply({ knowledge, agent, channel, message, language, reason: 'AI request failed' });
   } finally {
     clearTimeout(timeout);
   }
