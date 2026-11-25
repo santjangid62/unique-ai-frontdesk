@@ -68,36 +68,20 @@ function safeParseJson(text) {
   }
 }
 
-function translationUnavailableReply({ channel, reason }) {
-  const intro = channel === 'voice' ? 'यह फ्रंट डेस्क का स्वचालित सहायक है। ' : '';
+function hindiTranslationNotice(reason) {
   const notConfigured = /not configured|key/i.test(reason || '');
-  const message = notConfigured
-    ? 'हिन्दी में जवाब देने के लिए AI अनुवाद अभी कॉन्फ़िगर नहीं है। कृपया अपना सवाल अंग्रेज़ी में पूछें।'
-    : 'हिन्दी में जवाब देने के लिए AI अनुवाद अभी उपलब्ध नहीं है। कृपया थोड़ी देर बाद फिर कोशिश करें या सवाल अंग्रेज़ी में पूछें।';
-  return {
-    reply: `${intro}${message}`,
-    intent: 'general',
-    escalate: false,
-    escalationReason: '',
-    confidence: 0.2,
-    sources: [],
-    mode: 'fallback',
-    lead: {},
-    appointment: {},
-    note: reason,
-  };
+  return notConfigured
+    ? 'हिन्दी में AI अनुवाद अभी कॉन्फ़िगर नहीं है, इसलिए नीचे का जवाब अंग्रेज़ी में मौजूद जानकारी से दिया जा रहा है:'
+    : 'हिन्दी में AI अनुवाद अभी उपलब्ध नहीं है, इसलिए नीचे का जवाब अंग्रेज़ी में मौजूद जानकारी से दिया जा रहा है:';
 }
 
 function fallbackReply({ knowledge, agent, channel, message, reason, language = 'en' }) {
-  // Never answer a Hindi visitor in English because a translation was not
-  // possible; say clearly that AI translation is not configured instead.
-  if (language === 'hi') return translationUnavailableReply({ channel, reason });
-
   const best = knowledge?.[0];
   const intro = channel === 'voice' ? 'This is an automated assistant from the front desk. ' : '';
 
+  let reply;
   if (best && best.score >= 3) {
-    return {
+    reply = {
       reply: `${intro}${best.content.trim()}`,
       intent: 'general',
       escalate: false,
@@ -109,20 +93,27 @@ function fallbackReply({ knowledge, agent, channel, message, reason, language = 
       appointment: {},
       note: reason,
     };
+  } else {
+    reply = {
+      reply: `${intro}I don't have verified information about that yet, so I'd rather not guess. Let me connect you with our team who can help you properly — could you share your name and phone number?`,
+      intent: 'general',
+      escalate: true,
+      escalationReason: reason || 'No grounded knowledge available',
+      confidence: 0.2,
+      sources: best ? [{ title: best.title, id: best.id }] : [],
+      mode: 'fallback',
+      lead: {},
+      appointment: {},
+      note: reason,
+    };
   }
 
-  return {
-    reply: `${intro}I don't have verified information about that yet, so I'd rather not guess. Let me connect you with our team who can help you properly — could you share your name and phone number?`,
-    intent: 'general',
-    escalate: true,
-    escalationReason: reason || 'No grounded knowledge available',
-    confidence: 0.2,
-    sources: best ? [{ title: best.title, id: best.id }] : [],
-    mode: 'fallback',
-    lead: {},
-    appointment: {},
-    note: reason,
-  };
+  // Hindi mode without a translation must not look like a silent English reply:
+  // explain in Hindi that the answer below comes from English knowledge.
+  if (language === 'hi') {
+    return { ...reply, reply: `${hindiTranslationNotice(reason)}\n\n${reply.reply}` };
+  }
+  return reply;
 }
 
 /**

@@ -261,7 +261,7 @@ export default function PublicChat() {
             return (
               <div
                 key={message.id}
-                className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                className={`max-w-[85%] whitespace-pre-line rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                   mine ? 'ml-auto text-white' : 'bg-slate-100 text-slate-700'
                 }`}
                 style={mine ? { backgroundColor: accent } : undefined}

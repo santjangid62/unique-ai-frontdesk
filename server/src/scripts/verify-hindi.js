@@ -53,6 +53,7 @@ async function main() {
   check('Hindi reply uses Devanagari', /[\u0900-\u097F]/.test(hindi), hindi);
   check('Hindi reply keeps the price fact', /499/.test(hindi), hindi);
   check('Hindi reply is not the English source', hindi.trim() !== english.trim());
+  check('Hindi reply is real translation, not the fallback notice', !/AI अनुवाद अभी/.test(hindi), hindi);
   check('English reply stays English', !/[\u0900-\u097F]/.test(english) && /499/.test(english), english);
 
   console.log('\nHindi mode:', hindi);
