@@ -613,19 +613,21 @@ npm run db:check</code></pre>
   <h3>Step 3 — one-command deploy</h3>
   <p><code>deploy-token.txt</code> में Vercel token (vercel.com/account/tokens) हो, फिर:</p>
   <pre><code>npm run deploy</code></pre>
-  <p>Script यह सब करता है: token verify → project create/link → <code>MONGODB_URI</code> + दोनों JWT secrets + <code>NODE_ENV</code> सेट → deploy → production DB seed → live checks (<code>/api/health</code>, SPA, real login, tenant-scoped leads, 401, public widget config)। कोई check fail हुआ तो non-zero exit।</p>
+  <p>Script यह सब करता है: token verify → <code>MONGODB_URI</code> पहले ping (8s timeout — गलत Atlas password/IP बिना build के पकड़ा जाता है) → project create/link → <code>MONGODB_URI</code> + दोनों JWT secrets + <code>NODE_ENV</code> + <code>CLIENT_ORIGIN</code>/<code>APP_URL</code> सेट → deploy → production DB seed → live checks (<code>/api/health</code>, SPA, CORS, real login, tenant-scoped leads, 401, public widget config)। कोई check fail हुआ तो non-zero exit।</p>
   <div class="box warn">
     <h4>Local MongoDB URI से deploy नहीं होगा</h4>
     <p style="margin:0">अगर <code>.env</code> में <code>MONGODB_URI=mongodb://127.0.0.1:27017/unique-frontdesk</code> जैसा local URI है तो script credentials step पर ही रुक जाता है (Vercel पर कुछ नहीं बनता) और Atlas steps दिखाता है: free M0 cluster → Database Access में user → Network Access में <code>0.0.0.0/0</code> → Connect → Drivers → Node.js से <code>mongodb+srv://…</code> copy करके <code>.env</code> में डालें, फिर <code>npm run deploy</code> दोबारा चलाएँ।</p>
   </div>
-  <div class="box warn">
-    <h4>CLIENT_ORIGIN और APP_URL अलग से सेट करें</h4>
-    <p style="margin:0">Deploy script ये दो नहीं भरता। पहली deployment के बाद Vercel → Project → Settings → Environment Variables में <code>CLIENT_ORIGIN=https://your-app.vercel.app</code> और <code>APP_URL=https://your-app.vercel.app</code> डालें, फिर redeploy करें — वरना browser से login/API calls CORS से block होंगी (server-to-server health check फिर भी pass हो सकता है)।</p>
+  <div class="box">
+    <h4>CLIENT_ORIGIN और APP_URL अब script खुद भरता है</h4>
+    <p style="margin:0">डिफ़ॉल्ट रूप से <code>https://&lt;project&gt;.vercel.app</code> सेट होता है; <code>.env</code> में localhost URL हो तो script उसे बदल देता है। Custom domain इस्तेमाल करना हो तो <code>.env</code> में <code>CLIENT_ORIGIN=https://your-domain.com</code> और <code>APP_URL=https://your-domain.com</code> रखें — script वही भेजेगा।</p>
   </div>
   <table>
     <tr><th>Flag</th><th>काम</th></tr>
     <tr><td><code>--skip-seed</code></td><td>Deploy + verify, DB reseed नहीं</td></tr>
     <tr><td><code>--skip-deploy --url https://…</code></td><td>सिर्फ़ मौजूदा deployment verify करें</td></tr>
+    <tr><td><code>--dry-run</code></td><td>Token, Atlas connection और project check करें — कुछ बदला नहीं जाता</td></tr>
+    <tr><td><code>--skip-preflight</code></td><td>Atlas connection test छोड़ें</td></tr>
   </table>
 
   <h3>Live URLs (deploy के बाद)</h3>

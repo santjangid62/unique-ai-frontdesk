@@ -30,10 +30,17 @@ async function startAppMock({ mode = 'ok' } = {}) {
 
     if (url.pathname === '/api/health') {
       const healthy = mode === 'ok';
-      return sendJson(res, 200, {
-        success: true,
-        data: { status: healthy ? 'ok' : 'degraded', db: healthy ? 'connected' : 'disconnected', dbConfigured: healthy },
-      });
+      // Mirrors the real CORS middleware: echo an allowed origin back.
+      const headers = req.headers.origin ? { 'Access-Control-Allow-Origin': req.headers.origin } : {};
+      return sendJson(
+        res,
+        200,
+        {
+          success: true,
+          data: { status: healthy ? 'ok' : 'degraded', db: healthy ? 'connected' : 'disconnected', dbConfigured: healthy },
+        },
+        headers,
+      );
     }
     if (url.pathname === '/') {
       res.writeHead(200, { 'Content-Type': 'text/html' });
@@ -100,7 +107,7 @@ async function startVercelMock({ appUrl, states = ['READY'], buildLog = [], link
     }
 
     if (/^\/v10\/projects\/[^/]+\/env$/.test(url.pathname) && req.method === 'POST') {
-      state.envPosts.push({ key: body.key, target: body.target, type: body.type });
+      state.envPosts.push({ key: body.key, value: body.value, target: body.target, type: body.type });
       return sendJson(res, 201, { created: body.key });
     }
 
@@ -130,7 +137,7 @@ async function startVercelMock({ appUrl, states = ['READY'], buildLog = [], link
 const runDeploy = ({ apiBase, mongoUri }) =>
   runNode(DEPLOY, {
     cwd: ROOT,
-    args: ['--skip-seed'],
+    args: ['--skip-seed', '--skip-preflight'],
     env: {
       VERCEL_TOKEN: TOKEN,
       VERCEL_API_BASE: apiBase,
@@ -162,7 +169,14 @@ const runDeploy = ({ apiBase, mongoUri }) =>
     check('targeted production', vercel.state.deploymentPosts[0]?.target === 'production');
     check('polled until READY', vercel.state.polls >= 3 && /READY/.test(output), `polls=${vercel.state.polls}`);
     check('reported the build states', /BUILDING/.test(output) && /READY/.test(output));
-    check('all live checks passed', /9\/9 checks passed/.test(output), output.slice(-400));
+    check('all live checks passed', /10\/10 checks passed/.test(output), output.slice(-400));
+    check(
+      'set CLIENT_ORIGIN and APP_URL to the production URL',
+      ['CLIENT_ORIGIN', 'APP_URL'].every((key) =>
+        vercel.state.envPosts.some((entry) => entry.key === key && entry.value === 'https://unique-ai-frontdesk.vercel.app'),
+      ),
+      vercel.state.envPosts.map((entry) => `${entry.key}=${entry.value}`).join(','),
+    );
     check('verified the app URL from the deployment', output.includes(`Live URL   : ${app.url}`), app.url);
     check('finished cleanly', /Deployment is live and verified/.test(output));
 
@@ -229,7 +243,7 @@ const runDeploy = ({ apiBase, mongoUri }) =>
 
     check('runs without a Vercel token', !/No Vercel token/.test(output), output.slice(-300));
     check('verifies the URL given on the command line', /Skipping deploy, verifying/.test(output) && output.includes(`Live URL   : ${app.url}`));
-    check('all live checks passed', /9\/9 checks passed/.test(output), output.slice(-400));
+    check('all live checks passed', /10\/10 checks passed/.test(output), output.slice(-400));
     check('exits 0', code === 0, output.slice(-400));
 
     await app.close();
@@ -251,6 +265,31 @@ const runDeploy = ({ apiBase, mongoUri }) =>
       output.slice(-400),
     );
     check('does not touch the Vercel project', vercel.state.projectCreated === 0 && vercel.state.deploymentPosts.length === 0);
+
+    await vercel.close();
+  }
+
+  console.log('\nScenario 7 — --dry-run checks everything and changes nothing');
+  {
+    const vercel = await startVercelMock({ appUrl: 'https://example.vercel.app' });
+    const { code, output } = await runNode(DEPLOY, {
+      cwd: ROOT,
+      args: ['--skip-seed', '--skip-preflight', '--dry-run'],
+      env: {
+        VERCEL_TOKEN: TOKEN,
+        VERCEL_API_BASE: vercel.url,
+        JWT_ACCESS_SECRET: JWT_ACCESS,
+        JWT_REFRESH_SECRET: JWT_REFRESH,
+        MONGODB_URI: MONGO,
+      },
+    });
+
+    check('dry run exits 0', code === 0, output.slice(-400));
+    check('says nothing was changed', /nothing was changed/i.test(output) && /Remove --dry-run/.test(output), output.slice(-400));
+    check(
+      'does not create the project, set env vars or deploy',
+      vercel.state.projectCreated === 0 && vercel.state.envPosts.length === 0 && vercel.state.deploymentPosts.length === 0,
+    );
 
     await vercel.close();
   }

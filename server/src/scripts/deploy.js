@@ -13,8 +13,10 @@
  *
  * Usage:
  *   npm run deploy                 # full flow
+ *   npm run deploy -- --dry-run    # validate token, Atlas, project — change nothing
  *   npm run deploy -- --skip-seed  # deploy + verify without reseeding
  *   npm run deploy -- --skip-deploy --url https://...   # verify an existing URL
+ *   npm run deploy -- --skip-preflight   # skip the Atlas connection test
  *
  * Never prints secret values.
  */
@@ -90,6 +92,7 @@ function validateInputs({ requireMongo = true, requireToken = true, requireRemot
     for (const problem of problems) fail(problem);
     if (localMongo) {
       console.log('\n  Create a free MongoDB Atlas cluster, then deploy again:');
+      console.log('    (Local MongoDB Vercel से reach नहीं होता — Atlas URI चाहिए)');
       console.log('    1. cloud.mongodb.com → free M0 cluster → Database Access: add a user');
       console.log('    2. Network Access → 0.0.0.0/0 (Vercel egress IPs change, so allow all)');
       console.log('    3. Connect → Drivers → Node.js → mongodb+srv://… → paste as MONGODB_URI in .env');
@@ -137,6 +140,27 @@ async function api(token, pathname, { method = 'GET', body } = {}) {
   return payload;
 }
 
+/** Fail fast when this machine cannot reach the URI production will use. */
+async function checkMongoReachable(uri) {
+  step('   Checking the MongoDB connection');
+  const { default: mongoose } = await import('mongoose');
+  const connection = mongoose.createConnection(uri, { serverSelectionTimeoutMS: 8000 });
+  try {
+    await connection.asPromise();
+    await connection.db.admin().ping();
+    pass(`MongoDB reachable ${maskUri(uri)}`);
+  } catch (error) {
+    throw new Error(
+      `Cannot reach ${maskUri(uri)} from this machine (${String(error.message).split('\n')[0]}). ` +
+        'Check the Atlas database user password and Network Access → 0.0.0.0/0.',
+    );
+  } finally {
+    await connection.close().catch(() => {});
+  }
+}
+
+const isLocalUrl = (value) => /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?/i.test(value);
+
 async function verifyToken(token) {
   const user = await api(token, '/v2/user');
   pass(`Vercel account: ${user.user?.username || user.user?.email || 'ok'}`);
@@ -181,11 +205,24 @@ async function ensureProject(token) {
 
 async function upsertEnvVars(token, project, secrets) {
   step('3/6  Production environment variables');
+  // The app is served same-origin, so the production alias is the right origin.
+  // A leftover localhost value in .env would break browser calls, so replace it.
+  const productionUrl = `https://${project.name}.vercel.app`;
+  const configuredOrigin = (process.env.CLIENT_ORIGIN || '').trim().replace(/\/$/, '');
+  const configuredAppUrl = (process.env.APP_URL || '').trim().replace(/\/$/, '');
+  const clientOrigin = configuredOrigin && !isLocalUrl(configuredOrigin) ? configuredOrigin : productionUrl;
+  const appUrl = configuredAppUrl && !isLocalUrl(configuredAppUrl) ? configuredAppUrl : clientOrigin;
+  if (isLocalUrl(configuredOrigin) || isLocalUrl(configuredAppUrl)) {
+    warn(`Local CLIENT_ORIGIN/APP_URL replaced with ${productionUrl} (a localhost URL cannot be the live origin)`);
+  }
+
   const entries = {
     MONGODB_URI: secrets.mongoUri,
     JWT_ACCESS_SECRET: secrets.accessSecret,
     JWT_REFRESH_SECRET: secrets.refreshSecret,
     NODE_ENV: 'production',
+    CLIENT_ORIGIN: clientOrigin,
+    APP_URL: appUrl,
   };
 
   for (const [key, value] of Object.entries(entries)) {
@@ -366,6 +403,15 @@ async function verify(url, options = {}) {
     record('GET / (SPA)', false, error.message);
   }
 
+  // Browser calls from the deployment's own origin must be allowed.
+  try {
+    const cors = await request('/api/health', { headers: { Origin: url } });
+    const allowed = cors.headers.get('access-control-allow-origin');
+    record('CORS allows the live origin', allowed === url || allowed === '*', `allow-origin=${allowed || 'missing'}`);
+  } catch (error) {
+    record('CORS allows the live origin', false, error.message);
+  }
+
   // Real login with the seeded demo business admin.
   const creds = options.credentials || DEMO_CREDENTIALS.businessAdmin;
   let accessToken = null;
@@ -441,16 +487,36 @@ async function verify(url, options = {}) {
 (async () => {
   console.log('\n\u001b[1mUnique AI Frontdesk — one-command production deploy\u001b[0m');
   const skipDeploy = hasFlag('skip-deploy');
+  const dryRun = hasFlag('dry-run');
   const secrets = validateInputs({
     requireMongo: !hasFlag('skip-seed'),
     requireToken: !skipDeploy,
     requireRemoteMongo: !skipDeploy,
   });
 
+  if (!hasFlag('skip-preflight') && secrets.mongoUri) {
+    await checkMongoReachable(secrets.mongoUri);
+  }
+
   let project = null;
   if (!skipDeploy) {
     step('   Verifying Vercel token');
     await verifyToken(secrets.token);
+    if (dryRun) {
+      const existing = await api(secrets.token, `/v9/projects/${PROJECT_NAME}`).catch((error) => {
+        if (error.status === 404) return null;
+        throw error;
+      });
+      step('Dry run — nothing was changed');
+      info(
+        existing
+          ? `Project "${existing.name}" exists; a real run would set six env vars and deploy ${BRANCH}`
+          : `Project "${PROJECT_NAME}" would be created, linked to ${GITHUB_REPO} and deployed`,
+      );
+      info(`CLIENT_ORIGIN / APP_URL would be https://${PROJECT_NAME}.vercel.app`);
+      info('Remove --dry-run to deploy for real.');
+      process.exit(0);
+    }
     project = await ensureProject(secrets.token);
     await upsertEnvVars(secrets.token, project, secrets);
   }

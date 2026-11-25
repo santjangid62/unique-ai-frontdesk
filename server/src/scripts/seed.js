@@ -2,7 +2,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import mongoose from 'mongoose';
 import { connectDB, disconnectDB } from '../config/db.js';
-import { env, mongoUriProblem } from '../config/env.js';
+import { env, mongoUriProblem, mongoUriIsLocal } from '../config/env.js';
 import { ensureDefaultPlans } from '../services/plans.js';
 import User from '../models/User.js';
 import Tenant from '../models/Tenant.js';
@@ -996,6 +996,12 @@ if (isDirectRun) {
     if (uriProblem) {
       console.error(`[seed] ${uriProblem}`);
       console.error('[seed] Fix MONGODB_URI in .env (or use USE_IN_MEMORY_DB=1 for a throwaway run with a downloaded MongoDB binary).');
+      process.exit(1);
+    }
+    // NODE_ENV=production means the production database: keep a local mongod out of it.
+    if (process.env.NODE_ENV === 'production' && mongoUriIsLocal(process.env.MONGODB_URI)) {
+      console.error('[seed] Refusing to seed a local MongoDB with NODE_ENV=production — Vercel cannot reach it.');
+      console.error('[seed] Put the Atlas mongodb+srv:// URI in .env and run the seed again.');
       process.exit(1);
     }
     await connectDB(process.env.MONGODB_URI);

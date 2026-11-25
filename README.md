@@ -187,6 +187,8 @@ GET    /api/health
 
 ## Deployment on Vercel
 
+A step-by-step checklist lives in [`docs/DEPLOY_ONLINE.md`](docs/DEPLOY_ONLINE.md).
+
 `vercel.json` builds the Vite client and exposes the Express app as a serverless function at `api/index.js`.
 
 1. Push this repository to GitHub.
@@ -219,25 +221,29 @@ The script uses the Vercel REST API (no CLI install needed) to:
 
 1. verify the token, then create or reuse the `unique-ai-frontdesk` project and link
    `santjangid62/unique-ai-frontdesk` to it
-2. upsert `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` and `NODE_ENV` for production + preview
+2. upsert `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `NODE_ENV`, `CLIENT_ORIGIN` and `APP_URL` for
+   production + preview (`CLIENT_ORIGIN`/`APP_URL` default to `https://<project>.vercel.app`; a localhost value
+   in `.env` is replaced, a custom domain is kept)
 3. trigger a production deployment from `main` and stream its state until it finishes (build log tail on failure)
 4. seed the production database with the demo workspace
 5. verify the live URL: `/api/health` (`db: connected`), the SPA shell, a real login + `/api/auth/me`,
    tenant-scoped `/api/leads`, anonymous `401`, the public widget config, and that a wrong password is rejected
 
-If `MONGODB_URI` still points at a local mongod, the script stops at the credentials step without touching the
-Vercel project and prints the Atlas setup steps: free M0 cluster on cloud.mongodb.com → database user under
+Before touching Vercel it pings `MONGODB_URI` (8s timeout), so a wrong Atlas password or a blocked IP fails in
+seconds instead of after a build. If `MONGODB_URI` still points at a local mongod, the script stops at the
+credentials step without touching the Vercel project and prints the Atlas setup steps: free M0 cluster on cloud.mongodb.com → database user under
 **Database Access** → `0.0.0.0/0` under **Network Access** → copy the `mongodb+srv://…` string from
 **Connect → Drivers → Node.js** → paste it as `MONGODB_URI` in `.env`.
 
-It exits non-zero if any live check fails. Useful flags: `--skip-seed`, and
-`--skip-deploy --url https://app.vercel.app` to verify an existing deployment without redeploying.
+It exits non-zero if any live check fails. Useful flags: `--dry-run` (validate the token, Atlas connection and
+project, then stop without changing anything), `--skip-seed`, `--skip-preflight` (skip the Atlas connection test),
+and `--skip-deploy --url https://app.vercel.app` to verify an existing deployment without redeploying.
 Secrets are never printed (the Mongo URI is masked), and an empty variable is never pushed to Vercel.
 
 `npm run test:deploy` runs this entire flow against a local mock Vercel API and a mock deployment —
-project creation, repo link, env upsert, polling, a healthy run, a disconnected database, a failed build and a
-local MongoDB URI refused before any Vercel API call — so the script can be verified without a token, network or
-database.
+project creation, repo link, env upsert, polling, a healthy run, a disconnected database, a failed build, a
+local MongoDB URI refused before any Vercel API call and a `--dry-run` that changes nothing — so the script can
+be verified without a token, network or database.
 
 ### MongoDB Atlas
 
@@ -268,7 +274,8 @@ payload against a local mock of the Atlas API (no keys or network needed).
 
 `npm run db:local` starts a mongod from `.mongo/` (downloading it once) with data in `.mongo-data/`, and the app
 accepts credential-less local URIs such as `mongodb://127.0.0.1:27017/unique-frontdesk`. Local URIs are for
-development only — `npm run deploy` refuses one and prints the Atlas setup steps instead.
+development only — `npm run deploy` refuses one and prints the Atlas setup steps instead, and `npm run seed`
+refuses a local URI when `NODE_ENV=production` so a production seed cannot silently hit your machine.
 
 ### Optional provider configuration
 
