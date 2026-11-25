@@ -43,9 +43,9 @@ function profileFacts(profile, agent) {
     `Address: ${[profile.address, profile.city, profile.state, profile.country].filter(Boolean).join(', ') || 'n/a'}`,
     `Working days: ${(profile.workingDays || []).join(', ') || 'n/a'} | Hours: ${profile.openingTime}-${profile.closingTime}`,
     `Languages: ${(profile.languages || []).join(', ')}`,
-    profile.coaching?.demoAvailable ? 'Demo classes: available (subject to slot availability)' : 'Demo classes: not confirmed',
-    profile.coaching?.admissionProcess ? `Admission process: ${profile.coaching.admissionProcess}` : '',
-    profile.coaching?.placementInfo ? `Placement: ${profile.coaching.placementInfo}` : '',
+    profile.coaching?.demoAvailable ? 'Trial / demo: available (subject to slot availability)' : 'Trial / demo: not confirmed',
+    profile.coaching?.admissionProcess ? `Next steps after enquiry: ${profile.coaching.admissionProcess}` : '',
+    profile.coaching?.placementInfo ? `Additional support: ${profile.coaching.placementInfo}` : '',
     courses ? `Courses:\n${courses}` : '',
     agent?.instructions ? `Agent instructions from the business owner: ${agent.instructions}` : '',
   ]
