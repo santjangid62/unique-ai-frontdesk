@@ -584,7 +584,11 @@ npm run db:check</code></pre>
   <h3>Step 3 — one-command deploy</h3>
   <p><code>deploy-token.txt</code> में Vercel token (vercel.com/account/tokens) हो, फिर:</p>
   <pre><code>npm run deploy</code></pre>
-  <p>Script यह सब करता है: token verify → project create/link → production env vars → deploy → production DB seed → live checks (<code>/api/health</code>, SPA, real login, tenant-scoped leads, 401, public widget config)। कोई check fail हुआ तो non-zero exit।</p>
+  <p>Script यह सब करता है: token verify → project create/link → <code>MONGODB_URI</code> + दोनों JWT secrets + <code>NODE_ENV</code> सेट → deploy → production DB seed → live checks (<code>/api/health</code>, SPA, real login, tenant-scoped leads, 401, public widget config)। कोई check fail हुआ तो non-zero exit।</p>
+  <div class="box warn">
+    <h4>CLIENT_ORIGIN और APP_URL अलग से सेट करें</h4>
+    <p style="margin:0">Deploy script ये दो नहीं भरता। पहली deployment के बाद Vercel → Project → Settings → Environment Variables में <code>CLIENT_ORIGIN=https://your-app.vercel.app</code> और <code>APP_URL=https://your-app.vercel.app</code> डालें, फिर redeploy करें — वरना browser से login/API calls CORS से block होंगी (server-to-server health check फिर भी pass हो सकता है)।</p>
+  </div>
   <table>
     <tr><th>Flag</th><th>काम</th></tr>
     <tr><td><code>--skip-seed</code></td><td>Deploy + verify, DB reseed नहीं</td></tr>
