@@ -92,6 +92,21 @@ export function mongoUriProblem(uri) {
   return null;
 }
 
+/** True when the URI points at a database only this machine can reach. */
+export function mongoUriIsLocal(uri) {
+  const value = String(uri || '').trim();
+  if (!/^mongodb(\+srv)?:\/\//i.test(value)) return false;
+  const authority = value.replace(/^mongodb(\+srv)?:\/\//i, '').split('/')[0].split('?')[0];
+  const hostPort = authority.includes('@') ? authority.slice(authority.lastIndexOf('@') + 1) : authority;
+  const host = (hostPort.startsWith('[')
+    ? hostPort.slice(1, hostPort.indexOf(']'))
+    : hostPort.split(':')[0]
+  )
+    .trim()
+    .toLowerCase();
+  return LOCAL_MONGO_HOSTS.has(host);
+}
+
 export function assertProdConfig() {
   if (!env.isProd) return;
   const problems = [];

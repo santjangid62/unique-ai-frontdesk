@@ -235,6 +235,26 @@ const runDeploy = ({ apiBase, mongoUri }) =>
     await app.close();
   }
 
+  console.log('\nScenario 6 — a local MongoDB URI blocks the deploy');
+  {
+    const vercel = await startVercelMock({ appUrl: 'https://example.vercel.app' });
+    const { code, output } = await runDeploy({
+      apiBase: vercel.url,
+      mongoUri: 'mongodb://127.0.0.1:27017/unique-frontdesk',
+    });
+
+    check('deploy exits 1', code === 1, output.slice(-400));
+    check('explains Vercel cannot reach a local database', /Vercel cannot reach/.test(output), output.slice(-400));
+    check(
+      'shows the Atlas setup steps',
+      /cloud\.mongodb\.com/.test(output) && /0\.0\.0\.0\/0/.test(output) && /mongodb\+srv/.test(output),
+      output.slice(-400),
+    );
+    check('does not touch the Vercel project', vercel.state.projectCreated === 0 && vercel.state.deploymentPosts.length === 0);
+
+    await vercel.close();
+  }
+
   console.log(summary());
   process.exit(exitCode());
 })().catch((error) => {

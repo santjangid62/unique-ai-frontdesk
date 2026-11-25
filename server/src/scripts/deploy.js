@@ -24,7 +24,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import 'dotenv/config';
 import { DEMO_CREDENTIALS } from './seed.js';
-import { mongoUriProblem } from '../config/env.js';
+import { mongoUriProblem, mongoUriIsLocal } from '../config/env.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const API = (process.env.VERCEL_API_BASE || 'https://api.vercel.com').replace(/\/$/, '');
@@ -51,7 +51,7 @@ const pass = (text) => console.log(`   \u001b[32m✓\u001b[0m ${text}`);
 
 const maskUri = (uri) => uri.replace(/\/\/([^:/@]+):([^@]*)@/, '//$1:••••@');
 
-function validateInputs({ requireMongo = true, requireToken = true } = {}) {
+function validateInputs({ requireMongo = true, requireToken = true, requireRemoteMongo = true } = {}) {
   step('1/6  Checking credentials');
   const problems = [];
 
@@ -62,6 +62,14 @@ function validateInputs({ requireMongo = true, requireToken = true } = {}) {
   if (requireMongo || mongoUri) {
     const uriIssue = mongoUriProblem(mongoUri);
     if (uriIssue) problems.push(uriIssue);
+  }
+
+  // A local MongoDB is fine for development, but a Vercel Function cannot reach
+  // this machine — stop before deploying instead of failing the live checks.
+  const localMongo =
+    requireRemoteMongo && Boolean(mongoUri) && !mongoUriProblem(mongoUri) && mongoUriIsLocal(mongoUri);
+  if (localMongo) {
+    problems.push('MONGODB_URI points at a local MongoDB, which Vercel cannot reach — deploy needs MongoDB Atlas');
   }
   if (!accessSecret) problems.push('JWT_ACCESS_SECRET is empty in .env');
   if (!refreshSecret) problems.push('JWT_REFRESH_SECRET is empty in .env');
@@ -83,6 +91,14 @@ function validateInputs({ requireMongo = true, requireToken = true } = {}) {
 
   if (problems.length) {
     for (const problem of problems) fail(problem);
+    if (localMongo) {
+      console.log('\n  Create a free MongoDB Atlas cluster, then deploy again:');
+      console.log('    1. Open https://cloud.mongodb.com and create a free M0 cluster (a region near your users)');
+      console.log('    2. Database Access → Add New Database User (save the username and password)');
+      console.log('    3. Network Access → Add IP Address → 0.0.0.0/0 (Vercel egress IPs change)');
+      console.log('    4. Clusters → Connect → Drivers → Node.js → copy the mongodb+srv://… connection string');
+      console.log('    5. Put it in .env as MONGODB_URI=… (one line, real password), then run `npm run deploy`');
+    }
     console.log('\n  Fix these, then run `npm run deploy` again.\n');
     process.exit(1);
   }
@@ -430,7 +446,11 @@ async function verify(url, options = {}) {
 (async () => {
   console.log('\n\u001b[1mUnique AI Frontdesk — one-command production deploy\u001b[0m');
   const skipDeploy = hasFlag('skip-deploy');
-  const secrets = validateInputs({ requireMongo: !hasFlag('skip-seed'), requireToken: !skipDeploy });
+  const secrets = validateInputs({
+    requireMongo: !hasFlag('skip-seed'),
+    requireToken: !skipDeploy,
+    requireRemoteMongo: !skipDeploy,
+  });
 
   let project = null;
   if (!skipDeploy) {
