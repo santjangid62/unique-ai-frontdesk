@@ -556,8 +556,5 @@ async function verify(url, options = {}) {
   process.exit(0);
 })().catch(async (error) => {
   console.error(`\n\u001b[31m✗ Deploy failed:\u001b[0m ${error.message}\n`);
-  if (error.status === 403) {
-    console.error('  The Vercel token was rejected. Create a new one at https://vercel.com/account/tokens and save it in deploy-token.txt.\n');
-  }
   process.exit(1);
 });
