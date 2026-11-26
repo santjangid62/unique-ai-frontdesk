@@ -316,9 +316,14 @@ tenant-isolation bug, drifted demo password or stale PDF fails before deployment
 `npm run lock:check` uses `npm ci --dry-run --ignore-scripts`, so it downloads nothing — CI runs it before
 `npm ci` and fails fast when a dependency was added without regenerating a lockfile.
 
-`npm run pdf:build` prints `docs/SETUP-GUIDE.html` to `docs/Unique-AI-Frontdesk-Setup-Guide.pdf` with headless
-Chrome/Edge (or the binary in `CHROME_BIN`) and records both hashes in `docs/SETUP-GUIDE.pdf.json`.
-`npm run test:docs-pdf` compares them, so editing the HTML without rebuilding the PDF fails the push.
+`npm run pdf:build` needs a browser installed: Google Chrome or Microsoft Edge (or `google-chrome`/`chromium` on
+Linux), run headlessly — set `CHROME_BIN` to the executable if it is somewhere unusual. It prints
+`docs/SETUP-GUIDE.html` to `docs/Unique-AI-Frontdesk-Setup-Guide.pdf` and records a digest of the HTML **content**
+in `docs/SETUP-GUIDE.pdf.json`.
+
+`npm run test:docs-pdf` compares that digest, so editing the HTML without rebuilding the PDF fails the push. The
+digest ignores BOM, line endings and trailing spaces, and the PDF's own bytes are not compared, so rebuilding the
+guide on another OS or a newer Chrome still passes CI.
 
 `npm run smoke` covers health, login, RBAC, tenant isolation, lead dedupe, double-booking prevention, grounded
 AI answers, escalation on unknown questions, platform analytics and CSV export.

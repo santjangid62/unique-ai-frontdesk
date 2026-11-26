@@ -3,45 +3,33 @@
  *
  *   npm run test:docs-pdf
  *
- * `npm run pdf:build` writes docs/SETUP-GUIDE.pdf.json with the hash of the HTML and
- * the PDF it produced; this compares both, so a stale PDF cannot be pushed.
+ * Compares the HTML's content digest (line endings, BOM and trailing spaces
+ * ignored) with the one `npm run pdf:build` recorded, so the check behaves the
+ * same on every machine and OS. The PDF bytes are deliberately not compared:
+ * a rebuild on Linux or a newer Chrome produces different bytes for the same
+ * content.
  */
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { createChecker } from './helpers.js';
-import { HTML, PDF, STAMP, sha256 } from '../src/scripts/build-setup-pdf.js';
+import { HTML, PDF, STAMP, htmlDigest } from '../src/scripts/build-setup-pdf.js';
 
 const { check, summary, exitCode } = createChecker();
-const REBUILD = 'run `npm run pdf:build` and commit both files';
+const REBUILD = 'run `npm run pdf:build` and commit the PDF with its stamp';
+const exists = (file) => existsSync(file);
 
 console.log('\nSetup guide PDF vs its HTML source');
 
-const stampOk = existsSync(STAMP);
-check(`stamp file exists (${path.basename(STAMP)})`, stampOk, REBUILD);
+check(`PDF exists (${path.basename(PDF)})`, exists(PDF), REBUILD);
+check(`stamp exists (${path.basename(STAMP)})`, exists(STAMP), REBUILD);
 
-const pdfOk = existsSync(PDF);
-check(`PDF exists (${path.basename(PDF)})`, pdfOk, REBUILD);
-
-let stamp = {};
-if (stampOk) {
-  try {
-    stamp = JSON.parse(readFileSync(STAMP, 'utf8'));
-  } catch {
-    check('stamp file is valid JSON', false, REBUILD);
-  }
-}
-
-if (stampOk && pdfOk) {
-  const htmlHash = sha256(HTML);
+if (exists(PDF) && exists(STAMP)) {
+  const stamp = JSON.parse(readFileSync(STAMP, 'utf8'));
+  const digest = htmlDigest(readFileSync(HTML, 'utf8'));
   check(
-    'HTML has not changed since the PDF was built',
-    stamp.htmlSha256 === htmlHash,
-    `docs/SETUP-GUIDE.html hash is ${htmlHash.slice(0, 12)} but the PDF was built from ${String(stamp.htmlSha256).slice(0, 12)} — ${REBUILD}`,
-  );
-  check(
-    'PDF matches the recorded build',
-    stamp.pdfSha256 === sha256(PDF),
-    `PDF hash differs from ${path.basename(STAMP)} — ${REBUILD}`,
+    'HTML content is the one the PDF was built from',
+    stamp.htmlDigest === digest,
+    `${digest.slice(0, 12)} now vs ${String(stamp.htmlDigest || 'no digest').slice(0, 12)} in the stamp — ${REBUILD}`,
   );
 }
 

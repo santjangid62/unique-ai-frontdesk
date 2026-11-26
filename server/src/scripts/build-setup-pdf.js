@@ -1,12 +1,11 @@
 /**
  * Rebuilds docs/Unique-AI-Frontdesk-Setup-Guide.pdf from docs/SETUP-GUIDE.html and
- * records both hashes in docs/SETUP-GUIDE.pdf.json, which `npm run test:docs-pdf`
- * compares on every run — so a stale PDF cannot be pushed.
+ * records a digest of the HTML content in docs/SETUP-GUIDE.pdf.json, which
+ * `npm run test:docs-pdf` compares — so a stale PDF cannot be pushed.
  *
  *   npm run pdf:build
  *
- * Uses a locally installed Chrome/Edge in headless mode; set CHROME_BIN to point at
- * a specific binary.
+ * Needs a local Chrome or Edge (set CHROME_BIN to pick a specific binary).
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
@@ -30,7 +29,20 @@ const CANDIDATES = {
   linux: ['/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser'],
 };
 
-export const sha256 = (file) => createHash('sha256').update(readFileSync(file)).digest('hex');
+/**
+ * Digest of the HTML's content, ignoring what differs between checkouts and
+ * machines (BOM, CRLF vs LF, trailing spaces). The PDF itself is never hashed:
+ * a rebuild on another OS or Chrome version produces different bytes for the
+ * same content.
+ */
+export function htmlDigest(source) {
+  const normalized = source
+    .replace(/^\uFEFF/, '')
+    .replace(/\r\n?/g, '\n')
+    .replace(/[ \t]+$/gm, '')
+    .replace(/\n*$/, '\n');
+  return createHash('sha256').update(normalized, 'utf8').digest('hex');
+}
 
 /** First existing browser binary, honouring CHROME_BIN. */
 export function findBrowser() {
@@ -70,12 +82,12 @@ function main() {
     process.exit(1);
   }
 
-  const stamp = { htmlSha256: sha256(HTML), pdfSha256: sha256(PDF) };
+  const stamp = { htmlDigest: htmlDigest(readFileSync(HTML, 'utf8')) };
   writeFileSync(STAMP, `${JSON.stringify(stamp, null, 2)}\n`);
 
   const pages = (readFileSync(PDF, 'latin1').match(/\/Type\s*\/Page[^s]/g) || []).length;
   console.log(
-    `[pdf:build] ${path.basename(PDF)} — ${statSync(PDF).size} bytes, ~${pages} pages; stamp written to ${path.basename(STAMP)}`,
+    `[pdf:build] ${path.basename(PDF)} — ${statSync(PDF).size} bytes, ~${pages} pages; content digest ${stamp.htmlDigest.slice(0, 12)} stored in ${path.basename(STAMP)}`,
   );
 }
 
