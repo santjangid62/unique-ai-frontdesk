@@ -21,6 +21,10 @@ jobs:
       # Needs no install, so a changed password fails the push before anything else.
       - name: Demo credentials match the setup guide
         run: npm run test:credentials
+      # The committed PDF must be rebuilt from the current HTML, so a stale guide
+      # cannot ship. Also needs no install.
+      - name: Setup guide PDF matches the HTML
+        run: npm run test:docs-pdf
       # Fails the build when package.json and a lockfile drift apart, before
       # wasting time on an install that would rewrite them silently.
       - name: Check lockfiles are in sync

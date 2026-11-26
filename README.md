@@ -296,6 +296,9 @@ npm run build         # Vite production build
 npm run smoke         # end-to-end API checks against a running, seeded server
 npm run smoke:ci      # the same suite, self-contained: in-memory MongoDB + seed + app
 npm run lock:check    # fails if package-lock.json drifted from package.json (root + client)
+npm run test:credentials  # fails if the guide's demo-login table drifted from the seed
+npm run pdf:build     # rebuild the setup-guide PDF from the HTML and restamp it
+npm run test:docs-pdf # fails if that PDF is older than the HTML
 ```
 
 The signup checks create a throwaway business (`Smoke Verify Institute`). When `MONGODB_URI` is
@@ -305,12 +308,17 @@ the exact tenant name, the `smoke.verify.<timestamp>@example.com` contact email 
 
 `npm run smoke:ci` needs no database or server: it starts a throwaway in-memory MongoDB, seeds the demo
 workspace, serves the app on an ephemeral port and runs `npm run smoke` against it. CI (`.github/workflows/test.yml`)
-runs on every push and pull request: `npm run test:credentials` first (the guide's demo-login table must match the
-seed scripts), then the lockfile check, installs, the client build, `npm run smoke:ci` and `npm test`, so a broken
-build, auth regression, tenant-isolation bug or a drifted demo password fails before deployment or merge.
+runs on every push and pull request: `npm run test:credentials` and `npm run test:docs-pdf` first (the guide's
+demo-login table must match the seed scripts, and its PDF must be rebuilt from the current HTML), then the lockfile
+check, installs, the client build, `npm run smoke:ci` and `npm test`, so a broken build, auth regression,
+tenant-isolation bug, drifted demo password or stale PDF fails before deployment or merge.
 
 `npm run lock:check` uses `npm ci --dry-run --ignore-scripts`, so it downloads nothing — CI runs it before
 `npm ci` and fails fast when a dependency was added without regenerating a lockfile.
+
+`npm run pdf:build` prints `docs/SETUP-GUIDE.html` to `docs/Unique-AI-Frontdesk-Setup-Guide.pdf` with headless
+Chrome/Edge (or the binary in `CHROME_BIN`) and records both hashes in `docs/SETUP-GUIDE.pdf.json`.
+`npm run test:docs-pdf` compares them, so editing the HTML without rebuilding the PDF fails the push.
 
 `npm run smoke` covers health, login, RBAC, tenant isolation, lead dedupe, double-booking prevention, grounded
 AI answers, escalation on unknown questions, platform analytics and CSV export.
