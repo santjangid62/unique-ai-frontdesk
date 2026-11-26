@@ -308,10 +308,11 @@ the exact tenant name, the `smoke.verify.<timestamp>@example.com` contact email 
 
 `npm run smoke:ci` needs no database or server: it starts a throwaway in-memory MongoDB, seeds the demo
 workspace, serves the app on an ephemeral port and runs `npm run smoke` against it. CI (`.github/workflows/test.yml`)
-runs on every push and pull request: `npm run test:credentials` and `npm run test:docs-pdf` first (the guide's
-demo-login table must match the seed scripts, and its PDF must be rebuilt from the current HTML), then the lockfile
-check, installs, the client build, `npm run smoke:ci` and `npm test`, so a broken build, auth regression,
-tenant-isolation bug, drifted demo password or stale PDF fails before deployment or merge.
+runs on every push and pull request as two parallel jobs: **docs checks** (install-free, so it finishes first) runs
+`npm run test:credentials` and `npm run test:docs-pdf` — the guide's demo-login table must match the seed scripts
+and its PDF must be rebuilt from the current HTML — while the **test** job runs the lockfile check, installs, the
+client build, `npm run smoke:ci` and `npm test`. A broken build, auth regression, tenant-isolation bug, drifted
+demo password or stale PDF fails before deployment or merge.
 
 `npm run lock:check` uses `npm ci --dry-run --ignore-scripts`, so it downloads nothing — CI runs it before
 `npm ci` and fails fast when a dependency was added without regenerating a lockfile.
