@@ -352,8 +352,11 @@ AI answers, escalation on unknown questions, platform analytics and CSV export.
    head branch automatically on merge (`delete_branch_on_merge`), so there is no manual branch cleanup; only your
    local copy needs dropping:
    ```bash
-   git checkout main && git fetch --prune && git pull && git branch -d feature/<short-name>
+   git checkout main && git pull && git branch -D feature/<short-name> && git fetch --prune
    ```
+   A squash merge rewrites the commits, so git cannot prove the branch was merged and a plain `git branch -d`
+   refuses with `not fully merged`; `-D` is safe because the work already lives on `main`. Run the prune last, so it
+   drops the remote-tracking ref of the branch that the merge deleted on GitHub.
 
 What the rule enforces on `main`: a pull request before merging (no approval count, so a solo maintainer can merge),
 the two required status checks above, an up-to-date branch, no force pushes and no branch deletion. It applies to
