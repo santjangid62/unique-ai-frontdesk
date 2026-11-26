@@ -194,7 +194,7 @@ A step-by-step checklist lives in [`docs/DEPLOY_ONLINE.md`](docs/DEPLOY_ONLINE.m
 1. Push this repository to GitHub.
 2. Import it in Vercel (framework preset: **Other**). Build command and output directory come from `vercel.json`.
 3. Add environment variables in **Project → Settings → Environment Variables**:
-   `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `CLIENT_ORIGIN` (your Vercel URL), and optionally
+   `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `CLIENT_ORIGIN` and `APP_URL` (both your Vercel URL), and optionally
    `OPENAI_API_KEY`, `OPENAI_MODEL`, `TWILIO_AUTH_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`.
    `MONGODB_URI` must be the Atlas `mongodb+srv://…` string: a local `mongodb://127.0.0.1…` URI cannot be
    reached from a Vercel Function.
@@ -245,8 +245,9 @@ Secrets are never printed (the Mongo URI is masked), and an empty variable is ne
 
 `npm run test:deploy` runs this entire flow against a local mock Vercel API and a mock deployment —
 project creation, repo link, env upsert, polling, a healthy run, a disconnected database, a failed build, a
-local MongoDB URI refused before any Vercel API call and a `--dry-run` that changes nothing — so the script can
-be verified without a token, network or database.
+local MongoDB URI refused before any Vercel API call, a 401/403 token rejection that shows only the friendly message
+(never the raw Vercel error), placeholder tokens refused before the first API call, and a `--dry-run` that changes
+nothing — so the script can be verified without a token, network or database.
 
 ### MongoDB Atlas
 

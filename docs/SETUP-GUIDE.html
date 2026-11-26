@@ -663,6 +663,7 @@ npm run db:check</code></pre>
     <tr><td>Vercel पर login fail</td><td>Production env vars missing या DB seed नहीं</td><td><code>npm run deploy</code> दोबारा चलाएँ (env + seed + verify करता है)</td></tr>
     <tr><td>Deploy: repository linked नहीं</td><td>Vercel GitHub app उस repo के लिए install नहीं है</td><td>Vercel dashboard → GitHub app install करें, फिर <code>npm run deploy</code></td></tr>
     <tr><td>Deploy “local MongoDB” पर रुका</td><td><code>MONGODB_URI</code> local URI है, जिसे Vercel reach नहीं कर सकता</td><td>Script के बताए Atlas steps पूरे करें और <code>mongodb+srv://…</code> URI <code>.env</code> में डालें; फिर <code>npm run deploy</code></td></tr>
+    <tr><td>Deploy: token placeholder जैसा लगता है</td><td><code>deploy-token.txt</code> में <code>abcd1234…</code>, <code>your-token</code>, <code>paste-here</code>, <code>xxxx</code> या quotes वाली value है</td><td>vercel.com/account/tokens से असली token एक line में डालें; script credentials step पर ही रुकता है और Vercel तक कोई call नहीं जाता</td></tr>
     <tr><td>CORS error</td><td><code>CLIENT_ORIGIN</code> live URL से match नहीं</td><td>Vercel env में <code>CLIENT_ORIGIN=https://your-app.vercel.app</code> सेट करके redeploy</td></tr>
   </table>
 
