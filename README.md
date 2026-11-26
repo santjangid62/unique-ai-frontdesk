@@ -314,6 +314,9 @@ and its PDF must be rebuilt from the current HTML — while the **test** job run
 client build, `npm run smoke:ci` and `npm test`. A broken build, auth regression, tenant-isolation bug, drifted
 demo password or stale PDF fails before deployment or merge.
 
+Both jobs declare `timeout-minutes` (10 for the install-free docs job, 30 for the build/test job), so a hung step
+fails its job after that window instead of leaving the run — and a protected-branch pull request — pending forever.
+
 `npm run lock:check` uses `npm ci --dry-run --ignore-scripts`, so it downloads nothing — CI runs it before
 `npm ci` and fails fast when a dependency was added without regenerating a lockfile.
 
@@ -328,3 +331,31 @@ guide on another OS or a newer Chrome still passes CI.
 
 `npm run smoke` covers health, login, RBAC, tenant isolation, lead dedupe, double-booking prevention, grounded
 AI answers, escalation on unknown questions, platform analytics and CSV export.
+
+## Contributing workflow
+
+`main` is protected, so every change lands through a pull request and a direct push is rejected:
+
+1. **Branch** from an up-to-date `main`:
+   ```bash
+   git checkout main && git pull && git checkout -b feature/<short-name>
+   ```
+2. **Commit and push** the branch: `git push -u origin feature/<short-name>`. GitHub prints a
+   `.../pull/new/<branch>` link in the push output.
+3. **Open the pull request** against `main` from that link (or `gh pr create --fill` if the GitHub CLI is installed).
+4. **Wait for both required checks to be green:** **docs checks** (`npm run test:credentials`, `npm run test:docs-pdf`)
+   and **test** (lockfile check, root and client install, client build, `npm run smoke:ci`, `npm test`). The checks are
+   required and the branch must be up to date with `main`, so if `main` moves while the PR is open, update the branch
+   and let the checks run again.
+5. **Merge** only once both are green — a squash merge keeps `main`'s history linear.
+
+What the rule enforces on `main`: a pull request before merging (no approval count, so a solo maintainer can merge),
+the two required status checks above, an up-to-date branch, no force pushes and no branch deletion. It applies to
+administrators too, so `git push origin main` from any account is refused with
+`! [remote rejected] HEAD -> main (protected branch hook declined)`.
+
+If a required check goes red, fix the cause on the branch and push again (never merge around it): a drifted demo
+password or stale PDF fails **docs checks**, while a build, smoke or unit-test failure fails **test**. If a run cannot
+finish because of a runner or Actions outage, the PR stays at `mergeable_state: blocked`; the `timeout-minutes` above
+turn a hung step into a failed job, and re-running the job is enough once the runner recovers. Only as an emergency
+measure should an administrator lift the rule (Settings → Branches → `main`) and restore it afterwards.
