@@ -347,7 +347,12 @@ AI answers, escalation on unknown questions, platform analytics and CSV export.
    and **test** (lockfile check, root and client install, client build, `npm run smoke:ci`, `npm test`). The checks are
    required and the branch must be up to date with `main`, so if `main` moves while the PR is open, update the branch
    and let the checks run again.
-5. **Merge** only once both are green — a squash merge keeps `main`'s history linear.
+5. **Merge** only once both are green — a squash merge keeps `main`'s history linear. The repository deletes the
+   head branch automatically on merge (`delete_branch_on_merge`), so there is no manual branch cleanup; only your
+   local copy needs dropping:
+   ```bash
+   git checkout main && git pull && git branch -d feature/<short-name>
+   ```
 
 What the rule enforces on `main`: a pull request before merging (no approval count, so a solo maintainer can merge),
 the two required status checks above, an up-to-date branch, no force pushes and no branch deletion. It applies to
