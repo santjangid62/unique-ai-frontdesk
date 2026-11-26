@@ -338,8 +338,9 @@ AI answers, escalation on unknown questions, platform analytics and CSV export.
 
 1. **Branch** from an up-to-date `main`:
    ```bash
-   git checkout main && git pull && git checkout -b feature/<short-name>
+   git checkout main && git fetch --prune && git pull && git checkout -b feature/<short-name>
    ```
+   `git fetch --prune` drops the remote-tracking refs of branches that were deleted on merge, so they do not pile up.
 2. **Commit and push** the branch: `git push -u origin feature/<short-name>`. GitHub prints a
    `.../pull/new/<branch>` link in the push output.
 3. **Open the pull request** against `main` from that link (or `gh pr create --fill` if the GitHub CLI is installed).
@@ -351,7 +352,7 @@ AI answers, escalation on unknown questions, platform analytics and CSV export.
    head branch automatically on merge (`delete_branch_on_merge`), so there is no manual branch cleanup; only your
    local copy needs dropping:
    ```bash
-   git checkout main && git pull && git branch -d feature/<short-name>
+   git checkout main && git fetch --prune && git pull && git branch -d feature/<short-name>
    ```
 
 What the rule enforces on `main`: a pull request before merging (no approval count, so a solo maintainer can merge),
