@@ -23,14 +23,8 @@ npm run dev                   # API on http://localhost:5000
 npm run dev:client            # dashboard on http://localhost:5173 (proxies /api)
 ```
 
-Demo logins created by `npm run seed`:
-
-| Role | Email | Password |
-| --- | --- | --- |
-| Super Admin | admin@uniqueit.in | Admin@12345 |
-| Business Admin | owner@uniquecomputers.in | Owner@12345 |
-| Staff | staff@uniquecomputers.in | Staff@12345 |
-| Second tenant admin | owner@abccoaching.in | Owner@12345 |
+Demo logins created by `npm run seed` — role, portal URL, email and password — are listed once, in the
+[setup guide's local-run section](docs/SETUP-GUIDE.html#s7), so credentials only have to be updated in one place.
 
 The seed also creates a neutral public workspace for the landing page demo at `/chat/demo`
 (tenant `demo`, "Demo Business" with generic services, prices and booking policy).
@@ -54,8 +48,8 @@ npm run demo:reset                  # local-only: drop the DB and rebuild all of
 `demo:reset` is the way back to a clean demo state after manual testing has changed data the seed cannot
 recognise (lead statuses, cancelled appointments, staff replies). It refuses to run against a non-local URI.
 
-`demo:data` prints the logins it uses. Besides the demo accounts above it creates
-`tester@uniquecomputers.in / Tester@12345` (business admin) so testers can work without the owner account.
+`demo:data` prints the logins it uses. Besides the seeded demo accounts it creates a tester login (business admin)
+so testers can work without the owner account; that account is in the same guide table.
 
 ## Features implemented
 
