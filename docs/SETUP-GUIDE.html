@@ -537,6 +537,16 @@ npm run dev:client          # Dashboard: http://127.0.0.1:5173</code></pre>
   <pre><code>npm run db:local            # terminal 1 — mongod 127.0.0.1:27017
 npm run dev                 # terminal 2 — API (reads .env)
 npm run dev:client          # terminal 3 — Vite dashboard</code></pre>
+
+  <h4>Login के लिए demo accounts (seed से बने, base <code>http://127.0.0.1:5173</code>)</h4>
+  <table>
+    <tr><th>Role</th><th>Portal</th><th>Email</th><th>Password</th></tr>
+    <tr><td>Business Admin (Unique Computers)</td><td><code>/login/business</code></td><td><code>owner@uniquecomputers.in</code></td><td><code>Owner@12345</code></td></tr>
+    <tr><td>Staff (सिर्फ़ assigned work)</td><td><code>/login/staff</code></td><td><code>staff@uniquecomputers.in</code></td><td><code>Staff@12345</code></td></tr>
+    <tr><td>Super Admin (platform)</td><td><code>/login/super-admin</code></td><td><code>admin@uniqueit.in</code></td><td><code>Admin@12345</code></td></tr>
+    <tr><td>Second tenant owner (ABC Coaching)</td><td><code>/login/business</code></td><td><code>owner@abccoaching.in</code></td><td><code>Owner@12345</code></td></tr>
+  </table>
+  <p style="font-size:14px;color:#475569">गलत portal पर login reject होता है (जैसे staff को <code>/login/business</code> पर)। <code>npm run demo:data</code> के बाद <code>tester@uniquecomputers.in</code> / <code>Tester@12345</code> भी मिलता है।</p>
   <div class="box warn">
     <h4>Port/Mongo environment</h4>
     <p style="margin:0">अगर shell में <code>PORT=0</code> या खाली <code>MONGODB_URI</code> exported हो तो server start नहीं होगा। साफ़ मान देकर चलाएँ: <code>MONGODB_URI="mongodb://127.0.0.1:27017/unique-frontdesk" PORT=5000 npm run dev</code></p>
