@@ -243,6 +243,9 @@ local MongoDB URI refused before any Vercel API call, a 401/403 token rejection 
 (never the raw Vercel error), placeholder tokens refused before the first API call, and a `--dry-run` that changes
 nothing — so the script can be verified without a token, network or database.
 
+`npm run test:credentials` reads `DEMO_CREDENTIALS`, the tester login and the setup guide's demo-login table
+and fails if an email or password differs, so the published logins cannot drift from what the seed creates.
+
 ### MongoDB Atlas
 
 Create a free cluster, a database user and allow Vercel egress (or `0.0.0.0/0` for a pilot), then copy the
