@@ -184,6 +184,9 @@ const runSetupSeed = (mockUrl, envFile, seedScript) =>
 (async () => {
   console.log('\nAtlas setup against a local mock API\n');
 
+  // Temporary probe: fails on purpose so the required check is red.
+  check('intentional failure probe', false, 'deliberate failure for the branch protection test');
+
   console.log('Scenario 1 — project already has a free cluster under another name');
   {
     const mock = await startMock({
