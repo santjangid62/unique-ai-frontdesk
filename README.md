@@ -217,6 +217,9 @@ token (https://vercel.com/account/tokens) in `deploy-token.txt` (gitignored), th
 npm run deploy
 ```
 
+The token has to be the real one: placeholders such as `abcd1234…`, `your-token`, `paste-here`, `xxxx`, or a quoted
+value are rejected at the credentials step, before any Vercel API call.
+
 The script uses the Vercel REST API (no CLI install needed) to:
 
 1. verify the token, then create or reuse the `unique-ai-frontdesk` project and link

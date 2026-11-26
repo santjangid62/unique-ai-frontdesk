@@ -613,6 +613,7 @@ npm run db:check</code></pre>
   <h3>Step 3 — one-command deploy</h3>
   <p><code>deploy-token.txt</code> में Vercel token (vercel.com/account/tokens) हो, फिर:</p>
   <pre><code>npm run deploy</code></pre>
+  <p class="muted" style="font-size:14px;color:#475569">Token असली होना चाहिए — <code>abcd1234…</code>, <code>your-token</code>, <code>paste-here</code>, <code>xxxx</code> या quotes में लिखी value credentials step पर ही reject हो जाती है और Vercel तक कोई call नहीं जाता।</p>
   <p>Script यह सब करता है: token verify → <code>MONGODB_URI</code> पहले ping (8s timeout — गलत Atlas password/IP बिना build के पकड़ा जाता है) → project create/link → <code>MONGODB_URI</code> + दोनों JWT secrets + <code>NODE_ENV</code> + <code>CLIENT_ORIGIN</code>/<code>APP_URL</code> सेट → deploy → production DB seed → live checks (<code>/api/health</code>, SPA, CORS, real login, tenant-scoped leads, 401, public widget config)। कोई check fail हुआ तो non-zero exit।</p>
   <div class="box warn">
     <h4>Local MongoDB URI से deploy नहीं होगा</h4>
