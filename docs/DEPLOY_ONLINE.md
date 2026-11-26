@@ -14,6 +14,11 @@ reference see the [README](../README.md); for a Hindi walkthrough see [`SETUP-GU
 A local `MONGODB_URI` such as `mongodb://127.0.0.1:27017/unique-frontdesk` is for development only. The deploy
 script refuses it at the credentials step, touches nothing on Vercel, and prints the Atlas steps below.
 
+Placeholder tokens are refused too, before any Vercel API call: `abcd1234…`, `your-token`, `paste-here`, `xxxx`,
+quoted or `<wrapped>` values, and anything with dashes, spaces or words like *example* or *dummy*. A real token is a
+single bare random string — copy it from <https://vercel.com/account/tokens> (**Create Token**) and paste it as the
+only non-comment line in `deploy-token.txt`.
+
 ## 2. Atlas setup (free M0)
 
 1. <https://cloud.mongodb.com> → **Create** → free **M0** cluster.
@@ -53,6 +58,7 @@ Flags: `--skip-seed` (no reseed), `--skip-preflight` (skip the Atlas ping), `--s
 | `MONGODB_URI points at a local MongoDB` | Complete section 2 and put the Atlas URI in `.env` |
 | `Cannot reach mongodb+srv://…` | Wrong password or Atlas **Network Access** missing `0.0.0.0/0` |
 | `No Vercel token` | Save a token in `deploy-token.txt` or set `VERCEL_TOKEN` |
+| `The token in deploy-token.txt looks like a placeholder` | Replace `abcd1234…`, `your-token`, `paste-here`, `xxxx` or a quoted value with the real token from <https://vercel.com/account/tokens> |
 | `is not linked to the Vercel project` | Install the Vercel GitHub app for `santjangid62/unique-ai-frontdesk` |
 | `db=disconnected` in the live checks | The deployed `MONGODB_URI` is wrong or Atlas blocks Vercel |
 | CORS check fails / login blocked in the browser | Set `CLIENT_ORIGIN` and `APP_URL` to the real domain in `.env` and redeploy |
