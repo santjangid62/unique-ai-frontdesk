@@ -15,6 +15,10 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      # The setup guide's demo-login table must equal what the seed scripts create.
+      # Needs no install, so a changed password fails the push before anything else.
+      - name: Demo credentials match the setup guide
+        run: npm run test:credentials
       # Fails the build when package.json and a lockfile drift apart, before
       # wasting time on an install that would rewrite them silently.
       - name: Check lockfiles are in sync
@@ -35,4 +39,6 @@ jobs:
       # auth, RBAC and tenant-isolation regressions are caught on every push.
       - name: Smoke test against an in-memory database
         run: npm run smoke:ci
-      - run: npm test
+      # Atlas mock, deploy mock and the guide/seed credential check.
+      - name: Unit tests (Atlas mock, deploy mock, demo credentials)
+        run: npm test
