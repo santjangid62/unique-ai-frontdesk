@@ -10,6 +10,8 @@ jobs:
   docs:
     name: docs checks
     runs-on: ubuntu-latest
+    # A hung install-free job would leave a protected-branch PR pending forever.
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,6 +24,8 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    # Bounds the whole install/build/smoke run so a stuck step fails instead of hanging.
+    timeout-minutes: 30
     env:
       # The mock suites never start an in-memory MongoDB; skip its 500 MB postinstall.
       # The smoke job downloads the binary it actually needs and caches it below.
