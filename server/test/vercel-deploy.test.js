@@ -15,7 +15,8 @@ import { createChecker, listen, readBody, sendJson, runNode } from './helpers.js
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const DEPLOY = path.join(ROOT, 'server/src/scripts/deploy.js');
-const TOKEN = 'mock_token_1234567890abcdef';
+const TOKEN = 'Vt9Qm2Lp7Rs4Xy8Kd3Nb6Wc1';
+const PLACEHOLDER_TOKENS = ['abcd1234ef567890gh1234ij567890kl', 'your-token', 'paste-here', 'xxxxxxxxxxxxxxxxxxxxxxxx'];
 const JWT_ACCESS = 'a'.repeat(96);
 const JWT_REFRESH = 'b'.repeat(96);
 const MONGO = 'mongodb+srv://mock:secret@cluster0.mock.mongodb.net/unique-frontdesk';
@@ -75,7 +76,7 @@ async function startAppMock({ mode = 'ok' } = {}) {
 
 /** Mock Vercel REST API. */
 async function startVercelMock({ appUrl, states = ['READY'], buildLog = [], linkError = null, tokenStatus = 200 }) {
-  const state = { project: null, projectCreated: 0, linkCalls: 0, envPosts: [], deploymentPosts: [], polls: 0, eventCalls: 0 };
+  const state = { project: null, projectCreated: 0, linkCalls: 0, envPosts: [], deploymentPosts: [], polls: 0, eventCalls: 0, userCalls: 0 };
 
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://127.0.0.1');
@@ -83,6 +84,7 @@ async function startVercelMock({ appUrl, states = ['READY'], buildLog = [], link
     const parts = url.pathname.split('/').filter(Boolean);
 
     if (req.method === 'GET' && url.pathname === '/v2/user') {
+      state.userCalls += 1;
       if (tokenStatus !== 200) {
         const code = tokenStatus === 401 ? 'unauthorized' : 'forbidden';
         const message = tokenStatus === 401 ? 'Invalid token' : 'Not authorized';
@@ -139,12 +141,12 @@ async function startVercelMock({ appUrl, states = ['READY'], buildLog = [], link
   return { state, url, close: () => new Promise((done) => server.close(done)) };
 }
 
-const runDeploy = ({ apiBase, mongoUri }) =>
+const runDeploy = ({ apiBase, mongoUri, token = TOKEN }) =>
   runNode(DEPLOY, {
     cwd: ROOT,
     args: ['--skip-seed', '--skip-preflight'],
     env: {
-      VERCEL_TOKEN: TOKEN,
+      VERCEL_TOKEN: token,
       VERCEL_API_BASE: apiBase,
       JWT_ACCESS_SECRET: JWT_ACCESS,
       JWT_REFRESH_SECRET: JWT_REFRESH,
@@ -319,6 +321,25 @@ const runDeploy = ({ apiBase, mongoUri }) =>
       `${status}: stops before touching the project`,
       vercel.state.projectCreated === 0 && vercel.state.envPosts.length === 0 && vercel.state.deploymentPosts.length === 0,
     );
+
+    await vercel.close();
+  }
+
+  console.log('\nScenario 9 — placeholder tokens are refused before any API call');
+  {
+    const vercel = await startVercelMock({ appUrl: 'https://example.vercel.app' });
+
+    for (const placeholder of PLACEHOLDER_TOKENS) {
+      const { code, output } = await runDeploy({ apiBase: vercel.url, mongoUri: MONGO, token: placeholder });
+      check(
+        `refuses "${placeholder}"`,
+        code === 1 && /looks like a placeholder/.test(output) && /vercel\.com\/account\/tokens/.test(output),
+        output.slice(-300),
+      );
+    }
+
+    check('never calls /v2/user', vercel.state.userCalls === 0, `calls=${vercel.state.userCalls}`);
+    check('does not touch the project', vercel.state.projectCreated === 0 && vercel.state.deploymentPosts.length === 0);
 
     await vercel.close();
   }

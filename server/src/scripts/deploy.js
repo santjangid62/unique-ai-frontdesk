@@ -53,6 +53,18 @@ const pass = (text) => console.log(`   \u001b[32m✓\u001b[0m ${text}`);
 
 const maskUri = (uri) => uri.replace(/\/\/([^:/@]+):([^@]*)@/, '//$1:••••@');
 
+/**
+ * A real Vercel token is a bare random string with no separators, quotes or
+ * dictionary words, so those mark a value pasted from a docs template.
+ */
+const PLACEHOLDER_TOKEN_PATTERNS = [
+  /[<>{}\s'"]|\.{2,}|…/, // quoted, wrapped in <>, or containing an ellipsis
+  /x{4,}/i, // xxxx
+  /(.)\1{5,}/, // aaaaaa, 000000
+  /abcd|12345|qwerty|asdf|your|paste|placeholder|example|dummy|sample|changeme|insert|replace/i,
+];
+const looksLikePlaceholderToken = (token) => PLACEHOLDER_TOKEN_PATTERNS.some((pattern) => pattern.test(token));
+
 function validateInputs({ requireMongo = true, requireToken = true, requireRemoteMongo = true } = {}) {
   step('1/6  Checking credentials');
   const problems = [];
@@ -82,7 +94,11 @@ function validateInputs({ requireMongo = true, requireToken = true, requireRemot
       .map((line) => line.trim())
       .find((line) => line && !line.startsWith('#')) || '';
   }
-  if (!token && requireToken) {
+  if (token && looksLikePlaceholderToken(token)) {
+    problems.push(
+      'The token in deploy-token.txt looks like a placeholder (abcd1234…, your-token, paste-here, xxxx…) — paste the real token from https://vercel.com/account/tokens',
+    );
+  } else if (!token && requireToken) {
     problems.push('No Vercel token: create https://vercel.com/account/tokens and save it in deploy-token.txt');
   } else if (token && token.length < 20) {
     problems.push('The token in deploy-token.txt looks too short — copy the whole token');
