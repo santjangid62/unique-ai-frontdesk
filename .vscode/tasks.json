@@ -1,0 +1,86 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "db: local mongod",
+      "detail": "mongod on 127.0.0.1:27017 with data in .mongo-data/",
+      "type": "shell",
+      "command": "npm run db:local",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "mongodb",
+        "pattern": [{ "regexp": "^$" }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting MongoDB:",
+          "endsPattern": "Connection\\s*:\\s*mongodb://"
+        }
+      },
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "dev" }
+    },
+    {
+      "label": "api: dev",
+      "detail": "Express API on http://localhost:5000 (node --watch)",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "api",
+        "pattern": [{ "regexp": "^$" }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "\\[server\\]|\\[db\\]",
+          "endsPattern": "Unique AI Frontdesk API listening on http://localhost:"
+        }
+      },
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "dev" }
+    },
+    {
+      "label": "client: dev",
+      "detail": "Vite dashboard on http://localhost:5173 (proxies /api to :5000)",
+      "type": "shell",
+      "command": "npm run dev:client",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": [{ "regexp": "^$" }],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE v[0-9]",
+          "endsPattern": "Local:\\s+http://localhost:5173"
+        }
+      },
+      "presentation": { "reveal": "always", "panel": "dedicated", "group": "dev" }
+    },
+    {
+      "label": "dev: all",
+      "detail": "mongod + API + client together; stop each terminal to shut them down",
+      "dependsOn": ["db: local mongod", "api: dev", "client: dev"],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "seed",
+      "detail": "Plans, demo workspace and demo logins (one-off, safe to re-run)",
+      "type": "shell",
+      "command": "npm run seed",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "test",
+      "detail": "The same checks CI runs (npm test)",
+      "type": "shell",
+      "command": "npm test",
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    }
+  ]
+}
