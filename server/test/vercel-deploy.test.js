@@ -74,7 +74,7 @@ async function startAppMock({ mode = 'ok' } = {}) {
 }
 
 /** Mock Vercel REST API. */
-async function startVercelMock({ appUrl, states = ['READY'], buildLog = [], linkError = null }) {
+async function startVercelMock({ appUrl, states = ['READY'], buildLog = [], linkError = null, tokenStatus = 200 }) {
   const state = { project: null, projectCreated: 0, linkCalls: 0, envPosts: [], deploymentPosts: [], polls: 0, eventCalls: 0 };
 
   const server = http.createServer(async (req, res) => {
@@ -83,6 +83,11 @@ async function startVercelMock({ appUrl, states = ['READY'], buildLog = [], link
     const parts = url.pathname.split('/').filter(Boolean);
 
     if (req.method === 'GET' && url.pathname === '/v2/user') {
+      if (tokenStatus !== 200) {
+        const code = tokenStatus === 401 ? 'unauthorized' : 'forbidden';
+        const message = tokenStatus === 401 ? 'Invalid token' : 'Not authorized';
+        return sendJson(res, tokenStatus, { error: { code, message, invalidToken: true } });
+      }
       return sendJson(res, 200, { user: { username: 'mock-user', email: 'mock@example.com' } });
     }
 
@@ -288,6 +293,30 @@ const runDeploy = ({ apiBase, mongoUri }) =>
     check('says nothing was changed', /nothing was changed/i.test(output) && /Remove --dry-run/.test(output), output.slice(-400));
     check(
       'does not create the project, set env vars or deploy',
+      vercel.state.projectCreated === 0 && vercel.state.envPosts.length === 0 && vercel.state.deploymentPosts.length === 0,
+    );
+
+    await vercel.close();
+  }
+
+  console.log('\nScenario 8 — Vercel rejects the token with 401/403');
+  for (const status of [401, 403]) {
+    const vercel = await startVercelMock({ appUrl: 'https://example.vercel.app', tokenStatus: status });
+    const { code, output } = await runDeploy({ apiBase: vercel.url, mongoUri: MONGO });
+
+    check(`${status}: deploy exits 1`, code === 1, output.slice(-400));
+    check(
+      `${status}: explains how to replace the token`,
+      /Vercel rejected the token/.test(output) && /vercel\.com\/account\/tokens/.test(output) && /deploy-token\.txt/.test(output),
+      output.slice(-400),
+    );
+    check(
+      `${status}: hides the raw Vercel API error`,
+      !/Not authorized/.test(output) && !/Invalid token/.test(output) && !/\/v2\/user/.test(output) && !/invalidToken/.test(output),
+      output.slice(-400),
+    );
+    check(
+      `${status}: stops before touching the project`,
       vercel.state.projectCreated === 0 && vercel.state.envPosts.length === 0 && vercel.state.deploymentPosts.length === 0,
     );
 
