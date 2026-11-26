@@ -162,7 +162,18 @@ async function checkMongoReachable(uri) {
 const isLocalUrl = (value) => /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?/i.test(value);
 
 async function verifyToken(token) {
-  const user = await api(token, '/v2/user');
+  let user;
+  try {
+    user = await api(token, '/v2/user');
+  } catch (error) {
+    if (error.status === 401 || error.status === 403) {
+      throw new Error(
+        'Vercel rejected the token. Create a new one at https://vercel.com/account/tokens, ' +
+          'paste it as the only line in deploy-token.txt (no placeholder, no quotes) and deploy again.',
+      );
+    }
+    throw error;
+  }
   pass(`Vercel account: ${user.user?.username || user.user?.email || 'ok'}`);
   return user.user;
 }
