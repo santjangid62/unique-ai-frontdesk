@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Plus, Save, Trash2, Plug } from 'lucide-react';
+import { BookOpen, Plus, Save, Trash2, Plug, Sparkles, Bot } from 'lucide-react';
 import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
-import { Alert, Badge, Card, Field, PageHeader, Spinner } from '../components/ui.jsx';
+import { Alert, Badge, Card, Field, Modal, PageHeader, Spinner } from '../components/ui.jsx';
 import { titleCase } from '../lib/format.js';
 import { useI18n } from '../i18n/index.jsx';
 
@@ -18,6 +18,13 @@ export default function Settings() {
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [providerForm, setProviderForm] = useState({});
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiProvider, setAiProvider] = useState(null);
+  const [aiStep, setAiStep] = useState(0);
+  const [aiValues, setAiValues] = useState({});
+  const [aiInput, setAiInput] = useState('');
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiMessages, setAiMessages] = useState([]);
 
   useEffect(() => {
     if (!profile) return;
@@ -126,6 +133,70 @@ export default function Settings() {
       reloadIntegrations();
     } catch (err) {
       setError(errorMessage(err));
+    }
+  };
+
+  const integrationFor = (provider) => (integrations || []).find((item) => item.provider === provider);
+
+  const openAiAssist = (provider) => {
+    const integration = integrationFor(provider);
+    const required = integration?.requires || [];
+    setAiProvider(provider);
+    setAiOpen(true);
+    setAiStep(0);
+    setAiValues({});
+    setAiInput('');
+    setAiMessages([
+      {
+        from: 'ai',
+        text:
+          required.length === 0
+            ? `I can set up ${provider} for you. No extra fields are needed — click "Finish" to mark it connected.`
+            : `I'll set up ${provider} for you. I need ${required.length} value${required.length > 1 ? 's' : ''}: ${required.join(', ')}. Let's start with ${required[0]}.`,
+      },
+    ]);
+  };
+
+  const closeAiAssist = () => {
+    setAiOpen(false);
+    setAiProvider(null);
+    setAiStep(0);
+    setAiValues({});
+    setAiInput('');
+    setAiMessages([]);
+  };
+
+  const submitAiStep = async () => {
+    if (!aiProvider) return;
+    const integration = integrationFor(aiProvider);
+    const required = integration?.requires || [];
+    const field = required[aiStep];
+    const value = aiInput.trim();
+    if (field && !value) return;
+    const nextValues = field ? { ...aiValues, [field]: value } : aiValues;
+    setAiValues(nextValues);
+    setAiInput('');
+    const userMsg = field ? { from: 'user', text: value } : { from: 'user', text: 'Finish' };
+    if (aiStep + 1 >= required.length) {
+      setAiBusy(true);
+      setAiMessages((prev) => [...prev, userMsg, { from: 'ai', text: 'Saving your credentials…' }]);
+      try {
+        await saveIntegration(aiProvider, nextValues);
+        await checkIntegration(aiProvider);
+        setAiMessages((prev) => [...prev, { from: 'ai', text: `Done! ${aiProvider} is now connected. You can close this window.` }]);
+      } catch (err) {
+        setAiMessages((prev) => [...prev, { from: 'ai', text: `Something went wrong: ${err?.message || 'unknown error'}. Try again.` }]);
+      } finally {
+        setAiBusy(false);
+      }
+      setAiStep(required.length);
+    } else {
+      setAiMessages((prev) => [
+        ...prev,
+        userMsg,
+        { from: 'ai', text: `Got it. Now please enter ${required[aiStep + 1]}.` },
+      ]);
+      setAiStep(aiStep + 1);
     }
   };
 
@@ -307,14 +378,24 @@ export default function Settings() {
       </form>
 
       <Card className="mt-5 p-5">
-        <div className="mb-4 flex items-center gap-2">
-          <Plug size={18} className="text-brand-600" />
-          <div>
-            <h2 className="text-sm font-semibold text-slate-900">{t('Channel integrations')}</h2>
-            <p className="text-xs text-slate-500">
-              {t('Credentials are stored per business and never returned in full. Webhooks are signature-verified.')}
-            </p>
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Plug size={18} className="text-brand-600" />
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">{t('Channel integrations')}</h2>
+              <p className="text-xs text-slate-500">
+                {t('Credentials are stored per business and never returned in full. Webhooks are signature-verified.')}
+              </p>
+            </div>
           </div>
+          <button
+            type="button"
+            className="btn-secondary px-3 py-1.5 text-xs"
+            onClick={() => { setAiOpen(true); setAiProvider(null); setAiMessages([]); }}
+            title="AI assist"
+          >
+            <Sparkles size={14} /> AI Assist
+          </button>
         </div>
         <div className="grid gap-4 lg:grid-cols-3">
           {(integrations || []).map((integration) => (
@@ -365,6 +446,71 @@ export default function Settings() {
           ))}
         </div>
       </Card>
+
+      <Modal open={aiOpen} onClose={closeAiAssist} title="AI Assist" description="I'll ask for each required value and save it for you." size="md">
+        {!aiProvider ? (
+          <div className="space-y-2">
+            <p className="text-sm text-slate-600">Which channel should I set up for you?</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(integrations || []).map((integration) => (
+                <button
+                  key={integration.provider}
+                  type="button"
+                  className="btn-secondary justify-start px-3 py-2 text-xs"
+                  onClick={() => openAiAssist(integration.provider)}
+                >
+                  <Sparkles size={14} /> {titleCase(integration.provider)}
+                  <span className="ml-auto text-[10px] text-slate-400">{integration.status}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="max-h-64 space-y-2 overflow-y-auto rounded-xl bg-slate-50 p-3">
+              {aiMessages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`flex ${message.from === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[85%] rounded-2xl px-3 py-2 text-xs ${
+                      message.from === 'user'
+                        ? 'bg-brand-600 text-white'
+                        : 'bg-white text-slate-700 shadow-sm'
+                    }`}
+                  >
+                    {message.from === 'ai' ? <Bot size={12} className="mr-1 inline text-brand-600" /> : null}
+                    {message.text}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {aiStep < (integrationFor(aiProvider)?.requires?.length || 0) ? (
+              <div className="flex gap-2">
+                <input
+                  className="input text-xs"
+                  placeholder={`Enter ${integrationFor(aiProvider).requires[aiStep]}`}
+                  value={aiInput}
+                  onChange={(event) => setAiInput(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') submitAiStep();
+                  }}
+                  disabled={aiBusy}
+                />
+                <button type="button" className="btn-primary px-3 py-1.5 text-xs" onClick={submitAiStep} disabled={aiBusy}>
+                  Send
+                </button>
+              </div>
+            ) : (
+              <button type="button" className="btn-secondary w-full text-xs" onClick={closeAiAssist} disabled={aiBusy}>
+                Close
+              </button>
+            )}
+          </div>
+        )}
+      </Modal>
+
     </div>
   );
 }
