@@ -4,6 +4,7 @@ import api, { errorMessage } from '../../lib/api.js';
 import useFetch from '../../lib/useFetch.js';
 import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Pagination, Spinner, Table, Tx } from '../../components/ui.jsx';
 import { dateTime, fromNow, titleCase } from '../../lib/format.js';
+import { useI18n } from '../../i18n/index.jsx';
 
 const empty = {
   name: '',
@@ -17,6 +18,7 @@ const empty = {
 };
 
 export default function Businesses() {
+  const { t } = useI18n();
   const [filters, setFilters] = useState({ search: '', status: '', page: 1 });
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty);
@@ -94,7 +96,7 @@ export default function Businesses() {
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               className="input w-60 pl-9"
-              placeholder="Search business or slug"
+              placeholder={t('Search business or slug')}
               value={filters.search}
               onChange={(event) => setFilters({ ...filters, search: event.target.value, page: 1 })}
             />
@@ -160,7 +162,7 @@ export default function Businesses() {
                   <div className="flex justify-end gap-1">
                     {row.status === 'active' ? (
                       <button type="button" className="btn-ghost px-2 py-1 text-xs text-amber-700" onClick={() => setStatus(row, 'suspended')}>
-                        Suspend
+                        <Tx>Suspend</Tx>
                       </button>
                     ) : (
                       <button type="button" className="btn-ghost px-2 py-1 text-xs text-emerald-700" onClick={() => setStatus(row, 'active')}>
@@ -229,9 +231,9 @@ export default function Businesses() {
           <div className="sm:col-span-2 mt-2 rounded-xl border border-slate-100 bg-slate-50 p-3">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500"><Tx>Business admin (optional)</Tx></p>
             <div className="grid gap-3 sm:grid-cols-3">
-              <input className="input" placeholder="Admin name" value={form.ownerName} onChange={(event) => setForm({ ...form, ownerName: event.target.value })} />
-              <input className="input" placeholder="Admin email" type="email" value={form.ownerEmail} onChange={(event) => setForm({ ...form, ownerEmail: event.target.value })} />
-              <input className="input" placeholder="Temporary password" value={form.ownerPassword} onChange={(event) => setForm({ ...form, ownerPassword: event.target.value })} />
+              <input className="input" placeholder={t('Admin name')} value={form.ownerName} onChange={(event) => setForm({ ...form, ownerName: event.target.value })} />
+              <input className="input" placeholder={t('Admin email')} type="email" value={form.ownerEmail} onChange={(event) => setForm({ ...form, ownerEmail: event.target.value })} />
+              <input className="input" placeholder={t('Temporary password')} value={form.ownerPassword} onChange={(event) => setForm({ ...form, ownerPassword: event.target.value })} />
             </div>
           </div>
         </form>

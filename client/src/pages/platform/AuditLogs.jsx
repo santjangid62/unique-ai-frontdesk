@@ -3,8 +3,10 @@ import { ShieldCheck } from 'lucide-react';
 import useFetch from '../../lib/useFetch.js';
 import { Alert, Badge, Card, EmptyState, PageHeader, Pagination, Spinner, Table, Tx } from '../../components/ui.jsx';
 import { dateTime, titleCase } from '../../lib/format.js';
+import { useI18n } from '../../i18n/index.jsx';
 
 export default function AuditLogs() {
+  const { t } = useI18n();
   const [filters, setFilters] = useState({ action: '', severity: '', page: 1 });
   const query = new URLSearchParams({
     page: String(filters.page),
@@ -32,7 +34,7 @@ export default function AuditLogs() {
         <div className="flex flex-wrap gap-2 border-b border-slate-100 p-4">
           <input
             className="input w-64"
-            placeholder="Filter by action (for example login)"
+            placeholder={t('Filter by action (for example login)')}
             value={filters.action}
             onChange={(event) => setFilters({ ...filters, action: event.target.value, page: 1 })}
           />

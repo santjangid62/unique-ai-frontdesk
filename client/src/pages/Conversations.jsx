@@ -3,10 +3,12 @@ import { Bot, MessageSquare, RefreshCw, Send, UserCog, XCircle } from 'lucide-re
 import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { Alert, Badge, Card, EmptyState, PageHeader, Spinner, Tabs } from '../components/ui.jsx';
+import { Alert, Badge, Card, EmptyState, PageHeader, Spinner, Tabs, Tx } from '../components/ui.jsx';
 import { dateTime, fromNow, titleCase } from '../lib/format.js';
+import { useI18n } from '../i18n/index.jsx';
 
 export default function Conversations() {
+  const { t } = useI18n();
   const { user, isBusinessAdmin } = useAuth();
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
@@ -92,7 +94,7 @@ export default function Conversations() {
           <div className="space-y-3 border-b border-slate-100 p-3">
             <input
               className="input"
-              placeholder="Search name, phone or message"
+              placeholder={t('Search name, phone or message')}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
@@ -160,18 +162,18 @@ export default function Conversations() {
                   <p className="text-sm font-bold text-slate-900">{conversation.customerName}</p>
                   <p className="text-xs text-slate-500">
                     {conversation.customerPhone || 'No phone'} · {titleCase(conversation.channel)} ·{' '}
-                    {conversation.aiEnabled ? 'AI replying' : 'Staff handling'}
+                    {t(conversation.aiEnabled ? 'AI replying' : 'Staff handling')}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {conversation.status !== 'handoff' ? (
                     <button type="button" className="btn-secondary px-2.5 py-1.5 text-xs" onClick={() => action('handoff')}>
-                      <UserCog size={14} /> Take over
+                      <UserCog size={14} /> <Tx>Take over</Tx>
                     </button>
                   ) : null}
                   {!conversation.aiEnabled && isBusinessAdmin ? (
                     <button type="button" className="btn-secondary px-2.5 py-1.5 text-xs" onClick={() => action('resume')}>
-                      <Bot size={14} /> Resume AI
+                      <Bot size={14} /> <Tx>Resume AI</Tx>
                     </button>
                   ) : null}
                   {conversation.status !== 'closed' ? (
@@ -224,7 +226,7 @@ export default function Conversations() {
               <form onSubmit={sendReply} className="flex items-center gap-2 border-t border-slate-100 px-3 py-3">
                 <input
                   className="input flex-1"
-                  placeholder="Reply as staff — this pauses the AI for this chat"
+                  placeholder={t('Reply as staff — this pauses the AI for this chat')}
                   value={reply}
                   onChange={(event) => setReply(event.target.value)}
                 />

@@ -4,8 +4,10 @@ import api, { errorMessage } from '../../lib/api.js';
 import useFetch from '../../lib/useFetch.js';
 import { Alert, Badge, Card, EmptyState, PageHeader, Pagination, Spinner, Table, Tx } from '../../components/ui.jsx';
 import { fromNow, titleCase } from '../../lib/format.js';
+import { useI18n } from '../../i18n/index.jsx';
 
 export default function PlatformUsers() {
+  const { t } = useI18n();
   const [filters, setFilters] = useState({ search: '', role: '', page: 1 });
   const [error, setError] = useState('');
   const query = new URLSearchParams({
@@ -45,7 +47,7 @@ export default function PlatformUsers() {
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               className="input w-60 pl-9"
-              placeholder="Search name or email"
+              placeholder={t('Search name or email')}
               value={filters.search}
               onChange={(event) => setFilters({ ...filters, search: event.target.value, page: 1 })}
             />

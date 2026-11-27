@@ -4,10 +4,12 @@ import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
 import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Pagination, Spinner, Table, Tx } from '../components/ui.jsx';
 import { dateTime, fromNow, titleCase } from '../lib/format.js';
+import { useI18n } from '../i18n/index.jsx';
 
 const empty = { name: '', phone: '', email: '', tags: '', interestedCourses: '' };
 
 export default function Customers() {
+  const { t } = useI18n();
   const [filters, setFilters] = useState({ search: '', page: 1 });
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty);
@@ -76,7 +78,7 @@ export default function Customers() {
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               className="input pl-9"
-              placeholder="Search customers"
+              placeholder={t('Search customers')}
               value={filters.search}
               onChange={(event) => setFilters({ search: event.target.value, page: 1 })}
             />
@@ -127,7 +129,7 @@ export default function Customers() {
               render: (row) => (
                 <div className="flex justify-end gap-1">
                   <button type="button" className="btn-ghost px-2 py-1 text-xs" onClick={() => setDetail(row.id)}>
-                    History
+                    <Tx>History</Tx>
                   </button>
                   <button type="button" className="btn-ghost px-2 py-1 text-xs text-rose-600" onClick={() => remove(row)}>
                     <Trash2 size={14} />

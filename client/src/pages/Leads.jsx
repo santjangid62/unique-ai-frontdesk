@@ -5,6 +5,7 @@ import useFetch from '../lib/useFetch.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Pagination, Spinner, Table, Tabs, Tx } from '../components/ui.jsx';
 import { dateTime, fromNow, titleCase } from '../lib/format.js';
+import { useI18n } from '../i18n/index.jsx';
 
 const STATUSES = ['new', 'contacted', 'interested', 'demo_scheduled', 'converted', 'not_interested', 'lost'];
 const SOURCES = ['website', 'whatsapp', 'voice', 'manual', 'integration'];
@@ -12,6 +13,7 @@ const SOURCES = ['website', 'whatsapp', 'voice', 'manual', 'integration'];
 const emptyForm = { name: '', phone: '', email: '', course: '', source: 'manual', status: 'new', assigneeId: '', followUpDate: '', notes: '' };
 
 export default function Leads() {
+  const { t } = useI18n();
   const { user, isBusinessAdmin } = useAuth();
   const [filters, setFilters] = useState({ status: '', source: '', search: '', page: 1 });
   const [formOpen, setFormOpen] = useState(false);
@@ -150,11 +152,11 @@ export default function Leads() {
           <>
             {isBusinessAdmin ? (
               <button type="button" className="btn-secondary" onClick={exportCsv}>
-                <Download size={16} /> Export CSV
+                <Download size={16} /> <Tx>Export CSV</Tx>
               </button>
             ) : null}
             <button type="button" className="btn-primary" onClick={openCreate}>
-              <Plus size={16} /> Add lead
+              <Plus size={16} /> <Tx>Add lead</Tx>
             </button>
           </>
         }
@@ -174,7 +176,7 @@ export default function Leads() {
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 className="input w-56 pl-9"
-                placeholder="Search name, phone, service"
+                placeholder={t('Search name, phone, service')}
                 value={filters.search}
                 onChange={(event) => setFilters({ ...filters, search: event.target.value, page: 1 })}
               />
@@ -389,7 +391,7 @@ export default function Leads() {
                 {!detailFetch.data.lead.notes?.length ? <p className="text-sm text-slate-500"><Tx>No notes yet.</Tx></p> : null}
               </div>
               <div className="mt-3 flex gap-2">
-                <input className="input" placeholder="Add a note…" value={note} onChange={(event) => setNote(event.target.value)} />
+                <input className="input" placeholder={t('Add a note…')} value={note} onChange={(event) => setNote(event.target.value)} />
                 <button type="button" className="btn-primary" onClick={addNote}>
                   Add
                 </button>
