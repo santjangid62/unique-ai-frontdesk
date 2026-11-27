@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import mongoose from 'mongoose';
 import { env } from '../config/env.js';
+import { connectDB, disconnectDB } from '../config/db.js';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
@@ -22,10 +23,11 @@ async function main() {
     throw new Error('demo:reset only drops a local MongoDB (mongodb://127.0.0.1/...) so a shared or Atlas database is never touched');
   }
 
-  await mongoose.connect(env.mongoUri);
+  // Through connectDB() so the preview guard applies here too, not just in the API.
+  await connectDB(env.mongoUri);
   const dbName = mongoose.connection.name;
   await mongoose.connection.dropDatabase();
-  await mongoose.disconnect();
+  await disconnectDB();
   console.log(`[demo:reset] dropped local database "${dbName}"`);
 
   for (const script of ['server/src/scripts/seed.js', 'server/src/scripts/demo-data.js']) {
