@@ -251,7 +251,7 @@ export default function Landing() {
                 <span className="chip mb-3 self-start bg-brand-600 text-white">{t('Most popular')}</span>
               ) : null}
               <h3 className="text-lg font-bold text-slate-900">{plan.name}</h3>
-              <p className="mt-1 text-sm text-slate-500">{plan.description || t('AI front desk for your business.')}</p>
+              <p className="mt-1 text-sm text-slate-500">{t(plan.description || 'AI front desk for your business.')}</p>
               <p className="mt-4 text-3xl font-extrabold text-slate-900">
                 {currency(plan.priceMonthly)}
                 <span className="text-sm font-medium text-slate-500">/mo</span>
@@ -260,7 +260,7 @@ export default function Landing() {
                 {(plan.features || []).slice(0, 5).map((feature) => (
                   <li key={feature} className="flex gap-2">
                     <Check size={16} className="mt-0.5 shrink-0 text-emerald-500" />
-                    {feature}
+                    {t(feature)}
                   </li>
                 ))}
               </ul>

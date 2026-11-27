@@ -89,7 +89,7 @@ export default function Subscription() {
             {(currentPlan?.features || []).map((feature) => (
               <li key={feature} className="flex gap-2">
                 <Check size={15} className="mt-0.5 shrink-0 text-emerald-500" />
-                {feature}
+                {t(feature)}
               </li>
             ))}
           </ul>
@@ -97,7 +97,7 @@ export default function Subscription() {
             {METRICS.map(([usageKey, label, limitKey]) => (
               <div key={usageKey}>
                 <div className="mb-1 flex items-center justify-between text-xs">
-                  <span className="font-medium text-slate-600">{label}</span>
+                  <span className="font-medium text-slate-600">{t(label)}</span>
                   <span className="text-slate-500">
                     {data.usage?.[usageKey] || 0} / {data.limits?.[limitKey] || 0}
                   </span>
@@ -116,7 +116,7 @@ export default function Subscription() {
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="text-base font-bold text-slate-900">{plan.name}</h3>
-                    <p className="mt-0.5 text-xs text-slate-500">{plan.description}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{t(plan.description || '')}</p>
                   </div>
                   {isCurrent ? <span className="chip bg-brand-50 text-brand-700">{t('Current')}</span> : null}
                 </div>

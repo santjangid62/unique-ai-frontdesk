@@ -123,7 +123,7 @@ export default function Plans() {
               </button>
             </div>
             <h2 className="mt-3 text-base font-bold text-slate-900">{plan.name}</h2>
-            <p className="text-xs text-slate-500">{plan.description}</p>
+            <p className="text-xs text-slate-500">{t(plan.description || '')}</p>
             <p className="mt-3 text-2xl font-extrabold text-slate-900">
               {currency(plan.priceMonthly)}
               <span className="text-xs font-medium text-slate-500">/mo</span>
@@ -137,7 +137,7 @@ export default function Plans() {
             <div className="mt-3 space-y-1">
               {(plan.features || []).slice(0, 4).map((feature) => (
                 <p key={feature} className="flex gap-1.5 text-[11px] text-slate-500">
-                  <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" /> {feature}
+                  <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" /> {t(feature)}
                 </p>
               ))}
             </div>
