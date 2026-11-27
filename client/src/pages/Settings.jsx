@@ -166,23 +166,26 @@ export default function Settings() {
     setAiMessages([]);
   };
 
-  const submitAiStep = async () => {
+  const isOptionalField = (provider, field) => provider === 'openai' && field === 'apiKey';
+
+  const submitAiStep = async (skip = false) => {
     if (!aiProvider) return;
     const integration = integrationFor(aiProvider);
     const required = integration?.requires || [];
     const field = required[aiStep];
-    const value = aiInput.trim();
-    if (field && !value) return;
-    const nextValues = field ? { ...aiValues, [field]: value } : aiValues;
+    const value = skip ? '' : aiInput.trim();
+    if (field && !value && !isOptionalField(aiProvider, field) && !skip) return;
+    const nextValues = field && value ? { ...aiValues, [field]: value } : aiValues;
     setAiValues(nextValues);
     setAiInput('');
-    const userMsg = field ? { from: 'user', text: value } : { from: 'user', text: 'Finish' };
+    const userMsg = field ? { from: 'user', text: skip ? 'Skip' : value } : { from: 'user', text: 'Finish' };
     if (aiStep + 1 >= required.length) {
       setAiBusy(true);
       setAiMessages((prev) => [...prev, userMsg, { from: 'ai', text: 'Saving your credentials…' }]);
       try {
         await saveIntegration(aiProvider, nextValues);
-        await checkIntegration(aiProvider);
+        if (Object.keys(nextValues).length > 0) await checkIntegration(aiProvider);
+        else reloadIntegrations();
         setAiMessages((prev) => [...prev, { from: 'ai', text: `Done! ${aiProvider} is now connected. You can close this window.` }]);
       } catch (err) {
         setAiMessages((prev) => [...prev, { from: 'ai', text: `Something went wrong: ${err?.message || 'unknown error'}. Try again.` }]);
@@ -394,7 +397,7 @@ export default function Settings() {
             onClick={() => { setAiOpen(true); setAiProvider(null); setAiMessages([]); }}
             title="AI assist"
           >
-            <Sparkles size={14} /> AI Assist
+            <Sparkles size={14} /> Setup wizard
           </button>
         </div>
         <div className="grid gap-4 lg:grid-cols-3">
@@ -447,7 +450,7 @@ export default function Settings() {
         </div>
       </Card>
 
-      <Modal open={aiOpen} onClose={closeAiAssist} title="AI Assist" description="I'll ask for each required value and save it for you." size="md">
+      <Modal open={aiOpen} onClose={closeAiAssist} title="Setup wizard" description="I'll ask for each value and save it for you. Optional fields can be skipped." size="md">
         {!aiProvider ? (
           <div className="space-y-2">
             <p className="text-sm text-slate-600">Which channel should I set up for you?</p>
@@ -490,7 +493,7 @@ export default function Settings() {
               <div className="flex gap-2">
                 <input
                   className="input text-xs"
-                  placeholder={`Enter ${integrationFor(aiProvider).requires[aiStep]}`}
+                  placeholder={`Enter ${integrationFor(aiProvider).requires[aiStep]}${isOptionalField(aiProvider, integrationFor(aiProvider).requires[aiStep]) ? ' (optional)' : ''}`}
                   value={aiInput}
                   onChange={(event) => setAiInput(event.target.value)}
                   onKeyDown={(event) => {
@@ -498,9 +501,14 @@ export default function Settings() {
                   }}
                   disabled={aiBusy}
                 />
-                <button type="button" className="btn-primary px-3 py-1.5 text-xs" onClick={submitAiStep} disabled={aiBusy}>
+                <button type="button" className="btn-primary px-3 py-1.5 text-xs" onClick={() => submitAiStep(false)} disabled={aiBusy}>
                   Send
                 </button>
+                {isOptionalField(aiProvider, integrationFor(aiProvider).requires[aiStep]) ? (
+                  <button type="button" className="btn-secondary px-3 py-1.5 text-xs" onClick={() => submitAiStep(true)} disabled={aiBusy}>
+                    Skip
+                  </button>
+                ) : null}
               </div>
             ) : (
               <button type="button" className="btn-secondary w-full text-xs" onClick={closeAiAssist} disabled={aiBusy}>
