@@ -4,6 +4,7 @@
   "installCommand": "npm install --omit=dev --no-audit --no-fund && npm --prefix client install --include=dev --no-audit --no-fund",
   "buildCommand": "npm --prefix client run build",
   "outputDirectory": "client/dist",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- . ':(exclude)docs/**' ':(exclude)*.md' ':(exclude)*.pdf'",
   "functions": {
     "api/index.js": {
       "maxDuration": 30,
