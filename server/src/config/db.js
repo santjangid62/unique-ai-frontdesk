@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
-import { env } from './env.js';
+import { env, previewDbProblem } from './env.js';
 
 let connectionPromise = null;
+let previewGuardLogged = false;
 
 /**
  * Connects (or reuses) the MongoDB connection. Cached per process so serverless
@@ -13,6 +14,19 @@ export async function connectDB(uri = env.mongoUri) {
     error.code = 'DB_NOT_CONFIGURED';
     throw error;
   }
+  // Never let a Vercel preview deployment open the production database: a
+  // copied MONGODB_URI would otherwise expose (and let PRs overwrite) live data.
+  const previewProblem = previewDbProblem(uri);
+  if (previewProblem) {
+    if (!previewGuardLogged) {
+      previewGuardLogged = true;
+      console.error(`[db] ${previewProblem}`);
+    }
+    const error = new Error(previewProblem);
+    error.code = 'PREVIEW_PRODUCTION_DB';
+    throw error;
+  }
+
   if (connectionPromise) return connectionPromise;
 
   mongoose.set('strictQuery', true);
