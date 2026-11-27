@@ -898,6 +898,65 @@ Object.assign(HI, {
   'Comma separated, shown on the pricing page.': 'कॉमा से अलग करें, प्राइसिंग पेज पर दिखता है।',
 });
 
+/**
+ * Third batch: buttons, placeholders and panel copy that the scan found still
+ * rendering English in Hindi mode.
+ */
+Object.assign(HI, {
+  'New agent': 'नया एजेंट',
+  'Default agent': 'डिफ़ॉल्ट एजेंट',
+  'No knowledge matched. Add an entry so the AI can answer without guessing.':
+    'कोई नॉलेज मैच नहीं मिला। एंट्री जोड़ें ताकि AI अनुमान लगाए बिना जवाब दे सके।',
+  'Design how your receptionist speaks, what it may answer, and when it should bring in a human.':
+    'तय करें कि आपका रिसेप्शनिस्ट कैसे बोले, किन सवालों का जवाब दे और कब इंसान को जोड़े।',
+  'Create agent': 'एजेंट बनाएं',
+  'Test agent': 'एजेंट टेस्ट करें',
+  Edit: 'बदलें',
+  'Edit lead': 'लीड बदलें',
+  'Take over': 'खुद संभालें',
+  'Resume AI': 'AI फिर शुरू करें',
+  Suspend: 'सस्पेंड करें',
+  'Admin name': 'एडमिन का नाम',
+  'Admin email': 'एडमिन ईमेल',
+  'Temporary password': 'अस्थायी पासवर्ड',
+  'Export CSV': 'CSV डाउनलोड',
+  'Add lead': 'लीड जोड़ें',
+  Confirm: 'पक्का करें',
+  Complete: 'पूरा हुआ',
+  'No show': 'नहीं आए',
+  'Add entry': 'एंट्री जोड़ें',
+  'Upload document': 'दस्तावेज़ अपलोड करें',
+  'Processing…': 'प्रोसेस हो रहा है…',
+  'Open live widget': 'लाइव विजेट खोलें',
+  'Paste this before': 'इसे इससे पहले पेस्ट करें',
+  'on every page where you want the chat button.': 'हर उस पेज पर जहां आपको चैट बटन चाहिए।',
+  'AI replying': 'AI जवाब दे रहा है',
+  'Staff handling': 'स्टाफ़ संभाल रहा है',
+  History: 'इतिहास',
+  'Open my leads': 'मेरी लीड्स खोलें',
+  'Change password': 'पासवर्ड बदलें',
+  'New plan': 'नया प्लान',
+  Counsellor: 'काउंसलर',
+  'Offer a free trial or demo': 'मुफ़्त ट्रायल या डेमो दें',
+  'Step-by-step guide to training the AI for your business':
+    'अपने व्यवसाय के लिए AI ट्रेन करने की स्टेप-बाय-स्टेप गाइड',
+  'The AI only answers from what you verify here. Anything else is escalated instead of invented.':
+    'AI सिर्फ़ उसी बात का जवाब देता है जो आप यहां सत्यापित करते हैं। बाकी सब कुछ अनुमान लगाने के बजाय एस्केलेट कर दिया जाता है।',
+  'Website, WhatsApp and voice conversations in one place. Take over whenever the AI needs a human.':
+    'वेबसाइट, WhatsApp और वॉइस की बातचीत एक ही जगह। जब भी AI को इंसान की ज़रूरत हो, आप खुद संभाल लें।',
+  'Connect Twilio in Settings and forward your business number to start answering calls with AI.':
+    'Settings में Twilio जोड़ें और अपना व्यवसाय नंबर फ़ॉरवर्ड करें ताकि AI कॉल का जवाब देना शुरू करे।',
+  'Search business or slug': 'व्यवसाय या स्लग खोजें',
+  'Search name or email': 'नाम या ईमेल खोजें',
+  'Search knowledge': 'नॉलेज खोजें',
+  'Search customers': 'ग्राहक खोजें',
+  'Search name, phone, service': 'नाम, फ़ोन, सेवा खोजें',
+  'Search name, phone or message': 'नाम, फ़ोन या संदेश खोजें',
+  'Add a note…': 'नोट जोड़ें…',
+  'Filter by action (for example login)': 'एक्शन से फ़िल्टर करें (जैसे login)',
+  'Reply as staff — this pauses the AI for this chat': 'स्टाफ़ के रूप में जवाब दें — इस चैट के लिए AI रुक जाएगा',
+});
+
 const I18nContext = createContext(null);
 
 export function LanguageProvider({ children }) {

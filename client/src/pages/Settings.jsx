@@ -143,7 +143,7 @@ export default function Settings() {
             <Link
               to="/app/guide"
               className="btn-secondary"
-              title="Step-by-step guide to training the AI for your business"
+              title={t('Step-by-step guide to training the AI for your business')}
             >
               <BookOpen size={16} /> {t('Training guide')}
             </Link>
@@ -233,7 +233,7 @@ export default function Settings() {
                   checked={form.demoAvailable}
                   onChange={(event) => setForm({ ...form, demoAvailable: event.target.checked })}
                 />
-                Offer a free trial or demo
+                {t('Offer a free trial or demo')}
               </label>
             </Field>
             <Field label="Next steps after enquiry" className="sm:col-span-2" hint="Steps a customer follows after showing interest. The AI explains these when asked.">

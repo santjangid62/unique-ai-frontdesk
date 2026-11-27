@@ -335,7 +335,7 @@ function StaffOverview() {
             <p className="mt-1 text-sm text-brand-100"><Tx>Your assigned leads and upcoming appointments are ready.</Tx></p>
           </div>
           <Link to="/app/leads" className="btn bg-white/15 text-white hover:bg-white/25">
-            Open my leads <ArrowUpRight size={16} />
+            <Tx>Open my leads</Tx> <ArrowUpRight size={16} />
           </Link>
         </div>
       </Card>

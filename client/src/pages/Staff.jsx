@@ -137,7 +137,7 @@ export default function Staff() {
             <PhoneInput value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
           </Field>
           <Field label="Designation" hint="Shown next to their name across the app.">
-            <input className="input" placeholder="Counsellor" value={form.designation} onChange={(event) => setForm({ ...form, designation: event.target.value })} />
+            <input className="input" placeholder={t('Counsellor')} value={form.designation} onChange={(event) => setForm({ ...form, designation: event.target.value })} />
           </Field>
           <Field label="Access level" hint="Staff see only work assigned to them; business admins manage everything.">
             <select className="input" value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}>

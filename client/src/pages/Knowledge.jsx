@@ -4,11 +4,13 @@ import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
 import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Pagination, Spinner, Table, Tabs, Tx } from '../components/ui.jsx';
 import { fromNow, titleCase } from '../lib/format.js';
+import { useI18n } from '../i18n/index.jsx';
 
 const CATEGORIES = ['business', 'course', 'fee', 'faq', 'policy', 'timing', 'contact', 'other'];
 const empty = { category: 'faq', title: '', content: '', tags: '' };
 
 export default function Knowledge() {
+  const { t } = useI18n();
   const [tab, setTab] = useState('entries');
   const [filters, setFilters] = useState({ category: '', search: '', page: 1 });
   const [open, setOpen] = useState(false);
@@ -138,10 +140,10 @@ export default function Knowledge() {
           <>
             <input ref={fileRef} type="file" accept=".pdf,.txt,.md,.csv" className="hidden" onChange={upload} />
             <button type="button" className="btn-secondary" onClick={() => fileRef.current?.click()} disabled={uploading}>
-              <Upload size={16} /> {uploading ? 'Processing…' : 'Upload document'}
+              <Upload size={16} /> {t(uploading ? 'Processing…' : 'Upload document')}
             </button>
             <button type="button" className="btn-primary" onClick={openCreate}>
-              <Plus size={16} /> Add entry
+              <Plus size={16} /> <Tx>Add entry</Tx>
             </button>
           </>
         }
@@ -173,7 +175,7 @@ export default function Knowledge() {
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 className="input w-56 pl-9"
-                placeholder="Search knowledge"
+                placeholder={t('Search knowledge')}
                 value={filters.search}
                 onChange={(event) => setFilters({ ...filters, search: event.target.value, page: 1 })}
               />
@@ -281,7 +283,7 @@ export default function Knowledge() {
                 description="Upload a PDF or text file — it is split into knowledge entries automatically."
                 action={
                   <button type="button" className="btn-primary" onClick={() => fileRef.current?.click()}>
-                    <Upload size={16} /> Upload document
+                    <Upload size={16} /> <Tx>Upload document</Tx>
                   </button>
                 }
               />

@@ -108,7 +108,7 @@ export default function Agents() {
         subtitle="Design how your receptionist speaks, what it may answer, and when it should bring in a human."
         actions={
           <button type="button" className="btn-primary" onClick={openCreate}>
-            <Plus size={16} /> New agent
+            <Plus size={16} /> <Tx>New agent</Tx>
           </button>
         }
       />
@@ -129,7 +129,7 @@ export default function Agents() {
             description="Create your first receptionist to start answering enquiries."
             action={
               <button type="button" className="btn-primary" onClick={openCreate}>
-                Create agent
+                <Tx>Create agent</Tx>
               </button>
             }
           />
@@ -180,7 +180,7 @@ export default function Agents() {
               </div>
 
               <p className="mt-3 line-clamp-3 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                <span className="font-semibold text-slate-700">Greeting: </span>
+                <span className="font-semibold text-slate-700"><Tx>Greeting</Tx>: </span>
                 {agent.greeting}
               </p>
 
@@ -193,10 +193,10 @@ export default function Agents() {
                     setTestResult(null);
                   }}
                 >
-                  <FlaskConical size={14} /> Test agent
+                  <FlaskConical size={14} /> <Tx>Test agent</Tx>
                 </button>
                 <button type="button" className="btn-secondary px-3 py-1.5 text-xs" onClick={() => openEdit(agent)}>
-                  <Pencil size={14} /> Edit
+                  <Pencil size={14} /> <Tx>Edit</Tx>
                 </button>
                 <button type="button" className="btn-ghost px-3 py-1.5 text-xs text-rose-600" onClick={() => remove(agent)}>
                   <Trash2 size={14} />
@@ -323,7 +323,7 @@ export default function Agents() {
                 checked={form.isDefault}
                 onChange={(event) => setForm({ ...form, isDefault: event.target.checked })}
               />
-              Default agent
+              <Tx>Default agent</Tx>
             </label>
           </div>
         </form>
@@ -371,7 +371,7 @@ export default function Agents() {
             ) : (
               <p className="rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                 <Sparkles size={12} className="mr-1 inline" />
-                No knowledge matched. Add an entry so the AI can answer without guessing.
+                <Tx>No knowledge matched. Add an entry so the AI can answer without guessing.</Tx>
               </p>
             )}
           </div>

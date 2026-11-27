@@ -105,7 +105,7 @@ export default function Profile() {
 
       <Card className="mt-5 p-5">
         <h2 className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-900">
-          <KeyRound size={16} className="text-brand-600" /> Change password
+          <KeyRound size={16} className="text-brand-600" /> <Tx>Change password</Tx>
         </h2>
         <p className="mb-4 text-xs text-slate-500"><Tx>Changing your password signs out all other sessions.</Tx></p>
         {passwordState.error ? (

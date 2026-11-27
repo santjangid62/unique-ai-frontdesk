@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Check, Package, Pencil, Plus } from 'lucide-react';
 import api, { errorMessage } from '../../lib/api.js';
 import useFetch from '../../lib/useFetch.js';
-import { Alert, Card, Field, Modal, PageHeader, Spinner } from '../../components/ui.jsx';
+import { Alert, Card, Field, Modal, PageHeader, Spinner, Tx } from '../../components/ui.jsx';
 import { currency } from '../../lib/format.js';
+import { useI18n } from '../../i18n/index.jsx';
 
 const empty = {
   code: '',
@@ -21,6 +22,7 @@ const empty = {
 };
 
 export default function Plans() {
+  const { t } = useI18n();
   const { data: plans, loading, error: loadError, reload } = useFetch('/plans');
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -98,7 +100,7 @@ export default function Plans() {
         subtitle="Plan pricing and limits drive tenant feature gates and usage meters."
         actions={
           <button type="button" className="btn-primary" onClick={openCreate}>
-            <Plus size={16} /> New plan
+            <Plus size={16} /> <Tx>New plan</Tx>
           </button>
         }
       />
@@ -146,7 +148,7 @@ export default function Plans() {
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title={editing ? `Edit ${editing.name}` : 'New plan'}
+        title={editing ? `${t('Edit')} ${editing.name}` : t('New plan')}
         size="lg"
         footer={
           <>

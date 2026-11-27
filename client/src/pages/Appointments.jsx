@@ -3,7 +3,7 @@ import { CalendarPlus, Check, Clock, X } from 'lucide-react';
 import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Spinner, Tabs } from '../components/ui.jsx';
+import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Spinner, Tabs, Tx } from '../components/ui.jsx';
 import { dateTime, dayLabel, timeLabel, titleCase } from '../lib/format.js';
 
 const TYPES = ['demo', 'counselling', 'admission', 'general'];
@@ -161,13 +161,13 @@ export default function Appointments() {
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {appointment.status === 'scheduled' ? (
                         <button type="button" className="btn-secondary px-2 py-1 text-xs" onClick={() => setStatus(appointment, 'confirmed')}>
-                          <Check size={13} /> Confirm
+                          <Check size={13} /> <Tx>Confirm</Tx>
                         </button>
                       ) : null}
                       {['scheduled', 'confirmed'].includes(appointment.status) ? (
                         <>
                           <button type="button" className="btn-secondary px-2 py-1 text-xs" onClick={() => setStatus(appointment, 'completed')}>
-                            Complete
+                            <Tx>Complete</Tx>
                           </button>
                           <button type="button" className="btn-danger px-2 py-1 text-xs" onClick={() => setStatus(appointment, 'cancelled')}>
                             <X size={13} /> Cancel
@@ -176,7 +176,7 @@ export default function Appointments() {
                       ) : null}
                       {appointment.status === 'confirmed' ? (
                         <button type="button" className="btn-secondary px-2 py-1 text-xs" onClick={() => setStatus(appointment, 'no_show')}>
-                          No show
+                          <Tx>No show</Tx>
                         </button>
                       ) : null}
                     </div>

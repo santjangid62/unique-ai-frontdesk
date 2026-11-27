@@ -80,7 +80,7 @@ export default function ChatWidget() {
         subtitle="Match the widget to your brand, then paste one line of code on your website."
         actions={
           <a href={directLink} target="_blank" rel="noreferrer" className="btn-secondary">
-            <ExternalLink size={16} /> Open live widget
+            <ExternalLink size={16} /> <Tx>Open live widget</Tx>
           </a>
         }
       />
@@ -168,8 +168,9 @@ export default function ChatWidget() {
               <h2 className="text-sm font-semibold text-slate-900"><Tx>Embed on your website</Tx></h2>
             </div>
             <p className="text-sm text-slate-600">
-              Paste this before <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">&lt;/body&gt;</code> on every page where
-              you want the chat button.
+              <Tx>Paste this before</Tx>{' '}
+              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">&lt;/body&gt;</code>{' '}
+              <Tx>on every page where you want the chat button.</Tx>
             </p>
             <pre className="mt-3 overflow-x-auto rounded-xl bg-slate-900 p-3 text-[11px] leading-relaxed text-slate-100">
               {embedCode}
