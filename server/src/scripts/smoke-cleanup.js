@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { connectDB, disconnectDB } from '../config/db.js';
 
 /**
  * Cleanup helpers for the throwaway business that smoke.js creates for the
@@ -46,11 +47,12 @@ async function withDatabase(callback) {
   if (!uri) return { skipped: true, reason: 'MONGODB_URI is not set, skipping database cleanup' };
 
   const ownsConnection = mongoose.connection.readyState !== 1;
-  if (ownsConnection) await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
+  // Through connectDB() so the preview guard applies to cleanup runs as well.
+  if (ownsConnection) await connectDB(uri);
   try {
     return await callback(mongoose.connection.db);
   } finally {
-    if (ownsConnection) await mongoose.disconnect();
+    if (ownsConnection) await disconnectDB();
   }
 }
 

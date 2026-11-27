@@ -7,7 +7,8 @@
  * the production MONGODB_URI is pasted into the Preview environment. No network
  * or database is needed: the guard rejects the URI before mongoose connects.
  */
-import { createChecker } from './helpers.js';
+import fs from 'node:fs';
+import { createChecker, runNode } from './helpers.js';
 import { mongoUriDbName, previewDbProblem, PRODUCTION_DB_NAME } from '../src/config/env.js';
 
 const { check, summary, exitCode } = createChecker();
@@ -54,6 +55,43 @@ const refused = await connectDB(PROD_URI).then(
 check('connectDB refuses the production database', refused?.code === 'PREVIEW_PRODUCTION_DB', refused?.message || 'connected anyway');
 check('no connection was opened', dbState() === 'disconnected', dbState());
 delete process.env.VERCEL_ENV;
+
+// Maintenance scripts must connect through connectDB() as well, so the guard
+// cannot be bypassed by a direct mongoose.connect().
+const source = (name) => fs.readFileSync(new URL(`../src/scripts/${name}`, import.meta.url), 'utf8');
+for (const name of ['reset-demo.js', 'smoke-cleanup.js']) {
+  const script = source(name);
+  check(`${name} imports connectDB`, /import \{[^}]*connectDB[^}]*\} from '\.\.\/config\/db\.js'/.test(script));
+  check(`${name} has no direct mongoose.connect`, !/mongoose\.connect\(/.test(script));
+}
+
+// The local-only demo reset must hit the guard before it drops anything.
+const LOCAL_PROD_URI = 'mongodb://127.0.0.1:27019/unique-frontdesk';
+const reset = await runNode('server/src/scripts/reset-demo.js', {
+  env: { VERCEL_ENV: 'preview', MONGODB_URI: LOCAL_PROD_URI },
+});
+check(
+  'reset-demo refuses the production database on preview',
+  reset.code === 1 && /Refusing to connect to the production database/.test(reset.output),
+  reset.output.trim().split('\n').slice(-1)[0],
+);
+
+// Smoke cleanup runs its own connection; it must be refused the same way.
+process.env.VERCEL_ENV = 'preview';
+process.env.MONGODB_URI = LOCAL_PROD_URI;
+const { sweepStaleSmokeBusinesses } = await import('../src/scripts/smoke-cleanup.js');
+const sweepError = await sweepStaleSmokeBusinesses().then(
+  () => null,
+  (error) => error,
+);
+check(
+  'smoke cleanup refuses the production database on preview',
+  sweepError?.code === 'PREVIEW_PRODUCTION_DB',
+  sweepError ? sweepError.message : 'cleaned up anyway',
+);
+check('smoke cleanup opened no connection', dbState() === 'disconnected', dbState());
+delete process.env.VERCEL_ENV;
+delete process.env.MONGODB_URI;
 
 console.log(summary());
 process.exit(exitCode());
