@@ -8,6 +8,14 @@ const asBool = (value, fallback = false) => {
 const DEV_ACCESS = 'dev-access-secret-change-me';
 const DEV_REFRESH = 'dev-refresh-secret-change-me';
 
+// Every Vercel preview deployment has its own host in VERCEL_URL. Deriving the
+// public URLs from it keeps CORS and email links on the deployment that served
+// the request, instead of a fixed alias that points at a different build.
+const vercelHost = String(process.env.VERCEL_URL || '')
+  .replace(/^https?:\/\//i, '')
+  .replace(/\/+$/, '');
+const previewUrl = String(process.env.VERCEL_ENV || '').toLowerCase() === 'preview' && vercelHost ? `https://${vercelHost}` : '';
+
 export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   isProd: process.env.NODE_ENV === 'production',
@@ -17,7 +25,7 @@ export const env = {
   refreshSecret: process.env.JWT_REFRESH_SECRET || DEV_REFRESH,
   accessTtl: process.env.JWT_ACCESS_TTL || '30m',
   refreshDays: Number(process.env.JWT_REFRESH_DAYS || 30),
-  clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+  clientOrigin: process.env.CLIENT_ORIGIN || previewUrl || 'http://localhost:5173',
   openaiKey: process.env.OPENAI_API_KEY || '',
   openaiModel: process.env.OPENAI_MODEL || 'gpt-4o-mini',
   twilioAuthToken: process.env.TWILIO_AUTH_TOKEN || '',
@@ -27,7 +35,7 @@ export const env = {
   // Transactional email (verification codes, password resets).
   resendApiKey: process.env.RESEND_API_KEY || '',
   mailFrom: process.env.MAIL_FROM || 'Unique AI Frontdesk <onboarding@resend.dev>',
-  appUrl: process.env.APP_URL || process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+  appUrl: process.env.APP_URL || process.env.CLIENT_ORIGIN || previewUrl || 'http://localhost:5173',
 };
 
 /**
