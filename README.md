@@ -247,6 +247,9 @@ Preview deployments cannot reach live data: when `VERCEL_ENV=preview`, `connectD
 production database (`unique-frontdesk`), so a production URI pasted into the Preview environment fails loudly instead of
 letting a PR preview read or overwrite real records. `npm run test:preview-guard` covers the guard offline.
 
+Preview deployments also derive `CLIENT_ORIGIN` and `APP_URL` from their own `VERCEL_URL` when those variables are unset, so
+CORS and email links follow the deployment that served the request instead of a fixed alias (`npm run test:preview-urls`).
+
 `npm run test:credentials` reads `DEMO_CREDENTIALS`, the tester login and the setup guide's demo-login table
 and fails if an email or password differs, so the published logins cannot drift from what the seed creates.
 
