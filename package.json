@@ -25,11 +25,12 @@
     "verify:hindi": "node server/src/scripts/verify-hindi.js",
     "pdf:build": "node server/src/scripts/build-setup-pdf.js",
     "lock:check": "npm ci --dry-run --ignore-scripts && npm --prefix client ci --dry-run --ignore-scripts",
-    "test": "node server/test/atlas-mock.test.js && node server/test/vercel-deploy.test.js && node server/test/demo-credentials.test.js && node server/test/docs-pdf.test.js",
+    "test": "node server/test/atlas-mock.test.js && node server/test/vercel-deploy.test.js && node server/test/demo-credentials.test.js && node server/test/docs-pdf.test.js && node server/test/preview-db-guard.test.js",
     "test:atlas": "node server/test/atlas-mock.test.js",
     "test:deploy": "node server/test/vercel-deploy.test.js",
     "test:credentials": "node server/test/demo-credentials.test.js",
-    "test:docs-pdf": "node server/test/docs-pdf.test.js"
+    "test:docs-pdf": "node server/test/docs-pdf.test.js",
+    "test:preview-guard": "node server/test/preview-db-guard.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

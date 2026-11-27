@@ -38,6 +38,31 @@ export const env = {
  */
 const LOCAL_MONGO_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '0.0.0.0']);
 
+/** Database that holds the live production data. Preview deployments must never open it. */
+export const PRODUCTION_DB_NAME = 'unique-frontdesk';
+
+/** Database name inside a connection string ('' when the URI names none). */
+export function mongoUriDbName(uri) {
+  const rest = String(uri || '')
+    .trim()
+    .replace(/^mongodb(\+srv)?:\/\//i, '');
+  const slash = rest.indexOf('/');
+  if (slash === -1) return '';
+  return rest.slice(slash + 1).split('?')[0].trim();
+}
+
+/**
+ * Guard for Vercel preview deployments. A PR preview that shares the production
+ * database can read and overwrite live customer data, so a preview refuses to
+ * connect unless MONGODB_URI names a different database. Returns the reason it
+ * is blocked, or null when the URI is safe (or this is not a preview).
+ */
+export function previewDbProblem(uri, vercelEnv = process.env.VERCEL_ENV) {
+  if (String(vercelEnv || '').trim().toLowerCase() !== 'preview') return null;
+  if (mongoUriDbName(uri).toLowerCase() !== PRODUCTION_DB_NAME) return null;
+  return `Refusing to connect to the production database "${PRODUCTION_DB_NAME}" while VERCEL_ENV=preview. Point the Preview MONGODB_URI at a separate database (for example "${PRODUCTION_DB_NAME}-preview").`;
+}
+
 /** Lower-cased host of a connection string ('' when there is none). */
 export function mongoUriHost(uri) {
   const authority = String(uri || '')

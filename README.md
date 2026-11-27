@@ -243,6 +243,10 @@ local MongoDB URI refused before any Vercel API call, a 401/403 token rejection 
 (never the raw Vercel error), placeholder tokens refused before the first API call, and a `--dry-run` that changes
 nothing — so the script can be verified without a token, network or database.
 
+Preview deployments cannot reach live data: when `VERCEL_ENV=preview`, `connectDB()` refuses a `MONGODB_URI` that names the
+production database (`unique-frontdesk`), so a production URI pasted into the Preview environment fails loudly instead of
+letting a PR preview read or overwrite real records. `npm run test:preview-guard` covers the guard offline.
+
 `npm run test:credentials` reads `DEMO_CREDENTIALS`, the tester login and the setup guide's demo-login table
 and fails if an email or password differs, so the published logins cannot drift from what the seed creates.
 
