@@ -957,6 +957,39 @@ Object.assign(HI, {
   'Reply as staff — this pauses the AI for this chat': 'स्टाफ़ के रूप में जवाब दें — इस चैट के लिए AI रुक जाएगा',
 });
 
+/**
+ * Plan catalog strings (server-sent descriptions/features) localized for Hindi.
+ */
+Object.assign(HI, {
+  'AI front desk for your business.': 'आपके व्यवसाय के लिए AI फ्रंट डेस्क।',
+  'For single-branch institutes getting started with AI reception.':
+    'AI रिसेप्शन के साथ शुरुआत कर रहे एकल-शाखा संस्थानों के लिए।',
+  'Adds WhatsApp automation and more staff seats.': 'WhatsApp ऑटोमेशन और अधिक स्टाफ सीट्स जोड़ता है।',
+  'Voice receptionist plus advanced automation for growing institutes.':
+    'बढ़ते संस्थानों के लिए वॉइस रिसेप्शनिस्ट और एडवांस्ड ऑटोमेशन।',
+  'Multi-branch operations with custom limits and SLA.': 'कस्टम सीमाओं और SLA के साथ मल्टी-ब्रांच संचालन।',
+  'Website AI chatbot': 'वेबसाइट AI चैटबॉट',
+  'Knowledge base': 'नॉलेज बेस',
+  'Lead capture': 'लीड कैप्चर',
+  'Appointment booking': 'अपॉइंटमेंट बुकिंग',
+  'Email support': 'ईमेल सहायता',
+  'Everything in Starter': 'Starter की सब कुछ',
+  'WhatsApp AI assistant': 'WhatsApp AI सहायक',
+  'Human handoff & assignment': 'मानव हैंडऑफ़ और असाइनमेंट',
+  'Reports & analytics': 'रिपोर्ट्स और एनालिटिक्स',
+  'Priority support': 'प्राथमिकता सहायता',
+  'Everything in Growth': 'Growth की सब कुछ',
+  'AI voice receptionist': 'AI वॉइस रिसेप्शनिस्ट',
+  'Call transcripts & summaries': 'कॉल ट्रांसक्रिप्ट और सारांश',
+  'Automation rules': 'ऑटोमेशन नियम',
+  'Dedicated onboarding': 'डेडिकेटेड ऑनबोर्डिंग',
+  'Everything in Professional': 'Professional की सब कुछ',
+  'Custom integrations': 'कस्टम इंटीग्रेशन',
+  'SLA & dedicated manager': 'SLA और डेडिकेटेड मैनेजर',
+  'Custom AI instructions': 'कस्टम AI निर्देश',
+  'Usage-based billing': 'उपयोग-आधारित बिलिंग',
+});
+
 const I18nContext = createContext(null);
 
 export function LanguageProvider({ children }) {
