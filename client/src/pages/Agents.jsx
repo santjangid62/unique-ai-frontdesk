@@ -4,6 +4,7 @@ import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
 import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Spinner, Tx } from '../components/ui.jsx';
 import { titleCase } from '../lib/format.js';
+import { useBusinessCategory } from '../lib/useBusinessCategory.js';
 
 const empty = {
   name: '',
@@ -22,6 +23,7 @@ const empty = {
 };
 
 export default function Agents() {
+  const category = useBusinessCategory();
   const { data: agents, loading, error: loadError, reload } = useFetch('/ai-agents');
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty);
@@ -29,7 +31,7 @@ export default function Agents() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [testOpen, setTestOpen] = useState(null);
-  const [testMessage, setTestMessage] = useState('What is the fee for the Python course?');
+  const [testMessage, setTestMessage] = useState(() => `What is the price of your ${category.offering.toLowerCase()}?`);
   const [testResult, setTestResult] = useState(null);
   const [testing, setTesting] = useState(false);
 

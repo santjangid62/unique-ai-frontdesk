@@ -11,6 +11,8 @@ import { toCsv, sendCsv } from '../utils/csv.js';
 import { upsertLead } from '../services/crm.js';
 import Lead, { LEAD_SOURCES, LEAD_STATUSES } from '../models/Lead.js';
 import User from '../models/User.js';
+import Tenant from '../models/Tenant.js';
+import { businessCategory } from '../services/businessCategories.js';
 import Appointment from '../models/Appointment.js';
 import Conversation from '../models/Conversation.js';
 
@@ -111,16 +113,19 @@ router.get(
   requireRole('business_admin'),
   asyncHandler(async (req, res) => {
     const tenantId = resolveTenantId(req);
-    const leads = await Lead.find({ ...scopedFilter(req, tenantId) })
-      .populate('assigneeId', 'name')
-      .limit(5000)
-      .lean();
+    const [tenant, leads] = await Promise.all([
+      Tenant.findById(tenantId).select('industry').lean(),
+      Lead.find({ ...scopedFilter(req, tenantId) })
+        .populate('assigneeId', 'name')
+        .limit(5000)
+        .lean(),
+    ]);
 
     const csv = toCsv(leads, [
       { label: 'Name', key: 'name' },
       { label: 'Phone', key: 'phone' },
       { label: 'Email', key: 'email' },
-      { label: 'Course', key: 'course' },
+      { label: businessCategory(tenant?.industry).offering, key: 'course' },
       { label: 'Source', key: 'source' },
       { label: 'Status', key: 'status' },
       { label: 'Assignee', value: (row) => row.assigneeId?.name || '' },
