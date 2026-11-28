@@ -44,6 +44,8 @@ router.get(
         lastCheckedAt: row?.lastCheckedAt || null,
         lastError: row?.lastError || null,
         requires: REQUIRED_FIELDS[provider] || [],
+        // Optional fields that strengthen the channel but never block saving.
+        optionals: provider === 'whatsapp' ? ['appSecret', 'verifyToken'] : [],
         platformConfigured: provider === 'openai' ? Boolean(env.openaiKey) : undefined,
       };
     });

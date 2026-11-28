@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import crypto from 'node:crypto';
 import { env } from '../config/env.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ok } from '../utils/response.js';
@@ -10,33 +9,53 @@ import Tenant from '../models/Tenant.js';
 import { getOrCreateConversation, processIncomingMessage } from '../services/chat.js';
 import { recordUsage } from '../services/usage.js';
 import { normalizePhone } from '../services/crm.js';
+import { phoneNumberIdFromPayload, signatureMatches, tokenMatches, webhookAppSecret } from '../services/whatsappWebhook.js';
 
 const router = Router();
 
-/** Meta webhook verification handshake. */
+/** Tenant whose stored verify token matches, or null. */
+async function tenantForVerifyToken(token) {
+  if (!token) return null;
+  const candidates = await Integration.find({ provider: 'whatsapp' })
+    .select('tenantId config.verifyToken')
+    .lean();
+  return candidates.find((row) => tokenMatches(row.config?.verifyToken, token)) || null;
+}
+
+/** Integration whose phone number ID receives this webhook, or null. */
+async function integrationForPhoneNumberId(phoneNumberId) {
+  if (!phoneNumberId) return null;
+  return Integration.findOne({
+    provider: 'whatsapp',
+    $or: [{ externalId: String(phoneNumberId) }, { 'config.phoneNumberId': String(phoneNumberId) }],
+  }).lean();
+}
+
+/** Meta webhook verification handshake (per-tenant token, platform fallback). */
 router.get(
   '/',
   asyncHandler(async (req, res) => {
     const mode = req.query['hub.mode'];
-    const token = req.query['hub.verify_token'];
+    const token = String(req.query['hub.verify_token'] || '');
     const challenge = req.query['hub.challenge'];
-    if (mode === 'subscribe' && token === env.whatsappVerifyToken) {
-      return res.status(200).send(String(challenge || ''));
+    if (mode === 'subscribe') {
+      const owner = await tenantForVerifyToken(token);
+      const legacy = tokenMatches(env.whatsappVerifyToken, token);
+      if (owner || legacy) return res.status(200).send(String(challenge || ''));
     }
     await audit(req, { action: 'whatsapp.verification_failed', severity: 'warning' });
     return res.status(403).send('Verification failed');
   }),
 );
 
-/** X-Hub-Signature-256 validation against the raw request body. */
-function verifySignature(req) {
-  if (!env.whatsappAppSecret) return !env.isProd;
-  const signature = req.header('X-Hub-Signature-256');
-  if (!signature) return false;
-  const expected = `sha256=${crypto.createHmac('sha256', env.whatsappAppSecret).update(req.rawBody || Buffer.from('')).digest('hex')}`;
-  const a = Buffer.from(expected);
-  const b = Buffer.from(String(signature));
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
+/**
+ * X-Hub-Signature-256 validation against the raw request body. The secret is
+ * resolved from the tenant that owns the receiving phone number ID, falling
+ * back to the platform secret when the tenant has none configured.
+ */
+function verifySignature(req, secret) {
+  if (!secret) return !env.isProd;
+  return signatureMatches(req.rawBody, req.header('X-Hub-Signature-256'), secret);
 }
 
 async function resolveTenantForPhoneNumber(phoneNumberId) {
@@ -84,7 +103,8 @@ router.post(
   '/',
   webhookLimiter,
   asyncHandler(async (req, res) => {
-    if (!verifySignature(req)) {
+    const signer = await integrationForPhoneNumberId(phoneNumberIdFromPayload(req.body));
+    if (!verifySignature(req, webhookAppSecret(signer))) {
       await audit(req, { action: 'whatsapp.invalid_signature', severity: 'critical' });
       return res.status(403).json({ success: false, error: { code: 'INVALID_SIGNATURE', message: 'Invalid signature' } });
     }
