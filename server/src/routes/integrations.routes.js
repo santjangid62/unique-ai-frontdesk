@@ -9,6 +9,7 @@ import { requireBusinessAdmin, requireTenantUser, resolveTenantId, tenantScopeGu
 import { audit } from '../utils/audit.js';
 import Integration from '../models/Integration.js';
 import { env } from '../config/env.js';
+import { REQUIRED_FIELDS, checkIntegrationConnection } from '../services/integrationCheck.js';
 
 const router = Router();
 router.use(authenticate, tenantScopeGuard, requireTenantUser);
@@ -42,14 +43,7 @@ router.get(
         config: maskConfig(row?.config || {}),
         lastCheckedAt: row?.lastCheckedAt || null,
         lastError: row?.lastError || null,
-        requires: {
-          twilio: ['accountSid', 'authToken', 'phoneNumber'],
-          whatsapp: ['phoneNumberId', 'accessToken'],
-          openai: ['apiKey'],
-          email: ['fromAddress'],
-          sms: ['senderId'],
-          n8n: ['webhookUrl'],
-        }[provider] || [],
+        requires: REQUIRED_FIELDS[provider] || [],
         platformConfigured: provider === 'openai' ? Boolean(env.openaiKey) : undefined,
       };
     });
@@ -124,31 +118,24 @@ router.post(
     const integration = await Integration.findOne({ tenantId, provider: req.params.provider });
     if (!integration) throw ApiError.notFound('Integration not configured');
 
-    const required = {
-      twilio: ['accountSid', 'authToken', 'phoneNumber'],
-      whatsapp: ['phoneNumberId', 'accessToken'],
-      openai: ['apiKey'],
-      email: ['fromAddress'],
-      sms: ['senderId'],
-      n8n: ['webhookUrl'],
-    }[req.params.provider] || [];
-
-    const missing = required.filter((key) => {
-      // A tenant-level OpenAI key is optional: the platform key covers it when set.
-      if (req.params.provider === 'openai' && key === 'apiKey' && env.openaiKey) return false;
-      const value = integration.config?.[key] || (key === 'phoneNumberId' ? integration.externalId : '');
-      return !value;
+    const result = await checkIntegrationConnection({
+      provider: req.params.provider,
+      config: integration.config || {},
+      externalId: integration.externalId,
     });
 
-    integration.status = missing.length ? 'error' : 'connected';
-    integration.lastError = missing.length ? `Missing: ${missing.join(', ')}` : null;
+    integration.status = result.ok ? 'connected' : 'error';
+    integration.lastError = result.ok ? null : result.error;
     integration.lastCheckedAt = new Date();
     await integration.save();
 
     return ok(res, {
       provider: integration.provider,
       status: integration.status,
-      missing,
+      missing: result.missing,
+      live: result.live,
+      detail: result.detail || null,
+      lastError: integration.lastError,
       lastCheckedAt: integration.lastCheckedAt,
     });
   }),
