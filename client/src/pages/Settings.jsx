@@ -196,7 +196,7 @@ export default function Settings() {
             text:
               result?.status === 'connected'
                 ? `Done! ${aiProvider} is now connected. You can close this window.`
-                : `Saved, but ${aiProvider} still needs: ${(result?.missing || []).join(', ') || 'more details'}. You can add it later from the fields below.`,
+                : `Saved, but the connection test failed: ${result?.lastError || 'the provider rejected these details'}. You can fix it from the fields below.`,
           },
         ]);
       } catch (err) {
@@ -426,6 +426,9 @@ export default function Settings() {
                 <p className="mt-2 text-xs text-slate-500">
                   Platform AI key: {integration.platformConfigured ? 'configured' : 'not configured (grounded fallback active)'}
                 </p>
+              ) : null}
+              {integration.lastError ? (
+                <p className="mt-2 text-[11px] font-medium text-rose-600">{integration.lastError}</p>
               ) : null}
               <div className="mt-2 space-y-2">
                 {integration.requires.slice(0, 2).map((key) => (
