@@ -8,10 +8,12 @@
 import { createChecker } from './helpers.js';
 import { env } from '../src/config/env.js';
 import {
+  decrementWindow,
   incrementWindow,
   rateLimitKey,
   sharedRateLimitConfigured,
 } from '../src/services/sharedRateLimit.js';
+import { apiLimiter, authLimiter, chatLimiter } from '../src/middleware/rateLimit.js';
 
 const { check, summary, exitCode } = createChecker();
 
@@ -72,6 +74,33 @@ try {
   failed = true;
 }
 check('a store error rejects so the caller can fall back', failed === true);
+
+calls.length = 0;
+const decreased = await decrementWindow({
+  key: 'uaf:ratelimit:auth:1',
+  windowMs: 60000,
+  url: 'https://example.upstash.io',
+  token: 'secret-token',
+  fetchImpl: fakeFetch([
+    [{ result: 4 }, { result: 30 }],
+  ]),
+});
+check('decrement removes one hit', decreased === 4 && calls.length === 1);
+
+calls.length = 0;
+const cleared = await decrementWindow({
+  key: 'uaf:ratelimit:auth:2',
+  windowMs: 60000,
+  url: 'https://example.upstash.io',
+  token: 'secret-token',
+  fetchImpl: fakeFetch([
+    [{ result: -1 }, { result: 30 }],
+    [{ result: 1 }],
+  ]),
+});
+check('decrement below zero clears the key', cleared === 0 && calls[1]?.body?.[0]?.[0] === 'DEL');
+
+check('auth, api and chat limiters are middleware', [authLimiter, apiLimiter, chatLimiter].every((fn) => typeof fn === 'function'));
 
 const saved = { url: env.upstashRedisUrl, token: env.upstashRedisToken };
 env.upstashRedisUrl = 'https://example.upstash.io';
