@@ -1,10 +1,37 @@
 import { env } from '../config/env.js';
 
-const TIMEOUT_MS = 1500;
+const TIMEOUT_MS = 500;
+// After a failed call, skip the shared store for this long so a slow or down
+// Redis never adds latency to every request.
+const COOLDOWN_MS = 30000;
+
+let blockedUntil = 0;
 
 /** True when a shared Upstash Redis REST store is configured. */
 export function sharedRateLimitConfigured() {
   return Boolean(env.upstashRedisUrl && env.upstashRedisToken);
+}
+
+/** True when the store is configured and the failure cooldown has passed. */
+export function sharedRateLimitReady() {
+  return sharedRateLimitConfigured() && Date.now() >= blockedUntil;
+}
+
+/** Clears the failure cooldown (used by tests and manual recovery). */
+export function resetSharedRateLimitBreaker() {
+  blockedUntil = 0;
+}
+
+function pauseSharedStore() {
+  const wasPaused = Date.now() < blockedUntil;
+  blockedUntil = Date.now() + COOLDOWN_MS;
+  if (!wasPaused) {
+    console.warn(`[rate-limit] shared store unavailable, using memory store for ${COOLDOWN_MS / 1000}s`);
+  }
+}
+
+function assertStoreReady() {
+  if (Date.now() < blockedUntil) throw new Error('Upstash Redis is paused after a failure');
 }
 
 /** Redis key for one scope and caller (IP or tenant). */
@@ -56,23 +83,29 @@ export async function incrementWindow({
   fetchImpl = fetch,
 }) {
   if (!url || !token) throw new Error('Upstash Redis is not configured');
+  assertStoreReady();
   const run = createRunner({ url, token, fetchImpl });
 
-  const [incremented, ttl] = await run([
-    ['INCR', key],
-    ['TTL', key],
-  ]);
+  try {
+    const [incremented, ttl] = await run([
+      ['INCR', key],
+      ['TTL', key],
+    ]);
 
-  const count = Number(incremented?.result);
-  if (!Number.isFinite(count) || incremented?.error) {
-    throw new Error(incremented?.error || 'Upstash returned no counter');
+    const count = Number(incremented?.result);
+    if (!Number.isFinite(count) || incremented?.error) {
+      throw new Error(incremented?.error || 'Upstash returned no counter');
+    }
+
+    if (!positiveTtl(ttl)) {
+      await run([['PEXPIRE', key, Math.max(1000, Number(windowMs) || 60000)]]);
+    }
+
+    return count;
+  } catch (error) {
+    pauseSharedStore();
+    throw error;
   }
-
-  if (!positiveTtl(ttl)) {
-    await run([['PEXPIRE', key, Math.max(1000, Number(windowMs) || 60000)]]);
-  }
-
-  return count;
 }
 
 /**
@@ -87,26 +120,32 @@ export async function decrementWindow({
   fetchImpl = fetch,
 }) {
   if (!url || !token) throw new Error('Upstash Redis is not configured');
+  assertStoreReady();
   const run = createRunner({ url, token, fetchImpl });
 
-  const [decremented, ttl] = await run([
-    ['DECR', key],
-    ['TTL', key],
-  ]);
+  try {
+    const [decremented, ttl] = await run([
+      ['DECR', key],
+      ['TTL', key],
+    ]);
 
-  const count = Number(decremented?.result);
-  if (!Number.isFinite(count) || decremented?.error) {
-    throw new Error(decremented?.error || 'Upstash returned no counter');
+    const count = Number(decremented?.result);
+    if (!Number.isFinite(count) || decremented?.error) {
+      throw new Error(decremented?.error || 'Upstash returned no counter');
+    }
+
+    if (count < 0) {
+      await run([['DEL', key]]);
+      return 0;
+    }
+
+    if (!positiveTtl(ttl)) {
+      await run([['PEXPIRE', key, Math.max(1000, Number(windowMs) || 60000)]]);
+    }
+
+    return count;
+  } catch (error) {
+    pauseSharedStore();
+    throw error;
   }
-
-  if (count < 0) {
-    await run([['DEL', key]]);
-    return 0;
-  }
-
-  if (!positiveTtl(ttl)) {
-    await run([['PEXPIRE', key, Math.max(1000, Number(windowMs) || 60000)]]);
-  }
-
-  return count;
 }
