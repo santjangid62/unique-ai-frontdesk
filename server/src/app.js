@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { env, allowedOrigins, assertProdConfig } from './config/env.js';
 import { connectDB } from './config/db.js';
+import { verifyAccessToken } from './utils/tokens.js';
 import { ApiError } from './utils/ApiError.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { apiLimiter } from './middleware/rateLimit.js';
@@ -72,6 +73,23 @@ app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cookieParser());
 
 if (!env.isProd) app.use(morgan('dev'));
+
+/**
+ * Verifies an optional bearer token before rate limiting so authenticated
+ * requests are counted per user instead of per IP. Invalid tokens are left for
+ * the route's authenticate middleware to reject.
+ */
+app.use('/api', (req, _res, next) => {
+  const header = req.headers.authorization || '';
+  if (header.startsWith('Bearer ')) {
+    try {
+      req.auth = verifyAccessToken(header.slice(7).trim());
+    } catch {
+      req.auth = null;
+    }
+  }
+  next();
+});
 
 app.use('/api', apiLimiter);
 

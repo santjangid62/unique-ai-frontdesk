@@ -190,7 +190,7 @@ A step-by-step checklist lives in [`docs/DEPLOY_ONLINE.md`](docs/DEPLOY_ONLINE.m
 3. Add environment variables in **Project → Settings → Environment Variables**:
    `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `CLIENT_ORIGIN` and `APP_URL` (both your Vercel URL), and optionally
    `OPENAI_API_KEY`, `OPENAI_MODEL`, `TWILIO_AUTH_TOKEN`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`,
-   `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`. The Upstash pair is optional but makes auth, API, chat and webhook rate
+   `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` and optionally `RATE_LIMIT_MAX_INSTANCES` (default 5). The Upstash pair is optional but makes auth, API, chat and webhook rate
    limits global across serverless instances; without it each instance counts separately.
    `MONGODB_URI` must be the Atlas `mongodb+srv://…` string: a local `mongodb://127.0.0.1…` URI cannot be
    reached from a Vercel Function.

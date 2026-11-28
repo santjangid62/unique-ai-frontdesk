@@ -14,11 +14,15 @@ export const authenticate = asyncHandler(async (req, _res, next) => {
   const bearer = header.startsWith('Bearer ') ? header.slice(7).trim() : null;
   if (!bearer) throw ApiError.unauthorized('Authentication required');
 
-  let payload;
-  try {
-    payload = verifyAccessToken(bearer);
-  } catch {
-    throw ApiError.unauthorized('Session expired, please sign in again');
+  // The rate limiter verifies the token first; reuse that result instead of
+  // verifying the same token twice.
+  let payload = req.auth;
+  if (!payload) {
+    try {
+      payload = verifyAccessToken(bearer);
+    } catch {
+      throw ApiError.unauthorized('Session expired, please sign in again');
+    }
   }
 
   const user = await User.findById(payload.sub);
