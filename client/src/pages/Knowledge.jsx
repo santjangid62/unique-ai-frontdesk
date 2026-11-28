@@ -5,12 +5,16 @@ import useFetch from '../lib/useFetch.js';
 import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Pagination, Spinner, Table, Tabs, Tx } from '../components/ui.jsx';
 import { fromNow, titleCase } from '../lib/format.js';
 import { useI18n } from '../i18n/index.jsx';
+import { useBusinessCategory } from '../lib/useBusinessCategory.js';
 
 const CATEGORIES = ['business', 'course', 'fee', 'faq', 'policy', 'timing', 'contact', 'other'];
 const empty = { category: 'faq', title: '', content: '', tags: '' };
 
 export default function Knowledge() {
   const { t } = useI18n();
+  const category = useBusinessCategory();
+  const categoryLabels = { course: category.offerings };
+  const categoryLabel = (value) => categoryLabels[value] || titleCase(value);
   const [tab, setTab] = useState('entries');
   const [filters, setFilters] = useState({ category: '', search: '', page: 1 });
   const [open, setOpen] = useState(false);
@@ -182,9 +186,9 @@ export default function Knowledge() {
             </div>
             <select className="input w-40" value={filters.category} onChange={(event) => setFilters({ ...filters, category: event.target.value, page: 1 })}>
               <option value=""><Tx>All categories</Tx></option>
-              {CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {titleCase(category)}
+              {CATEGORIES.map((value) => (
+                <option key={value} value={value}>
+                  {categoryLabel(value)}
                 </option>
               ))}
             </select>
@@ -208,7 +212,7 @@ export default function Knowledge() {
                   </div>
                 ),
               },
-              { key: 'category', label: 'Category', render: (row) => <Badge status="website">{titleCase(row.category)}</Badge> },
+              { key: 'category', label: 'Category', render: (row) => <Badge status="website">{categoryLabel(row.category)}</Badge> },
               {
                 key: 'tags',
                 label: 'Tags',
@@ -240,7 +244,12 @@ export default function Knowledge() {
                 ),
               },
             ]}
-            empty={<EmptyState title="No knowledge entries" description="Add fees, courses, timings and FAQs so the AI can answer accurately." />}
+            empty={
+              <EmptyState
+                title="No knowledge entries"
+                description={`Add fees, ${category.offerings.toLowerCase()}, timings and FAQs so the AI can answer accurately.`}
+              />
+            }
           />
           <Pagination meta={entries.meta} onPage={(page) => setFilters({ ...filters, page })} />
         </Card>
@@ -317,9 +326,9 @@ export default function Knowledge() {
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Category" hint="Pick the section this fact belongs to.">
               <select className="input" value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })}>
-                {CATEGORIES.map((category) => (
-                  <option key={category} value={category}>
-                    {titleCase(category)}
+                {CATEGORIES.map((value) => (
+                  <option key={value} value={value}>
+                    {categoryLabel(value)}
                   </option>
                 ))}
               </select>
