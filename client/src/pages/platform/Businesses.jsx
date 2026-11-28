@@ -3,7 +3,8 @@ import { Building2, Plus, Search } from 'lucide-react';
 import api, { errorMessage } from '../../lib/api.js';
 import useFetch from '../../lib/useFetch.js';
 import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Pagination, Spinner, Table, Tx } from '../../components/ui.jsx';
-import { dateTime, fromNow, titleCase } from '../../lib/format.js';
+import { dateTime, fromNow } from '../../lib/format.js';
+import { CATEGORY_OPTIONS, categoryFor } from '../../lib/businessCategories.js';
 import { useI18n } from '../../i18n/index.jsx';
 
 const empty = {
@@ -125,7 +126,7 @@ export default function Businesses() {
                 render: (row) => (
                   <button type="button" className="text-left" onClick={() => setDetail(row.id)}>
                     <p className="font-semibold text-slate-800 hover:text-brand-600">{row.name}</p>
-                    <p className="text-xs text-slate-500">/{row.slug} · {titleCase(row.industry)}</p>
+                    <p className="text-xs text-slate-500">/{row.slug} · {categoryFor(row.industry).label}</p>
                   </button>
                 ),
               },
@@ -206,9 +207,9 @@ export default function Businesses() {
           </Field>
           <Field label="Industry">
             <select className="input" value={form.industry} onChange={(event) => setForm({ ...form, industry: event.target.value })}>
-              {['coaching', 'healthcare', 'hotels', 'real_estate', 'salon', 'other'].map((industry) => (
-                <option key={industry} value={industry}>
-                  {titleCase(industry)}
+              {CATEGORY_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
@@ -247,7 +248,7 @@ export default function Businesses() {
             <div className="grid gap-2 sm:grid-cols-2">
               {[
                 ['Slug', detailFetch.data.tenant.slug],
-                ['Industry', titleCase(detailFetch.data.tenant.industry)],
+                ['Industry', categoryFor(detailFetch.data.tenant.industry).label],
                 ['Status', titleCase(detailFetch.data.tenant.status)],
                 ['Email', detailFetch.data.tenant.contactEmail || '—'],
                 ['Phone', detailFetch.data.tenant.contactPhone || '—'],

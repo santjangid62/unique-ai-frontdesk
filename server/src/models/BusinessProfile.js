@@ -15,6 +15,20 @@ const courseSchema = new mongoose.Schema(
   { _id: true },
 );
 
+const offeringSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    category: { type: String, default: '' },
+    price: { type: Number, default: 0 },
+    duration: { type: String, default: '' },
+    schedule: { type: [String], default: [] },
+    mode: { type: String, enum: ['online', 'offline', 'hybrid', 'na'], default: 'na' },
+    details: { type: String, default: '' },
+    isActive: { type: Boolean, default: true },
+  },
+  { _id: true },
+);
+
 const businessProfileSchema = new mongoose.Schema(
   {
     tenantId: {
@@ -28,6 +42,9 @@ const businessProfileSchema = new mongoose.Schema(
     logoUrl: { type: String, default: '' },
     description: { type: String, default: '', maxlength: 4000 },
     industry: { type: String, default: 'coaching' },
+    // Category-aware catalogue: products for a shop, services for an IT
+    // company, courses for a coaching centre, and so on.
+    offerings: { type: [offeringSchema], default: [] },
     website: { type: String, default: '' },
     phone: { type: String, default: '' },
     email: { type: String, default: '' },

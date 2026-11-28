@@ -1,13 +1,14 @@
 import { env } from '../config/env.js';
 import { formatKnowledge } from './retrieval.js';
+import { businessCategory } from './businessCategories.js';
 
 const SYSTEM_PROMPT = `You are the AI front desk receptionist for a business. You speak on behalf of the business to customers.
 
 RULES (must always follow):
-1. Answer only from the VERIFIED BUSINESS CONTEXT below. Never invent fees, course names, batch timings, availability, discounts, policies or contact details.
+1. Answer only from the VERIFIED BUSINESS CONTEXT below. Never invent prices, offering names, schedules, availability, discounts, policies or contact details.
 2. If the context does not contain the answer, set "escalate": true and politely say you will connect the customer with the team. Never guess.
 3. Keep replies short (2-4 sentences), warm, and useful. One clear next step per reply.
-4. You may collect the customer's name, phone, email and interested course. Only ask for a phone number when it is genuinely missing.
+4. You may collect the customer's name, phone, email and the offering they are interested in (course, subject, product, service or package — whichever the business sells). Only ask for a phone number when it is genuinely missing.
 5. You may offer a demo class / appointment. NEVER say an appointment is confirmed until the system tells you it was saved; ask for a preferred date and time instead.
 6. If the customer is angry, asks for a human, or the query is complex, set "escalate": true with a short reason.
 7. On voice calls, identify yourself as an automated assistant in the first turn.
@@ -26,27 +27,48 @@ Return ONLY valid JSON with this shape:
 
 function profileFacts(profile, agent) {
   if (!profile) return 'No business profile configured.';
-  const courses = (profile.coaching?.courses || [])
-    .filter((course) => course.isActive !== false)
+  const category = businessCategory(profile.industry);
+  // New profiles store a category-aware catalogue; older coaching profiles
+  // still keep their courses under coaching.courses until they are re-saved.
+  const catalogue = profile.offerings?.length
+    ? profile.offerings
+    : (profile.coaching?.courses || []).map((course) => ({
+        name: course.name,
+        category: course.category,
+        price: course.fee,
+        duration: course.duration,
+        schedule: course.batchTimings,
+        mode: course.mode,
+        details: course.syllabus,
+        isActive: course.isActive,
+      }));
+  const offerings = catalogue
+    .filter((item) => item.isActive !== false)
     .map(
-      (course) =>
-        `- ${course.name} | category: ${course.category || 'n/a'} | fee: ${course.fee || 'not published'} | duration: ${
-          course.duration || 'n/a'
-        } | mode: ${course.mode} | batches: ${(course.batchTimings || []).join(', ') || 'n/a'}`,
+      (item) =>
+        `- ${item.name} | category: ${item.category || 'n/a'} | price: ${item.price || 'not published'} | duration: ${
+          item.duration || 'n/a'
+        } | schedule: ${(item.schedule || []).join(', ') || 'n/a'} | mode: ${item.mode || 'n/a'} | details: ${
+          item.details || 'n/a'
+        }`,
     )
     .join('\n');
 
   return [
-    `Business: ${profile.name} (${profile.industry})`,
+    `Business: ${profile.name} (${category.label})`,
     profile.description ? `About: ${profile.description}` : '',
     `Phone: ${profile.phone || 'n/a'} | Email: ${profile.email || 'n/a'}`,
     `Address: ${[profile.address, profile.city, profile.state, profile.country].filter(Boolean).join(', ') || 'n/a'}`,
     `Working days: ${(profile.workingDays || []).join(', ') || 'n/a'} | Hours: ${profile.openingTime}-${profile.closingTime}`,
     `Languages: ${(profile.languages || []).join(', ')}`,
-    profile.coaching?.demoAvailable ? 'Trial / demo: available (subject to slot availability)' : 'Trial / demo: not confirmed',
+    category.demo
+      ? profile.coaching?.demoAvailable
+        ? 'Trial / demo: available (subject to slot availability)'
+        : 'Trial / demo: not confirmed'
+      : '',
     profile.coaching?.admissionProcess ? `Next steps after enquiry: ${profile.coaching.admissionProcess}` : '',
     profile.coaching?.placementInfo ? `Additional support: ${profile.coaching.placementInfo}` : '',
-    courses ? `Courses:\n${courses}` : '',
+    offerings ? `${category.offerings}:\n${offerings}` : '',
     agent?.instructions ? `Agent instructions from the business owner: ${agent.instructions}` : '',
   ]
     .filter(Boolean)

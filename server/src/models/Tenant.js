@@ -2,7 +2,9 @@ import mongoose from 'mongoose';
 import { schemaOptions } from './base.js';
 
 export const TENANT_STATUSES = ['active', 'suspended', 'inactive'];
-export const INDUSTRIES = ['coaching', 'healthcare', 'hotels', 'real_estate', 'salon', 'other'];
+import { BUSINESS_INDUSTRIES } from '../services/businessCategories.js';
+
+export const INDUSTRIES = BUSINESS_INDUSTRIES;
 
 const tenantSchema = new mongoose.Schema(
   {

@@ -5,6 +5,7 @@ import { Sparkles, ArrowLeft, Building2, ShieldCheck, UserCog, MailCheck } from 
 import { useAuth } from '../context/AuthContext.jsx';
 import api, { errorMessage, fieldErrors } from '../lib/api.js';
 import { Alert, Field, PhoneInput } from '../components/ui.jsx';
+import { CATEGORY_OPTIONS } from '../lib/businessCategories.js';
 import { LanguageSwitcher, useI18n } from '../i18n/index.jsx';
 
 const PORTALS = {
@@ -297,12 +298,11 @@ export function Register() {
           </Field>
           <Field label="Industry">
             <select className="input" {...register('industry')}>
-              <option value="coaching">{t('Coaching / Institute')}</option>
-              <option value="healthcare">{t('Healthcare')}</option>
-              <option value="hotels">{t('Hotels')}</option>
-              <option value="real_estate">{t('Real Estate')}</option>
-              <option value="salon">{t('Salon')}</option>
-              <option value="other">{t('Other')}</option>
+              {CATEGORY_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {t(option.label)}
+                </option>
+              ))}
             </select>
           </Field>
         </div>

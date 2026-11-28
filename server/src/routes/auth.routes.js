@@ -25,6 +25,7 @@ import { notifyUser } from '../services/notifications.js';
 import { ensureDefaultPlans } from '../services/plans.js';
 import { sendPasswordResetEmail, sendVerificationEmail } from '../services/email.js';
 import { indianPhoneSchema, optionalIndianPhoneSchema } from '../utils/phone.js';
+import { BUSINESS_INDUSTRIES, businessCategory } from '../services/businessCategories.js';
 
 const router = Router();
 
@@ -41,7 +42,7 @@ const registerSchema = z.object({
   email: z.string().email().transform((value) => value.toLowerCase().trim()),
   password: passwordSchema,
   phone: indianPhoneSchema,
-  industry: z.enum(['coaching', 'healthcare', 'hotels', 'real_estate', 'salon', 'other']).default('coaching'),
+  industry: z.enum(BUSINESS_INDUSTRIES).default('coaching'),
   timezone: z.string().max(60).optional().default('Asia/Kolkata'),
 });
 
@@ -85,6 +86,7 @@ router.post(
   validate(registerSchema),
   asyncHandler(async (req, res) => {
     const { businessName, ownerName, email, password, phone, industry, timezone } = req.body;
+    const category = businessCategory(industry);
 
     const existing = await User.findOne({ email }).select('_id').lean();
     if (existing) throw ApiError.conflict('An account with this email already exists');
@@ -134,8 +136,7 @@ router.post(
       name: `${businessName} Frontdesk AI`,
       greeting: `Namaste! Welcome to ${businessName}. How can I help you today?`,
       isDefault: true,
-      instructions:
-        'Be warm and concise. Help with course information, fees, batch timings and demo class bookings.',
+      instructions: `Be warm and concise. ${category.agent}`,
       channels: { website: true, whatsapp: false, voice: false },
     });
 
@@ -143,7 +144,7 @@ router.post(
       tenantId: tenant._id,
       category: 'business',
       title: 'Business overview',
-      content: `${businessName} is a ${industry.replace('_', ' ')} business. Contact: ${phone || email}. Use the Settings page to add courses, fees, timings and FAQs so the AI can answer accurately.`,
+      content: `${businessName} is a ${category.label} business. Contact: ${phone || email}. Use the Settings page to add ${category.fields} and FAQs so the AI can answer accurately.`,
       tags: ['about', 'contact'],
     });
 
@@ -227,7 +228,7 @@ router.post(
       tenantId: user.tenantId,
       type: 'system',
       title: 'Welcome to Unique AI Frontdesk',
-      body: 'Your email is verified. Add your courses and FAQs, then test your AI receptionist.',
+      body: 'Your email is verified. Add your offerings and FAQs, then test your AI receptionist.',
       link: '/app/knowledge',
     });
 
