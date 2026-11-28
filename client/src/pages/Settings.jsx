@@ -119,20 +119,24 @@ export default function Settings() {
   const saveIntegration = async (provider, config) => {
     setError('');
     try {
-      await api.put(`/integrations/${provider}`, { status: 'connected', config });
+      const response = await api.put(`/integrations/${provider}`, { status: 'connected', config });
       setProviderForm((prev) => ({ ...prev, [provider]: {} }));
       reloadIntegrations();
+      return response.data?.data;
     } catch (err) {
       setError(errorMessage(err));
+      throw err;
     }
   };
 
   const checkIntegration = async (provider) => {
     try {
-      await api.post(`/integrations/${provider}/check`);
+      const response = await api.post(`/integrations/${provider}/check`);
       reloadIntegrations();
+      return response.data?.data;
     } catch (err) {
       setError(errorMessage(err));
+      throw err;
     }
   };
 
@@ -184,9 +188,17 @@ export default function Settings() {
       setAiMessages((prev) => [...prev, userMsg, { from: 'ai', text: 'Saving your credentials…' }]);
       try {
         await saveIntegration(aiProvider, nextValues);
-        if (Object.keys(nextValues).length > 0) await checkIntegration(aiProvider);
-        else reloadIntegrations();
-        setAiMessages((prev) => [...prev, { from: 'ai', text: `Done! ${aiProvider} is now connected. You can close this window.` }]);
+        const result = await checkIntegration(aiProvider);
+        setAiMessages((prev) => [
+          ...prev,
+          {
+            from: 'ai',
+            text:
+              result?.status === 'connected'
+                ? `Done! ${aiProvider} is now connected. You can close this window.`
+                : `Saved, but ${aiProvider} still needs: ${(result?.missing || []).join(', ') || 'more details'}. You can add it later from the fields below.`,
+          },
+        ]);
       } catch (err) {
         setAiMessages((prev) => [...prev, { from: 'ai', text: `Something went wrong: ${err?.message || 'unknown error'}. Try again.` }]);
       } finally {
