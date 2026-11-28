@@ -134,6 +134,8 @@ router.post(
     }[req.params.provider] || [];
 
     const missing = required.filter((key) => {
+      // A tenant-level OpenAI key is optional: the platform key covers it when set.
+      if (req.params.provider === 'openai' && key === 'apiKey' && env.openaiKey) return false;
       const value = integration.config?.[key] || (key === 'phoneNumberId' ? integration.externalId : '');
       return !value;
     });
