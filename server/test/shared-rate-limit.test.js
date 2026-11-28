@@ -20,6 +20,7 @@ import {
   authLimiter,
   chatLimiter,
   clampedLimit,
+  normalizeIpAddress,
   rateLimitIdentity,
 } from '../src/middleware/rateLimit.js';
 
@@ -120,6 +121,18 @@ check('identity uses the verified token subject', rateLimitIdentity({ auth: { su
 check('identity falls back to the token tenant', rateLimitIdentity({ auth: { tenantId: 't1' }, ip: '1.1.1.1' }) === 'tenant:t1');
 check('identity falls back to the loaded tenant', rateLimitIdentity({ tenant: { id: 't2' }, ip: '1.1.1.1' }) === 'tenant:t2');
 check('anonymous requests stay keyed by IP', rateLimitIdentity({ ip: '1.1.1.1' }) === 'ip:1.1.1.1');
+
+check('IPv4 addresses are unchanged', normalizeIpAddress('203.0.113.5') === '203.0.113.5');
+check('IPv4-mapped IPv6 becomes IPv4', normalizeIpAddress('::ffff:203.0.113.5') === '203.0.113.5');
+check('IPv6 collapses to its /64 prefix', normalizeIpAddress('2001:db8:1:2:aaaa:bbbb:cccc:dddd') === '2001:db8:1:2::/64');
+check(
+  'addresses in one /64 share a key',
+  normalizeIpAddress('2001:db8:1:2:1::1') === normalizeIpAddress('2001:db8:1:2:ffff::9'),
+);
+check('compressed IPv6 is expanded before truncating', normalizeIpAddress('2001:db8::1') === '2001:db8:0:0::/64');
+check('loopback keeps a stable key', normalizeIpAddress('::1') === '0:0:0:0::/64');
+check('zone ids are ignored', normalizeIpAddress('fe80::1%eth0') === 'fe80:0:0:0::/64');
+check('a missing IP becomes unknown', normalizeIpAddress('') === 'unknown');
 
 const saved = { url: env.upstashRedisUrl, token: env.upstashRedisToken };
 env.upstashRedisUrl = 'https://example.upstash.io';

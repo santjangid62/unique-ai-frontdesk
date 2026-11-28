@@ -25,7 +25,7 @@
     "verify:hindi": "node server/src/scripts/verify-hindi.js",
     "pdf:build": "node server/src/scripts/build-setup-pdf.js",
     "lock:check": "npm ci --dry-run --ignore-scripts && npm --prefix client ci --dry-run --ignore-scripts",
-    "test": "node server/test/atlas-mock.test.js && node server/test/vercel-deploy.test.js && node server/test/demo-credentials.test.js && node server/test/docs-pdf.test.js && node server/test/preview-db-guard.test.js && node server/test/preview-urls.test.js && node server/test/integration-check.test.js && node server/test/whatsapp-webhook.test.js && node server/test/shared-rate-limit.test.js",
+    "test": "node server/test/atlas-mock.test.js && node server/test/vercel-deploy.test.js && node server/test/demo-credentials.test.js && node server/test/docs-pdf.test.js && node server/test/preview-db-guard.test.js && node server/test/preview-urls.test.js && node server/test/integration-check.test.js && node server/test/whatsapp-webhook.test.js && node server/test/shared-rate-limit.test.js && node server/test/rate-limit-middleware.test.js",
     "test:atlas": "node server/test/atlas-mock.test.js",
     "test:deploy": "node server/test/vercel-deploy.test.js",
     "test:credentials": "node server/test/demo-credentials.test.js",
@@ -34,7 +34,8 @@
     "test:preview-urls": "node server/test/preview-urls.test.js",
     "test:integrations": "node server/test/integration-check.test.js",
     "test:whatsapp": "node server/test/whatsapp-webhook.test.js",
-    "test:ratelimit": "node server/test/shared-rate-limit.test.js"
+    "test:ratelimit": "node server/test/shared-rate-limit.test.js",
+    "test:ratelimit-middleware": "node server/test/rate-limit-middleware.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
