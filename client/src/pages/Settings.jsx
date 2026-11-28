@@ -7,11 +7,13 @@ import { Alert, Badge, Card, Field, Modal, PageHeader, Spinner } from '../compon
 import { titleCase } from '../lib/format.js';
 import { CATEGORY_OPTIONS, categoryFor } from '../lib/businessCategories.js';
 import { useI18n } from '../i18n/index.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 export default function Settings() {
   const { t } = useI18n();
+  const { refreshUser } = useAuth();
   const { data: profile, loading, error: loadError, reload } = useFetch('/business/profile');
   const { data: integrations, reload: reloadIntegrations } = useFetch('/integrations');
   const [form, setForm] = useState(null);
@@ -128,6 +130,7 @@ export default function Settings() {
       });
       setNotice('Business profile saved. The AI uses this information immediately.');
       reload();
+      await refreshUser();
     } catch (err) {
       setError(errorMessage(err));
     } finally {

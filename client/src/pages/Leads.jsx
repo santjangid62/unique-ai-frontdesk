@@ -3,6 +3,7 @@ import { Download, Plus, Search, StickyNote, Trash2, UserCheck } from 'lucide-re
 import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useBusinessCategory } from '../lib/useBusinessCategory.js';
 import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Pagination, Spinner, Table, Tabs, Tx } from '../components/ui.jsx';
 import { dateTime, fromNow, titleCase } from '../lib/format.js';
 import { useI18n } from '../i18n/index.jsx';
@@ -15,6 +16,7 @@ const emptyForm = { name: '', phone: '', email: '', course: '', source: 'manual'
 export default function Leads() {
   const { t } = useI18n();
   const { user, isBusinessAdmin } = useAuth();
+  const category = useBusinessCategory();
   const [filters, setFilters] = useState({ status: '', source: '', search: '', page: 1 });
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -209,7 +211,7 @@ export default function Leads() {
             },
             {
               key: 'course',
-              label: 'Service / interest',
+              label: t(category.interestLabel),
               render: (row) => <span className="text-slate-600">{row.course || '—'}</span>,
             },
             { key: 'source', label: 'Source', render: (row) => <Badge status={row.source} /> },
@@ -308,7 +310,7 @@ export default function Leads() {
           <Field label="Email">
             <input className="input" type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
           </Field>
-          <Field label="Service / interest" hint="What the customer asked about.">
+          <Field label={t(category.interestLabel)} hint={`What the customer asked about (${category.offerings.toLowerCase()}).`}>
             <input className="input" value={form.course} onChange={(event) => setForm({ ...form, course: event.target.value })} />
           </Field>
           <Field label="Source" hint="Where this enquiry came from.">
@@ -364,7 +366,7 @@ export default function Leads() {
             <div className="grid gap-3 sm:grid-cols-2">
               {[
                 ['Status', titleCase(detailFetch.data.lead.status)],
-                ['Service / interest', detailFetch.data.lead.course || '—'],
+                [t(category.interestLabel), detailFetch.data.lead.course || '—'],
                 ['Source', titleCase(detailFetch.data.lead.source)],
                 ['Assignee', detailFetch.data.lead.assigneeId?.name || 'Unassigned'],
                 ['Follow-up', detailFetch.data.lead.followUpDate ? dateTime(detailFetch.data.lead.followUpDate, { timeStyle: undefined }) : '—'],
