@@ -3,7 +3,7 @@ import { env } from '../config/env.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ok } from '../utils/response.js';
 import { audit } from '../utils/audit.js';
-import { webhookLimiter } from '../middleware/rateLimit.js';
+import { webhookLimiter, whatsappVerifyLimiter } from '../middleware/rateLimit.js';
 import Integration from '../models/Integration.js';
 import Tenant from '../models/Tenant.js';
 import { getOrCreateConversation, processIncomingMessage } from '../services/chat.js';
@@ -16,10 +16,12 @@ const router = Router();
 /** Tenant whose stored verify token matches, or null. */
 async function tenantForVerifyToken(token) {
   if (!token) return null;
-  const candidates = await Integration.find({ provider: 'whatsapp' })
+  // Target the token in the query instead of loading every WhatsApp integration.
+  const row = await Integration.findOne({ provider: 'whatsapp', 'config.verifyToken': token })
     .select('tenantId config.verifyToken')
     .lean();
-  return candidates.find((row) => tokenMatches(row.config?.verifyToken, token)) || null;
+  if (!row || !tokenMatches(row.config?.verifyToken, token)) return null;
+  return row;
 }
 
 /** Integration whose phone number ID receives this webhook, or null. */
@@ -34,6 +36,7 @@ async function integrationForPhoneNumberId(phoneNumberId) {
 /** Meta webhook verification handshake (per-tenant token, platform fallback). */
 router.get(
   '/',
+  whatsappVerifyLimiter,
   asyncHandler(async (req, res) => {
     const mode = req.query['hub.mode'];
     const token = String(req.query['hub.verify_token'] || '');
