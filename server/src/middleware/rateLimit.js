@@ -3,7 +3,7 @@ import {
   decrementWindow,
   incrementWindow,
   rateLimitKey,
-  sharedRateLimitConfigured,
+  sharedRateLimitReady,
 } from '../services/sharedRateLimit.js';
 
 const envelope = (message) => ({ success: false, error: { code: 'RATE_LIMITED', message } });
@@ -16,7 +16,9 @@ const envelope = (message) => ({ success: false, error: { code: 'RATE_LIMITED', 
  */
 function sharedLimiter({ scope, fallback, limit, windowMs, message, skipSuccessful = false }) {
   return async (req, res, next) => {
-    if (!sharedRateLimitConfigured()) return fallback(req, res, next);
+    // While the shared store is paused after a failure, skip the network call
+    // entirely instead of paying the timeout on every request.
+    if (!sharedRateLimitReady()) return fallback(req, res, next);
     const key = rateLimitKey(scope, req.ip);
     try {
       const count = await incrementWindow({ key, windowMs });
@@ -29,8 +31,7 @@ function sharedLimiter({ scope, fallback, limit, windowMs, message, skipSuccessf
         });
       }
       return next();
-    } catch (error) {
-      console.warn('[rate-limit] shared store unavailable, using memory store:', error.message);
+    } catch {
       return fallback(req, res, next);
     }
   };

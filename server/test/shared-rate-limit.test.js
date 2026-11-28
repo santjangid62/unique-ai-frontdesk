@@ -11,7 +11,9 @@ import {
   decrementWindow,
   incrementWindow,
   rateLimitKey,
+  resetSharedRateLimitBreaker,
   sharedRateLimitConfigured,
+  sharedRateLimitReady,
 } from '../src/services/sharedRateLimit.js';
 import { apiLimiter, authLimiter, chatLimiter } from '../src/middleware/rateLimit.js';
 
@@ -74,6 +76,7 @@ try {
   failed = true;
 }
 check('a store error rejects so the caller can fall back', failed === true);
+resetSharedRateLimitBreaker();
 
 calls.length = 0;
 const decreased = await decrementWindow({
@@ -106,8 +109,35 @@ const saved = { url: env.upstashRedisUrl, token: env.upstashRedisToken };
 env.upstashRedisUrl = 'https://example.upstash.io';
 env.upstashRedisToken = 'token';
 check('configured with both values', sharedRateLimitConfigured() === true);
+
+resetSharedRateLimitBreaker();
+check('ready when configured and not paused', sharedRateLimitReady() === true);
+
+let attempts = 0;
+const failingFetch = async () => {
+  attempts += 1;
+  return { ok: false, status: 503, json: async () => ({}) };
+};
+const options = { key: 'uaf:ratelimit:test:breaker', windowMs: 60000, url: env.upstashRedisUrl, token: env.upstashRedisToken };
+try {
+  await incrementWindow({ ...options, fetchImpl: failingFetch });
+} catch {
+  // expected: the failure pauses the store
+}
+check('a failure pauses the shared store', sharedRateLimitReady() === false);
+const attemptsBefore = attempts;
+try {
+  await incrementWindow({ ...options, fetchImpl: failingFetch });
+} catch {
+  // expected: paused stores fail fast without a network call
+}
+check('a paused store is not called again', attempts === attemptsBefore);
+resetSharedRateLimitBreaker();
+check('reset restores readiness', sharedRateLimitReady() === true);
+
 env.upstashRedisUrl = saved.url;
 env.upstashRedisToken = saved.token;
+resetSharedRateLimitBreaker();
 
 console.log(summary());
 process.exit(exitCode());
