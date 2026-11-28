@@ -9,6 +9,7 @@ import { requireTenantUser, resolveTenantId, tenantScopeGuard } from '../middlew
 import { audit } from '../utils/audit.js';
 import BusinessProfile from '../models/BusinessProfile.js';
 import Tenant from '../models/Tenant.js';
+import { BUSINESS_INDUSTRIES } from '../services/businessCategories.js';
 
 const router = Router();
 router.use(authenticate, tenantScopeGuard, requireTenantUser);
@@ -25,11 +26,24 @@ const courseSchema = z.object({
   _id: z.string().optional(),
 });
 
+const offeringSchema = z.object({
+  name: z.string().min(1).max(160),
+  category: z.string().max(80).optional().default(''),
+  price: z.coerce.number().min(0).max(100_000_000).optional().default(0),
+  duration: z.string().max(80).optional().default(''),
+  schedule: z.array(z.string().max(60)).optional().default([]),
+  mode: z.enum(['online', 'offline', 'hybrid', 'na']).optional().default('na'),
+  details: z.string().max(4000).optional().default(''),
+  isActive: z.boolean().optional().default(true),
+  _id: z.string().optional(),
+});
+
 const profileSchema = z.object({
   name: z.string().min(2).max(160).optional(),
   logoUrl: z.string().max(500).optional().default(''),
   description: z.string().max(4000).optional().default(''),
-  industry: z.string().max(40).optional(),
+  industry: z.enum(BUSINESS_INDUSTRIES).optional(),
+  offerings: z.array(offeringSchema).optional(),
   website: z.string().max(200).optional().default(''),
   phone: z.string().max(24).optional().default(''),
   email: z.string().max(160).optional().default(''),
@@ -95,8 +109,11 @@ router.put(
       { $set: req.body },
       { new: true, upsert: true, setDefaultsOnInsert: true },
     );
-    if (req.body.name) {
-      await Tenant.updateOne({ _id: tenantId }, { $set: { name: req.body.name } });
+    const tenantUpdate = {};
+    if (req.body.name) tenantUpdate.name = req.body.name;
+    if (req.body.industry) tenantUpdate.industry = req.body.industry;
+    if (Object.keys(tenantUpdate).length) {
+      await Tenant.updateOne({ _id: tenantId }, { $set: tenantUpdate });
     }
     await audit(req, {
       action: 'business.profile_updated',

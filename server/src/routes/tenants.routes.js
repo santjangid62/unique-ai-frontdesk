@@ -16,13 +16,14 @@ import Plan from '../models/Plan.js';
 import Lead from '../models/Lead.js';
 import Conversation from '../models/Conversation.js';
 import { ensureDefaultPlans } from '../services/plans.js';
+import { BUSINESS_INDUSTRIES } from '../services/businessCategories.js';
 
 const router = Router();
 router.use(authenticate, requireSuperAdmin);
 
 const tenantBody = z.object({
   name: z.string().min(2).max(160),
-  industry: z.enum(['coaching', 'healthcare', 'hotels', 'real_estate', 'salon', 'other']).default('coaching'),
+  industry: z.enum(BUSINESS_INDUSTRIES).default('coaching'),
   contactEmail: z.string().email().optional().or(z.literal('')),
   contactPhone: z.string().max(24).optional().default(''),
   planCode: z.string().max(40).optional().default('starter'),
@@ -180,7 +181,7 @@ router.put(
   validate(
     z.object({
       name: z.string().min(2).max(160).optional(),
-      industry: z.enum(['coaching', 'healthcare', 'hotels', 'real_estate', 'salon', 'other']).optional(),
+      industry: z.enum(BUSINESS_INDUSTRIES).optional(),
       contactEmail: z.string().email().optional().or(z.literal('')),
       contactPhone: z.string().max(24).optional(),
       planCode: z.string().max(40).optional(),
@@ -201,8 +202,11 @@ router.put(
         { upsert: true },
       );
     }
-    if (req.body.name) {
-      await BusinessProfile.updateOne({ tenantId: tenant._id }, { $set: { name: req.body.name } });
+    const profileUpdate = {};
+    if (req.body.name) profileUpdate.name = req.body.name;
+    if (req.body.industry) profileUpdate.industry = req.body.industry;
+    if (Object.keys(profileUpdate).length) {
+      await BusinessProfile.updateOne({ tenantId: tenant._id }, { $set: profileUpdate });
     }
 
     await audit(req, {

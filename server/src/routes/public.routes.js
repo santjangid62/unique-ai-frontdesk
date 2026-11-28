@@ -14,6 +14,7 @@ import Message from '../models/Message.js';
 import { getOrCreateConversation, processIncomingMessage } from '../services/chat.js';
 import { bookAppointment, checkAvailability } from '../services/booking.js';
 import { addMinutes } from '../utils/date.js';
+import { businessCategory } from '../services/businessCategories.js';
 
 const router = Router();
 
@@ -54,7 +55,9 @@ router.get(
         showBranding: profile?.widget?.showBranding !== false,
         agentName: agent?.name || 'AI Assistant',
       },
-      demoAvailable: profile?.coaching?.demoAvailable !== false,
+      demoAvailable:
+        businessCategory(profile?.industry || tenant.industry).demo === true &&
+        profile?.coaching?.demoAvailable !== false,
     });
   }),
 );

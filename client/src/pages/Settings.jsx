@@ -5,6 +5,7 @@ import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
 import { Alert, Badge, Card, Field, Modal, PageHeader, Spinner } from '../components/ui.jsx';
 import { titleCase } from '../lib/format.js';
+import { CATEGORY_OPTIONS, categoryFor } from '../lib/businessCategories.js';
 import { useI18n } from '../i18n/index.jsx';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -29,6 +30,7 @@ export default function Settings() {
   useEffect(() => {
     if (!profile) return;
     setForm({
+      category: profile.industry || 'coaching',
       name: profile.name || '',
       description: profile.description || '',
       phone: profile.phone || '',
@@ -46,30 +48,46 @@ export default function Settings() {
       demoAvailable: profile.coaching?.demoAvailable !== false,
       admissionProcess: profile.coaching?.admissionProcess || '',
       placementInfo: profile.coaching?.placementInfo || '',
-      courses: profile.coaching?.courses || [],
+      offerings: profile.offerings?.length
+        ? profile.offerings
+        : (profile.coaching?.courses || []).map((course) => ({
+            _id: course._id,
+            name: course.name,
+            category: course.category || '',
+            price: course.fee || 0,
+            duration: course.duration || '',
+            schedule: course.batchTimings || [],
+            mode: course.mode || 'na',
+            details: course.syllabus || '',
+            isActive: course.isActive !== false,
+          })),
       holidays: profile.holidays || [],
     });
   }, [profile]);
 
-  const updateCourse = (index, patch) => {
+  const category = categoryFor(form?.category);
+
+  const updateOffering = (index, patch) => {
     setForm((prev) => ({
       ...prev,
-      courses: prev.courses.map((course, position) => (position === index ? { ...course, ...patch } : course)),
+      offerings: prev.offerings.map((offering, position) =>
+        position === index ? { ...offering, ...patch } : offering,
+      ),
     }));
   };
 
-  const addCourse = () => {
+  const addOffering = () => {
     setForm((prev) => ({
       ...prev,
-      courses: [
-        ...prev.courses,
-        { name: '', category: '', fee: 0, duration: '', batchTimings: [], mode: 'offline', syllabus: '', isActive: true },
+      offerings: [
+        ...prev.offerings,
+        { name: '', category: '', price: 0, duration: '', schedule: [], mode: category.showMode ? 'offline' : 'na', details: '', isActive: true },
       ],
     }));
   };
 
-  const removeCourse = (index) => {
-    setForm((prev) => ({ ...prev, courses: prev.courses.filter((_, position) => position !== index) }));
+  const removeOffering = (index) => {
+    setForm((prev) => ({ ...prev, offerings: prev.offerings.filter((_, position) => position !== index) }));
   };
 
   const save = async (event) => {
@@ -94,14 +112,15 @@ export default function Settings() {
         workingDays: form.workingDays,
         languages: form.languages.split(',').map((language) => language.trim()).filter(Boolean),
         holidays: form.holidays,
+        industry: form.category,
+        offerings: form.offerings.map((offering) => ({
+          ...offering,
+          price: Number(offering.price) || 0,
+          schedule: Array.isArray(offering.schedule)
+            ? offering.schedule
+            : String(offering.schedule || '').split(',').map((slot) => slot.trim()).filter(Boolean),
+        })),
         coaching: {
-          courses: form.courses.map((course) => ({
-            ...course,
-            fee: Number(course.fee) || 0,
-            batchTimings: Array.isArray(course.batchTimings)
-              ? course.batchTimings
-              : String(course.batchTimings || '').split(',').map((timing) => timing.trim()).filter(Boolean),
-          })),
           demoAvailable: form.demoAvailable,
           admissionProcess: form.admissionProcess,
           placementInfo: form.placementInfo,
@@ -279,6 +298,30 @@ export default function Settings() {
             <Field label="Business name" className="sm:col-span-2" hint="Shown to customers and used when the AI introduces your business.">
               <input className="input" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
             </Field>
+            <Field label="Business category" hint="Choose the closest match — the offering section below changes to suit it.">
+              <select
+                className="input"
+                value={form.category}
+                onChange={(event) => {
+                  const nextCategory = event.target.value;
+                  const next = categoryFor(nextCategory);
+                  setForm({
+                    ...form,
+                    category: nextCategory,
+                    offerings: form.offerings.map((offering) => ({
+                      ...offering,
+                      mode: next.showMode ? (offering.mode === 'na' ? 'offline' : offering.mode) : 'na',
+                    })),
+                  });
+                }}
+              >
+                {CATEGORY_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {t(option.label)}
+                  </option>
+                ))}
+              </select>
+            </Field>
             <Field
               label="About the business"
               className="sm:col-span-2"
@@ -340,17 +383,19 @@ export default function Settings() {
             <Field label="Supported languages" hint="Languages the AI can reply in, comma separated.">
               <input className="input" value={form.languages} onChange={(event) => setForm({ ...form, languages: event.target.value })} />
             </Field>
-            <Field label="Free trial / demo">
-              <label className="flex items-center gap-2 pt-2 text-sm text-slate-600">
-                <input
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-slate-300 text-brand-600"
-                  checked={form.demoAvailable}
-                  onChange={(event) => setForm({ ...form, demoAvailable: event.target.checked })}
-                />
-                {t('Offer a free trial or demo')}
-              </label>
-            </Field>
+            {category.showDemo ? (
+              <Field label="Free trial / demo">
+                <label className="flex items-center gap-2 pt-2 text-sm text-slate-600">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-slate-300 text-brand-600"
+                    checked={form.demoAvailable}
+                    onChange={(event) => setForm({ ...form, demoAvailable: event.target.checked })}
+                  />
+                  {t('Offer a free trial or demo')}
+                </label>
+              </Field>
+            ) : null}
             <Field label="Next steps after enquiry" className="sm:col-span-2" hint="Steps a customer follows after showing interest. The AI explains these when asked.">
               <textarea className="input" rows={2} value={form.admissionProcess} onChange={(event) => setForm({ ...form, admissionProcess: event.target.value })} />
             </Field>
@@ -362,55 +407,55 @@ export default function Settings() {
 
         <Card className="p-5">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-900">{t('Courses')}</h2>
-            <button type="button" className="btn-secondary px-3 py-1.5 text-xs" onClick={addCourse}>
-              <Plus size={14} /> {t('Add course')}
+            <h2 className="text-sm font-semibold text-slate-900">{t(category.offerings)}</h2>
+            <button type="button" className="btn-secondary px-3 py-1.5 text-xs" onClick={addOffering}>
+              <Plus size={14} /> {t(category.addLabel)}
             </button>
           </div>
-          <p className="mb-4 text-xs text-slate-500">
-            {t('Add every course with its fee and batch timings — the AI answers fee, duration and batch questions from here.')}
-          </p>
-          {!form.courses.length ? (
-            <p className="text-sm text-slate-500">No courses yet. Add your courses so the AI can answer fee and batch questions.</p>
+          <p className="mb-4 text-xs text-slate-500">{t(category.hint)}</p>
+          {!form.offerings.length ? (
+            <p className="text-sm text-slate-500">{t(category.empty)}</p>
           ) : (
             <div className="space-y-4">
-              {form.courses.map((course, index) => (
-                <div key={course._id || index} className="rounded-xl border border-slate-200 p-4">
+              {form.offerings.map((offering, index) => (
+                <div key={offering._id || index} className="rounded-xl border border-slate-200 p-4">
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <Field label="Course name" className="sm:col-span-2" hint="Name as customers know it.">
-                      <input className="input" value={course.name} onChange={(event) => updateCourse(index, { name: event.target.value })} />
+                    <Field label={category.nameLabel} className="sm:col-span-2" hint="Name as customers know it.">
+                      <input className="input" value={offering.name} onChange={(event) => updateOffering(index, { name: event.target.value })} />
                     </Field>
                     <Field label="Category">
-                      <input className="input" value={course.category || ''} onChange={(event) => updateCourse(index, { category: event.target.value })} />
+                      <input className="input" value={offering.category || ''} onChange={(event) => updateOffering(index, { category: event.target.value })} />
                     </Field>
-                    <Field label="Fee (INR)" hint="Total fee as you quote it.">
-                      <input className="input" type="number" value={course.fee || 0} onChange={(event) => updateCourse(index, { fee: event.target.value })} />
+                    <Field label={category.priceLabel} hint="Price as you quote it.">
+                      <input className="input" type="number" value={offering.price || 0} onChange={(event) => updateOffering(index, { price: event.target.value })} />
                     </Field>
-                    <Field label="Duration" hint="For example: 3 months.">
-                      <input className="input" value={course.duration || ''} onChange={(event) => updateCourse(index, { duration: event.target.value })} />
+                    <Field label={category.durationLabel}>
+                      <input className="input" value={offering.duration || ''} onChange={(event) => updateOffering(index, { duration: event.target.value })} />
                     </Field>
-                    <Field label="Mode">
-                      <select className="input" value={course.mode || 'offline'} onChange={(event) => updateCourse(index, { mode: event.target.value })}>
-                        {['offline', 'online', 'hybrid'].map((mode) => (
-                          <option key={mode} value={mode}>
-                            {titleCase(mode)}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
-                    <Field label="Batch timings" hint="Comma separated, for example: 7 AM, 6 PM." className="sm:col-span-2">
+                    {category.showMode ? (
+                      <Field label="Mode">
+                        <select className="input" value={offering.mode || 'offline'} onChange={(event) => updateOffering(index, { mode: event.target.value })}>
+                          {['offline', 'online', 'hybrid'].map((mode) => (
+                            <option key={mode} value={mode}>
+                              {titleCase(mode)}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                    ) : null}
+                    <Field label={category.scheduleLabel} hint="Comma separated." className="sm:col-span-2">
                       <input
                         className="input"
-                        value={Array.isArray(course.batchTimings) ? course.batchTimings.join(', ') : course.batchTimings || ''}
-                        onChange={(event) => updateCourse(index, { batchTimings: event.target.value.split(',').map((value) => value.trim()).filter(Boolean) })}
+                        value={Array.isArray(offering.schedule) ? offering.schedule.join(', ') : offering.schedule || ''}
+                        onChange={(event) => updateOffering(index, { schedule: event.target.value.split(',').map((value) => value.trim()).filter(Boolean) })}
                       />
                     </Field>
-                    <Field label="Syllabus" className="sm:col-span-3 lg:col-span-4" hint="Short list of topics covered. The AI shares this when asked.">
-                      <textarea className="input" rows={2} value={course.syllabus || ''} onChange={(event) => updateCourse(index, { syllabus: event.target.value })} />
+                    <Field label={category.detailsLabel} className="sm:col-span-3 lg:col-span-4" hint="The AI shares this when asked.">
+                      <textarea className="input" rows={2} value={offering.details || ''} onChange={(event) => updateOffering(index, { details: event.target.value })} />
                     </Field>
                   </div>
                   <div className="mt-2 flex justify-end">
-                    <button type="button" className="btn-ghost px-2 py-1 text-xs text-rose-600" onClick={() => removeCourse(index)}>
+                    <button type="button" className="btn-ghost px-2 py-1 text-xs text-rose-600" onClick={() => removeOffering(index)}>
                       <Trash2 size={14} /> {t('Remove')}
                     </button>
                   </div>
