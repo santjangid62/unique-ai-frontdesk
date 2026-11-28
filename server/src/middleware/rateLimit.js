@@ -27,6 +27,14 @@ export const chatLimiter = rateLimit({
   message: envelope('Too many messages. Please wait a moment.'),
 });
 
+export const whatsappVerifyLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 60,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: envelope('Too many webhook verification attempts.'),
+});
+
 export const webhookLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 300,

@@ -20,5 +20,7 @@ const integrationSchema = new mongoose.Schema(
 );
 
 integrationSchema.index({ tenantId: 1, provider: 1 }, { unique: true });
+// Lets the WhatsApp verification handshake find a tenant by token directly.
+integrationSchema.index({ provider: 1, 'config.verifyToken': 1 });
 
 export default mongoose.models.Integration || mongoose.model('Integration', integrationSchema);
