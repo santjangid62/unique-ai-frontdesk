@@ -5,11 +5,13 @@ import useFetch from '../lib/useFetch.js';
 import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Pagination, Spinner, Table, Tx } from '../components/ui.jsx';
 import { dateTime, fromNow, titleCase } from '../lib/format.js';
 import { useI18n } from '../i18n/index.jsx';
+import { useBusinessCategory } from '../lib/useBusinessCategory.js';
 
 const empty = { name: '', phone: '', email: '', tags: '', interestedCourses: '' };
 
 export default function Customers() {
   const { t } = useI18n();
+  const category = useBusinessCategory();
   const [filters, setFilters] = useState({ search: '', page: 1 });
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty);
@@ -100,7 +102,7 @@ export default function Customers() {
             },
             {
               key: 'courses',
-              label: 'Interested in',
+              label: t(category.interestLabel),
               render: (row) => <span className="text-xs text-slate-600">{(row.interestedCourses || []).join(', ') || '—'}</span>,
             },
             {
@@ -162,7 +164,7 @@ export default function Customers() {
               <input className="input" type="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} />
             </Field>
           </div>
-          <Field label="Interested courses" hint="Comma separated, for example: Python, Excel.">
+          <Field label={t(category.interestLabel)} hint="Comma separated.">
             <input className="input" value={form.interestedCourses} onChange={(event) => setForm({ ...form, interestedCourses: event.target.value })} />
           </Field>
           <Field label="Tags" hint="Comma separated labels for grouping, for example: hot, repeat.">
@@ -180,7 +182,7 @@ export default function Customers() {
               {[
                 ['Phone', detailFetch.data.customer.phone || '—'],
                 ['Email', detailFetch.data.customer.email || '—'],
-                ['Courses', (detailFetch.data.customer.interestedCourses || []).join(', ') || '—'],
+                [t(category.offerings), (detailFetch.data.customer.interestedCourses || []).join(', ') || '—'],
                 ['Tags', (detailFetch.data.customer.tags || []).join(', ') || '—'],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-xl bg-slate-50 px-3 py-2">

@@ -335,6 +335,12 @@ const HI = {
   'Assign to': 'सौंपें',
   'Customer name': 'ग्राहक का नाम',
   'Service / interest': 'सेवा / रुचि',
+  'Course interest': 'कोर्स में रुचि',
+  'Subject interest': 'विषय में रुचि',
+  'Product interest': 'उत्पाद में रुचि',
+  'Service interest': 'सेवा में रुचि',
+  'Room / package interest': 'कमरे / पैकेज में रुचि',
+  'Property interest': 'प्रॉपर्टी में रुचि',
   'Search name, phone, service': 'नाम, फ़ोन, सेवा खोजें',
   'Consultations and service slots. Double bookings are blocked automatically.':
     'परामर्श और सेवा स्लॉट। डबल बुकिंग अपने आप रुकती है।',

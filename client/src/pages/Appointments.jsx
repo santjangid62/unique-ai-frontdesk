@@ -3,6 +3,8 @@ import { CalendarPlus, Check, Clock, X } from 'lucide-react';
 import api, { errorMessage } from '../lib/api.js';
 import useFetch from '../lib/useFetch.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useBusinessCategory } from '../lib/useBusinessCategory.js';
+import { useI18n } from '../i18n/index.jsx';
 import { Alert, Badge, Card, EmptyState, Field, Modal, PageHeader, Spinner, Tabs, Tx } from '../components/ui.jsx';
 import { dateTime, dayLabel, timeLabel, titleCase } from '../lib/format.js';
 
@@ -11,6 +13,8 @@ const STATUSES = ['scheduled', 'confirmed', 'completed', 'cancelled', 'reschedul
 
 export default function Appointments() {
   const { isBusinessAdmin, user } = useAuth();
+  const { t } = useI18n();
+  const category = useBusinessCategory();
   const [view, setView] = useState('upcoming');
   const [open, setOpen] = useState(false);
   const [error, setError] = useState('');
@@ -220,7 +224,7 @@ export default function Appointments() {
           <Field label="Email">
             <input className="input" type="email" value={form.customerEmail} onChange={(event) => setForm({ ...form, customerEmail: event.target.value })} />
           </Field>
-          <Field label="Service / interest" hint="What the customer is coming in for.">
+          <Field label={t(category.interestLabel)} hint={`What the customer is coming in for (${category.offerings.toLowerCase()}).`}>
             <input className="input" value={form.course} onChange={(event) => setForm({ ...form, course: event.target.value })} />
           </Field>
           <Field label="Type" hint="What kind of visit this is.">
