@@ -15,7 +15,13 @@ import {
   sharedRateLimitConfigured,
   sharedRateLimitReady,
 } from '../src/services/sharedRateLimit.js';
-import { apiLimiter, authLimiter, chatLimiter } from '../src/middleware/rateLimit.js';
+import {
+  apiLimiter,
+  authLimiter,
+  chatLimiter,
+  clampedLimit,
+  rateLimitIdentity,
+} from '../src/middleware/rateLimit.js';
 
 const { check, summary, exitCode } = createChecker();
 
@@ -104,6 +110,16 @@ const cleared = await decrementWindow({
 check('decrement below zero clears the key', cleared === 0 && calls[1]?.body?.[0]?.[0] === 'DEL');
 
 check('auth, api and chat limiters are middleware', [authLimiter, apiLimiter, chatLimiter].every((fn) => typeof fn === 'function'));
+
+check('fallback limits are split across instances', clampedLimit(1200, 5) === 240, String(clampedLimit(1200, 5)));
+check('small limits stay at least one', clampedLimit(3, 5) === 1);
+check('an invalid instance count falls back to one', clampedLimit(30, 0) === 30);
+
+check('identity prefers the signed-in user', rateLimitIdentity({ user: { id: 'u1' }, ip: '1.1.1.1' }) === 'user:u1');
+check('identity uses the verified token subject', rateLimitIdentity({ auth: { sub: 'u2' }, ip: '1.1.1.1' }) === 'user:u2');
+check('identity falls back to the token tenant', rateLimitIdentity({ auth: { tenantId: 't1' }, ip: '1.1.1.1' }) === 'tenant:t1');
+check('identity falls back to the loaded tenant', rateLimitIdentity({ tenant: { id: 't2' }, ip: '1.1.1.1' }) === 'tenant:t2');
+check('anonymous requests stay keyed by IP', rateLimitIdentity({ ip: '1.1.1.1' }) === 'ip:1.1.1.1');
 
 const saved = { url: env.upstashRedisUrl, token: env.upstashRedisToken };
 env.upstashRedisUrl = 'https://example.upstash.io';

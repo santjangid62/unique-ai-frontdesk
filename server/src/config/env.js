@@ -38,6 +38,9 @@ export const env = {
   // webhook limits stay per serverless instance.
   upstashRedisUrl: process.env.UPSTASH_REDIS_REST_URL || '',
   upstashRedisToken: process.env.UPSTASH_REDIS_REST_TOKEN || '',
+  // Expected serverless instance count. In-memory fallback limits are divided
+  // by this so a Redis outage does not multiply the global cap.
+  rateLimitInstances: Math.max(1, Number(process.env.RATE_LIMIT_MAX_INSTANCES) || 5),
   mailFrom: process.env.MAIL_FROM || 'Unique AI Frontdesk <onboarding@resend.dev>',
   appUrl: process.env.APP_URL || process.env.CLIENT_ORIGIN || previewUrl || 'http://localhost:5173',
 };
