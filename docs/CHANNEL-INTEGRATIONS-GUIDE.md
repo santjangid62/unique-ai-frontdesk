@@ -37,21 +37,25 @@ flowchart TD
 ## 2. WhatsApp Cloud API
 
 **Required fields:** `phoneNumberId`, `accessToken`
-**Optional env (server):** `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`
+**Optional per-business fields:** `appSecret` (Meta App Secret), `verifyToken` (webhook verify token)
+**Optional platform fallback (server env):** `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`
+
+Har business apna `appSecret` aur `verifyToken` card me save kar sakta hai. Jab tak wo set nahi hain, platform env fallback use hota hai — isliye multi-tenant setup me dono per-business fields bharna behtar hai.
 
 ### Where to get the values
 1. Go to [Meta for Developers](https://developers.facebook.com/) → **My Apps** → create/select your app.
 2. Add the **WhatsApp** product to the app.
 3. Under **WhatsApp → API Setup**, copy the **Phone number ID** and generate a **Permanent access token** (System User token recommended for production).
 4. Set the **Webhook URL** to `https://<your-domain>/api/webhooks/whatsapp`.
-5. Set the **Verify token** to the value of `WHATSAPP_VERIFY_TOKEN` (default `unique-frontdesk-verify`) in your server env.
+5. Set the **Verify token** to the same value you save in the app's `verifyToken` field for this business (or the platform `WHATSAPP_VERIFY_TOKEN` when no per-business token is set).
 6. Subscribe to the `messages` webhook field.
 
 ### Steps in the app
 1. Business Settings → Channel integrations → **WhatsApp** card.
 2. Enter `phoneNumberId` and `accessToken`.
-3. Click **Save**, then **Check**.
-4. Send a test message to your WhatsApp Business number; it should appear in **Conversations**.
+3. Optionally enter `appSecret` and `verifyToken` so this business's webhooks are verified with its own Meta app. Setup wizard me ye dono skip kiye ja sakte hain.
+4. Click **Save** — it runs the live Meta check automatically.
+5. Send a test message to your WhatsApp Business number; it should appear in **Conversations**.
 
 ```mermaid
 flowchart TD
@@ -59,10 +63,11 @@ flowchart TD
     B --> C[API Setup: copy Phone number ID]
     C --> D[Generate permanent access token]
     D --> E[App Settings: set Webhook URL = /api/webhooks/whatsapp]
-    E --> F[Set Verify token = WHATSAPP_VERIFY_TOKEN]
+    E --> F[Set Verify token = business verifyToken or WHATSAPP_VERIFY_TOKEN]
     F --> G[Subscribe to messages field]
-    G --> H[Unique AI Frontdesk: WhatsApp card -> fill phoneNumberId + accessToken]
-    H --> I[Save -> Check]
+    G --> H[Unique AI Frontdesk: WhatsApp card -> phoneNumberId + accessToken]
+    H --> H2[Optional: appSecret + verifyToken]
+    H2 --> I[Save -> live Meta check]
     I --> J{Status connected?}
     J -- Yes --> K[Send test WhatsApp message -> appears in Conversations]
     J -- No --> L[Fix missing fields -> repeat]

@@ -162,9 +162,15 @@ export default function Settings() {
 
   const integrationFor = (provider) => (integrations || []).find((item) => item.provider === provider);
 
+  const integrationFields = (provider) => {
+    const integration = integrationFor(provider);
+    return [...(integration?.requires || []), ...(integration?.optionals || [])];
+  };
+
   const openAiAssist = (provider) => {
     const integration = integrationFor(provider);
     const required = integration?.requires || [];
+    const optional = integration?.optionals || [];
     setAiProvider(provider);
     setAiOpen(true);
     setAiStep(0);
@@ -174,9 +180,13 @@ export default function Settings() {
       {
         from: 'ai',
         text:
-          required.length === 0
+          required.length === 0 && optional.length === 0
             ? `I can set up ${provider} for you. No extra fields are needed — click "Finish" to mark it connected.`
-            : `I'll set up ${provider} for you. I need ${required.length} value${required.length > 1 ? 's' : ''}: ${required.join(', ')}. Let's start with ${required[0]}.`,
+            : `I'll set up ${provider} for you. I need ${required.length} value${required.length > 1 ? 's' : ''}: ${
+                required.join(', ') || 'none'
+              }.${
+                optional.length ? ` Optional: ${optional.join(', ')} (you can skip these).` : ''
+              } Let's start with ${[...required, ...optional][0]}.`,
       },
     ]);
   };
@@ -190,20 +200,19 @@ export default function Settings() {
     setAiMessages([]);
   };
 
-  const isOptionalField = (provider, field) => provider === 'openai' && field === 'apiKey';
+  const isOptionalField = (provider, field) => (integrationFor(provider)?.optionals || []).includes(field);
 
   const submitAiStep = async (skip = false) => {
     if (!aiProvider) return;
-    const integration = integrationFor(aiProvider);
-    const required = integration?.requires || [];
-    const field = required[aiStep];
+    const fields = integrationFields(aiProvider);
+    const field = fields[aiStep];
     const value = skip ? '' : aiInput.trim();
     if (field && !value && !isOptionalField(aiProvider, field) && !skip) return;
     const nextValues = field && value ? { ...aiValues, [field]: value } : aiValues;
     setAiValues(nextValues);
     setAiInput('');
     const userMsg = field ? { from: 'user', text: skip ? 'Skip' : value } : { from: 'user', text: 'Finish' };
-    if (aiStep + 1 >= required.length) {
+    if (aiStep + 1 >= fields.length) {
       setAiBusy(true);
       setAiMessages((prev) => [...prev, userMsg, { from: 'ai', text: 'Saving your credentials…' }]);
       try {
@@ -229,7 +238,7 @@ export default function Settings() {
       setAiMessages((prev) => [
         ...prev,
         userMsg,
-        { from: 'ai', text: `Got it. Now please enter ${required[aiStep + 1]}.` },
+        { from: 'ai', text: `Got it. Now please enter ${fields[aiStep + 1]}${isOptionalField(aiProvider, fields[aiStep + 1]) ? ' (optional)' : ''}.` },
       ]);
       setAiStep(aiStep + 1);
     }
@@ -451,11 +460,11 @@ export default function Settings() {
                 <p className="mt-2 text-[11px] font-medium text-rose-600">{integration.lastError}</p>
               ) : null}
               <div className="mt-2 space-y-2">
-                {integration.requires.slice(0, 2).map((key) => (
+                {[...integration.requires, ...(integration.optionals || [])].slice(0, 4).map((key) => (
                   <input
                     key={key}
                     className="input text-xs"
-                    placeholder={`${titleCase(key)}${integration.provider === 'openai' ? ' (optional)' : ''}${integration.config?.[key] ? ' (saved)' : ''}`}
+                    placeholder={`${titleCase(key)}${(integration.optionals || []).includes(key) ? ' (optional)' : ''}${integration.config?.[key] ? ' (saved)' : ''}`}
                     value={providerForm[integration.provider]?.[key] || ''}
                     onChange={(event) =>
                       setProviderForm((prev) => ({
@@ -523,11 +532,11 @@ export default function Settings() {
                 </div>
               ))}
             </div>
-            {aiStep < (integrationFor(aiProvider)?.requires?.length || 0) ? (
+            {aiStep < integrationFields(aiProvider).length ? (
               <div className="flex gap-2">
                 <input
                   className="input text-xs"
-                  placeholder={`Enter ${integrationFor(aiProvider).requires[aiStep]}${isOptionalField(aiProvider, integrationFor(aiProvider).requires[aiStep]) ? ' (optional)' : ''}`}
+                  placeholder={`Enter ${integrationFields(aiProvider)[aiStep]}${isOptionalField(aiProvider, integrationFields(aiProvider)[aiStep]) ? ' (optional)' : ''}`}
                   value={aiInput}
                   onChange={(event) => setAiInput(event.target.value)}
                   onKeyDown={(event) => {
@@ -538,7 +547,7 @@ export default function Settings() {
                 <button type="button" className="btn-primary px-3 py-1.5 text-xs" onClick={() => submitAiStep(false)} disabled={aiBusy}>
                   Send
                 </button>
-                {isOptionalField(aiProvider, integrationFor(aiProvider).requires[aiStep]) ? (
+                {isOptionalField(aiProvider, integrationFields(aiProvider)[aiStep]) ? (
                   <button type="button" className="btn-secondary px-3 py-1.5 text-xs" onClick={() => submitAiStep(true)} disabled={aiBusy}>
                     Skip
                   </button>
