@@ -20,10 +20,37 @@ export function rateLimitIdentity(req) {
   if (userId) return `user:${userId}`;
   const tenantId = req.tenant?.id || req.tenant?._id || req.auth?.tenantId;
   if (tenantId) return `tenant:${tenantId}`;
-  return `ip:${req.ip || 'unknown'}`;
+  return `ip:${normalizeIpAddress(req.ip)}`;
 }
 
-const ipIdentity = (req) => `ip:${req.ip || 'unknown'}`;
+/**
+ * Expands an IPv6 address to its eight hextets so it can be truncated safely.
+ * Compressed forms (``::``) are padded with zeroes.
+ */
+function expandIpv6(address) {
+  const [left, right] = address.split('::');
+  const leftParts = left ? left.split(':') : [];
+  const rightParts = right ? right.split(':') : [];
+  const missing = Math.max(0, 8 - leftParts.length - rightParts.length);
+  return [...leftParts, ...Array(missing).fill('0'), ...rightParts];
+}
+
+/**
+ * Normalises a caller IP for use as a rate-limit key. IPv4 stays intact;
+ * IPv6 collapses to its /64 prefix so rotating addresses inside one subnet
+ * cannot bypass a limit.
+ */
+export function normalizeIpAddress(ip) {
+  const raw = String(ip || '').split('%')[0].trim();
+  if (!raw) return 'unknown';
+  const mapped = raw.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/i);
+  if (mapped) return mapped[1];
+  if (!raw.includes(':')) return raw;
+  const parts = expandIpv6(raw.toLowerCase()).map((part) => part.replace(/^0+$/, '0'));
+  return `${parts.slice(0, 4).join(':')}::/64`;
+}
+
+const ipIdentity = (req) => `ip:${normalizeIpAddress(req.ip)}`;
 
 /**
  * Splits a global limit across the expected instance count. Used only when the
@@ -84,9 +111,20 @@ function sharedLimiter({
       res.setHeader('RateLimit-Remaining', Math.max(0, limit - count));
       if (count > limit) return res.status(429).json(envelope(message));
       if (skipSuccessful) {
-        res.on('finish', () => {
-          if (res.statusCode < 400) decrementWindow({ key, windowMs }).catch(() => {});
-        });
+        // A response handler may be frozen on serverless right after the
+        // response is sent, so compensate before flushing instead of in
+        // res.on('finish').
+        const originalEnd = res.end.bind(res);
+        let finishing = false;
+        res.end = (chunk, encoding, callback) => {
+          if (finishing) return res;
+          finishing = true;
+          if (res.statusCode >= 400) return originalEnd(chunk, encoding, callback);
+          decrementWindow({ key, windowMs })
+            .catch(() => {})
+            .finally(() => originalEnd(chunk, encoding, callback));
+          return res;
+        };
       }
       return next();
     } catch {
