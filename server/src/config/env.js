@@ -34,6 +34,10 @@ export const env = {
   allowSuperAdminBootstrap: asBool(process.env.ALLOW_SUPER_ADMIN_BOOTSTRAP, false),
   // Transactional email (verification codes, password resets).
   resendApiKey: process.env.RESEND_API_KEY || '',
+  // Shared rate-limit store (Upstash Redis REST). Optional: without it the
+  // webhook limits stay per serverless instance.
+  upstashRedisUrl: process.env.UPSTASH_REDIS_REST_URL || '',
+  upstashRedisToken: process.env.UPSTASH_REDIS_REST_TOKEN || '',
   mailFrom: process.env.MAIL_FROM || 'Unique AI Frontdesk <onboarding@resend.dev>',
   appUrl: process.env.APP_URL || process.env.CLIENT_ORIGIN || previewUrl || 'http://localhost:5173',
 };
