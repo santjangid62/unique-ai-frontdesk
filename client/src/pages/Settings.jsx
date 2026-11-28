@@ -407,7 +407,7 @@ export default function Settings() {
             type="button"
             className="btn-secondary px-3 py-1.5 text-xs"
             onClick={() => { setAiOpen(true); setAiProvider(null); setAiMessages([]); }}
-            title="AI assist"
+            title="Setup wizard"
           >
             <Sparkles size={14} /> Setup wizard
           </button>
@@ -426,37 +426,36 @@ export default function Settings() {
                 <p className="mt-2 text-xs text-slate-500">
                   Platform AI key: {integration.platformConfigured ? 'configured' : 'not configured (grounded fallback active)'}
                 </p>
-              ) : (
-                <div className="mt-2 space-y-2">
-                  {integration.requires.slice(0, 2).map((key) => (
-                    <input
-                      key={key}
-                      className="input text-xs"
-                      placeholder={`${titleCase(key)}${integration.config?.[key] ? ' (saved)' : ''}`}
-                      value={providerForm[integration.provider]?.[key] || ''}
-                      onChange={(event) =>
-                        setProviderForm((prev) => ({
-                          ...prev,
-                          [integration.provider]: { ...(prev[integration.provider] || {}), [key]: event.target.value },
-                        }))
-                      }
-                    />
-                  ))}
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      className="btn-primary flex-1 px-2 py-1.5 text-xs"
-                      disabled={!Object.keys(providerForm[integration.provider] || {}).length}
-                      onClick={() => saveIntegration(integration.provider, providerForm[integration.provider] || {})}
-                    >
-                      {t('Save')}
-                    </button>
-                    <button type="button" className="btn-secondary px-2 py-1.5 text-xs" onClick={() => checkIntegration(integration.provider)}>
-                      {t('Check')}
-                    </button>
-                  </div>
+              ) : null}
+              <div className="mt-2 space-y-2">
+                {integration.requires.slice(0, 2).map((key) => (
+                  <input
+                    key={key}
+                    className="input text-xs"
+                    placeholder={`${titleCase(key)}${integration.provider === 'openai' ? ' (optional)' : ''}${integration.config?.[key] ? ' (saved)' : ''}`}
+                    value={providerForm[integration.provider]?.[key] || ''}
+                    onChange={(event) =>
+                      setProviderForm((prev) => ({
+                        ...prev,
+                        [integration.provider]: { ...(prev[integration.provider] || {}), [key]: event.target.value },
+                      }))
+                    }
+                  />
+                ))}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className="btn-primary flex-1 px-2 py-1.5 text-xs"
+                    disabled={!Object.keys(providerForm[integration.provider] || {}).length}
+                    onClick={() => saveIntegration(integration.provider, providerForm[integration.provider] || {})}
+                  >
+                    {t('Save')}
+                  </button>
+                  <button type="button" className="btn-secondary px-2 py-1.5 text-xs" onClick={() => checkIntegration(integration.provider)}>
+                    {t('Check')}
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
           ))}
         </div>
