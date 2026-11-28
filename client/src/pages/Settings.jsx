@@ -119,7 +119,8 @@ export default function Settings() {
   const saveIntegration = async (provider, config) => {
     setError('');
     try {
-      const response = await api.put(`/integrations/${provider}`, { status: 'connected', config });
+      // Saved as pending: only the provider check below may mark it connected.
+      const response = await api.put(`/integrations/${provider}`, { status: 'disconnected', config });
       setProviderForm((prev) => ({ ...prev, [provider]: {} }));
       reloadIntegrations();
       return response.data?.data;
@@ -137,6 +138,25 @@ export default function Settings() {
     } catch (err) {
       setError(errorMessage(err));
       throw err;
+    }
+  };
+
+  const runIntegrationCheck = async (provider) => {
+    setError('');
+    try {
+      await checkIntegration(provider);
+    } catch (err) {
+      setError(errorMessage(err));
+    }
+  };
+
+  const saveAndCheckIntegration = async (provider, config) => {
+    setError('');
+    try {
+      await saveIntegration(provider, config);
+      await checkIntegration(provider);
+    } catch (err) {
+      setError(errorMessage(err));
     }
   };
 
@@ -450,11 +470,11 @@ export default function Settings() {
                     type="button"
                     className="btn-primary flex-1 px-2 py-1.5 text-xs"
                     disabled={!Object.keys(providerForm[integration.provider] || {}).length}
-                    onClick={() => saveIntegration(integration.provider, providerForm[integration.provider] || {})}
+                    onClick={() => saveAndCheckIntegration(integration.provider, providerForm[integration.provider] || {})}
                   >
                     {t('Save')}
                   </button>
-                  <button type="button" className="btn-secondary px-2 py-1.5 text-xs" onClick={() => checkIntegration(integration.provider)}>
+                  <button type="button" className="btn-secondary px-2 py-1.5 text-xs" onClick={() => runIntegrationCheck(integration.provider)}>
                     {t('Check')}
                   </button>
                 </div>
